@@ -512,10 +512,6 @@ footer img{height:30px;width:auto;opacity:.9}
   </div>
 </header>
 
-<div class="band-wrap" aria-hidden="true"><div class="band"><div class="track" id="band">
-  <span>Controller</span><span>Planner</span><span>Inkoper</span><span>Receptie</span><span>Marketeer</span><span>Boekhouder</span><span>Analist</span><span>Dag en nacht</span>
-</div></div></div>
-
 <section class="logos" aria-label="Koppelingen">
   <p>Werkt samen met de systemen die je al gebruikt</p>
   <div class="marquee"><div class="track" id="track">
@@ -823,7 +819,7 @@ mates.forEach((m,i)=>{const t=m.dataset.tasks.split('|'),sp=m.querySelector('.ta
 if(RM)return;setTimeout(()=>setInterval(()=>{sp.classList.add('swap');setTimeout(()=>{k=(k+1)%t.length;sp.textContent=t[k];sp.classList.remove('swap')},350)},3600+i*170),i*450)})})();
 
 /* marquee duplicate */
-['track','band'].forEach(id=>{const tr=document.getElementById(id);tr.innerHTML+=tr.innerHTML});
+['track'].forEach(id=>{const tr=document.getElementById(id);tr.innerHTML+=tr.innerHTML});
 
 /* pain glow */
 document.querySelectorAll('nothing-x').forEach(p=>p.addEventListener('pointermove',e=>{const r=p.getBoundingClientRect();p.style.setProperty('--mx',e.clientX-r.left+'px');p.style.setProperty('--my',e.clientY-r.top+'px')}));
