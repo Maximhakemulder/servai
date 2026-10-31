@@ -65,6 +65,11 @@ section{position:relative}
 .nav .btn{padding:11px 20px;font-size:14px;background:#fff;color:#14163A;box-shadow:none}
 .nav .btn:hover{transform:translateY(-1px)}
 @media (max-width:860px){.nav-links{display:none}}
+.nav-cta{display:flex;align-items:center;gap:8px}
+.login{display:inline-flex;align-items:center;gap:7px;padding:10px 14px;border-radius:999px;font-size:14px;font-weight:600;color:#fff;text-decoration:none;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.08);backdrop-filter:blur(8px);transition:background .2s,border-color .2s}
+.login:hover{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.5)}
+.login svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+@media (max-width:420px){.login{padding:10px 11px}.nav .btn{padding:10px 14px;font-size:13px}}
 
 /* icons */
 .ico{--s:52px;flex:none;width:var(--s);height:var(--s);border-radius:16px;display:grid;place-items:center;position:relative;background:linear-gradient(var(--ink-2),var(--ink-2)) padding-box,linear-gradient(135deg,rgba(91,123,255,.7),rgba(255,90,102,.7)) border-box;border:1px solid transparent;box-shadow:0 10px 30px -12px rgba(176,90,181,.5)}
@@ -452,7 +457,10 @@ footer img{height:30px;width:auto;opacity:.9}
       <a href="#rekenen">Besparing</a>
       <a href="#faq">Vragen</a>
     </div>
-    <a class="btn btn-main" href="#demo">Plan een demo</a>
+    <div class="nav-cta">
+      <a class="login" href="dashboard/"><svg viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5"/></svg>Inloggen</a>
+      <a class="btn btn-main" href="#demo">Plan een demo</a>
+    </div>
   </div>
 </nav>
 
