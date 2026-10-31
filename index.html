@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="SERVAI koppelt kassa, reserveringen, rooster, inkoop en reviews en laat AI het werk doen. Minder personeel op de verkeerde uren, meer marge op elk bord.">
+<meta name="description" content="SERVAI is jouw horeca backoffice, volledig geautomatiseerd. Een digitaal team dat dag en nacht je administratie, planning, inkoop, reserveringen en marketing regelt.">
 <meta property="og:title" content="SERVAI · AI for hospitality">
-<meta property="og:description" content="Je zaak draait op data. SERVAI laat je het zien, via WhatsApp.">
+<meta property="og:description" content="Jouw horeca backoffice, volledig geautomatiseerd.">
 <meta property="og:image" content="assets/servai-brand-gradient.png">
 <meta name="theme-color" content="#080A16">
 <link rel="icon" href="assets/favicon.png">
@@ -36,6 +36,7 @@
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
+html,body{overflow-x:clip}
 body{background:var(--ink);color:var(--fg);font-family:var(--f-body);font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:60;background:var(--ink)}
 a{color:inherit}
@@ -55,39 +56,93 @@ section{position:relative}
 .arrow{transition:transform .25s}.btn:hover .arrow{transform:translateX(4px)}
 
 /* nav */
-.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);background:rgba(8,10,22,.65);border-bottom:1px solid transparent;transition:border-color .3s}
-.nav.scrolled{border-bottom-color:var(--line)}
-.nav .wrap{display:flex;align-items:center;justify-content:space-between;height:68px;gap:20px}
+.nav{position:fixed;top:0;left:0;right:0;z-index:50;padding-top:env(safe-area-inset-top,0px);transition:background .35s,border-color .35s,backdrop-filter .35s;border-bottom:1px solid transparent}
+.nav.scrolled{background:rgba(8,10,22,.72);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom-color:var(--line)}
+.nav .wrap{display:flex;align-items:center;justify-content:space-between;height:72px;gap:20px}
 .logo img{height:22px;width:auto;display:block}
-.nav-links{display:flex;gap:28px;font-size:15px;color:var(--mute)}
-.nav-links a{text-decoration:none;transition:color .2s}.nav-links a:hover{color:var(--fg)}
-.nav .btn{padding:11px 18px;font-size:14px}
+.nav-links{display:flex;gap:30px;font-size:15px;color:rgba(255,255,255,.8);font-weight:500}
+.nav-links a{text-decoration:none;transition:color .2s}.nav-links a:hover{color:#fff}
+.nav .btn{padding:11px 20px;font-size:14px;background:#fff;color:#14163A;box-shadow:none}
+.nav .btn:hover{transform:translateY(-1px)}
 @media (max-width:860px){.nav-links{display:none}}
 
-/* hero */
-.hero{padding-block:88px 56px;overflow:hidden;isolation:isolate}
-.hero::before{content:"";position:absolute;inset:0;z-index:-2;background:linear-gradient(115deg,#1E3F9E,#4A4AA0,#8A4482,#EC4B57,#8A4482,#1E3F9E);background-size:300% 300%;animation:gradmove 18s ease-in-out infinite;opacity:.55}
-.hero::after{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(ellipse 80% 60% at 30% 40%,transparent,var(--ink) 95%),linear-gradient(to bottom,transparent 55%,var(--ink))}
-@keyframes gradmove{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-.hero .wrap{display:grid;grid-template-columns:1.15fr .85fr;gap:64px;align-items:center}
-.hero h1{font-size:clamp(40px,5.6vw,72px);font-weight:700;margin-top:22px;line-height:1.08}
-.hero h1 .line{display:block;overflow:hidden;padding-bottom:.06em}
-.hero h1 .line span{display:inline-block;animation:rise 1s cubic-bezier(.2,.8,.2,1) both}
-.hero h1 .line:nth-child(2) span{animation-delay:.12s}
-@keyframes rise{from{transform:translateY(105%)}to{transform:none}}
-.lede{font-size:clamp(18px,1.5vw,20px);color:#D3D6EE;max-width:31em;margin-top:22px}
-.hero-ctas{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
-.proof{display:flex;flex-wrap:wrap;align-items:center;gap:14px 22px;margin-top:40px;padding-top:26px;border-top:1px solid var(--line)}
-.proof small{font-size:13px;color:var(--mute)}
-.proof .brands{display:flex;gap:20px;font:700 16px var(--f-display);color:rgba(238,240,250,.85);letter-spacing:-.01em}
-.proof .stat{display:flex;gap:28px;margin-left:auto}
-.proof .stat div{font-size:13px;color:var(--mute);line-height:1.3}
-.proof .stat b{display:block;font:700 22px var(--f-display);color:var(--fg)}
-@media (max-width:960px){.hero .wrap{grid-template-columns:1fr;gap:48px}.hero{padding-block:56px 32px}.proof .stat{margin-left:0}}
+/* icons */
+.ico{--s:52px;flex:none;width:var(--s);height:var(--s);border-radius:16px;display:grid;place-items:center;position:relative;background:linear-gradient(var(--ink-2),var(--ink-2)) padding-box,linear-gradient(135deg,rgba(91,123,255,.7),rgba(255,90,102,.7)) border-box;border:1px solid transparent;box-shadow:0 10px 30px -12px rgba(176,90,181,.5)}
+.ico svg{width:26px;height:26px;fill:none;stroke:url(#g);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:80;stroke-dashoffset:0}
+.js .rv:not(.in) .ico svg{stroke-dashoffset:80}
+.rv .ico svg{transition:stroke-dashoffset 1.6s cubic-bezier(.6,0,.2,1) .2s}
+.ico::after{content:"";position:absolute;inset:-1px;border-radius:inherit;background:conic-gradient(from var(--a,0deg),transparent 0 70%,rgba(255,255,255,.8) 85%,transparent);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;padding:1px;opacity:0;transition:opacity .3s}
+*:hover>.ico::after,*:hover>div>.ico::after{opacity:1;animation:spin 2.4s linear infinite}
+@property --a{syntax:"<angle>";initial-value:0deg;inherits:false}
+@keyframes spin{to{--a:360deg}}
+.mk{display:inline-block;vertical-align:-2px;color:#fff}
+.eyebrow::before{display:none}
+.eyebrow .mk{width:18px;height:13px}
+.motif{position:absolute;pointer-events:none;z-index:-1;fill:none}
+.motif use{color:transparent}
+
+/* hero: full-bleed moving brand gradient */
+.hero{position:relative;isolation:isolate;overflow:hidden;padding-block:150px 90px;background:#2A3C9A}
+.hero .grad{position:absolute;inset:-20%;z-index:-3;background:
+  radial-gradient(40% 50% at 20% 30%,#1B3E9E 0%,transparent 70%),
+  radial-gradient(35% 45% at 85% 40%,#EC4B57 0%,transparent 70%),
+  radial-gradient(40% 50% at 55% 20%,#8A4482 0%,transparent 70%),
+  radial-gradient(45% 55% at 40% 90%,#7C86D0 0%,transparent 70%),
+  linear-gradient(120deg,#1E3F9E,#7A4486 55%,#E2505E);
+  animation:drift 22s ease-in-out infinite alternate;will-change:transform}
+@keyframes drift{0%{transform:translate3d(0,0,0) rotate(0deg) scale(1)}33%{transform:translate3d(4%,-3%,0) rotate(6deg) scale(1.08)}66%{transform:translate3d(-3%,3%,0) rotate(-4deg) scale(1.04)}100%{transform:translate3d(2%,2%,0) rotate(3deg) scale(1.1)}}
+.hero .grain{position:absolute;inset:0;z-index:-2;opacity:.18;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.hero-mark{position:absolute;z-index:-1;right:-6%;top:6%;width:min(70vw,980px);height:auto;fill:none;stroke:rgba(255,255,255,.14);stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round;animation:markfloat 14s ease-in-out infinite}
+.hero-mark path{stroke-dasharray:120;stroke-dashoffset:120;animation:draw 3s cubic-bezier(.6,0,.2,1) .3s forwards}
+.hero-mark .hm2{animation-delay:1.2s}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes markfloat{50%{transform:translateY(-24px) rotate(-2deg)}}
+@media (max-width:960px){.hero-mark{width:120vw;right:-40%;top:30%}}
+.hero::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:160px;z-index:-1;background:linear-gradient(to bottom,transparent,var(--ink))}
+.hero .wrap{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr);gap:72px;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:10px;padding:8px 14px 8px 8px;border-radius:99px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);backdrop-filter:blur(8px);font-size:14px;font-weight:500;color:#fff}
+.pill b{background:#fff;color:#14163A;border-radius:99px;padding:3px 10px;font-size:12px;font-weight:700;letter-spacing:.02em}
+.hero h1{font-size:clamp(36px,4.5vw,66px);font-weight:700;line-height:.98;margin-top:26px;color:#fff;letter-spacing:-.04em}
+.hero h1 .l1{display:block;animation:rise 1s cubic-bezier(.2,.8,.2,1) both}
+.hero h1 .l2{display:block;background:linear-gradient(90deg,#fff 0%,#FFD3D7 25%,#fff 50%,#C9D2FF 75%,#fff 100%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:rise 1s .12s cubic-bezier(.2,.8,.2,1) both,shine 6s linear infinite}
+@keyframes shine{to{background-position:-200% 0}}
+@keyframes rise{from{opacity:0;transform:translateY(30px)}}
+.roles{display:flex;flex-wrap:wrap;align-items:center;gap:.3em .4em;margin-top:30px;font:600 clamp(20px,2.2vw,28px)/1.2 var(--f-display);color:#fff;letter-spacing:-.01em}
+.roles .rot{display:inline-grid;perspective:600px;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+.roles .rot span{grid-area:1/1;opacity:0;transform:translateY(70%) rotateX(-60deg);transition:opacity .45s,transform .6s cubic-bezier(.2,.8,.2,1);justify-self:start}
+.roles .rot span.on{opacity:1;transform:none}
+.roles .rot span.out{opacity:0;transform:translateY(-60%) rotateX(60deg)}
+.roles .rot em{font-style:normal;display:inline-block;background:#fff;color:#2A2F7A;padding:.12em .45em;border-radius:.35em;box-shadow:0 10px 30px -10px rgba(10,12,40,.5)}
+.lede{font-size:clamp(18px,1.6vw,21px);color:rgba(255,255,255,.9);max-width:30em;margin-top:28px}
+.hero-ctas{display:flex;flex-wrap:wrap;gap:12px;margin-top:34px}
+.hero .btn-main{background:#fff;color:#14163A;box-shadow:0 20px 50px -15px rgba(10,12,40,.6)}
+.hero .btn-main:hover{background:#fff;transform:translateY(-3px);box-shadow:0 26px 60px -15px rgba(10,12,40,.75)}
+.hero .btn-ghost{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.3);color:#fff;backdrop-filter:blur(8px)}
+.proof{display:flex;flex-wrap:wrap;align-items:center;gap:16px 34px;margin-top:46px}
+.proof small{display:block;font-size:12px;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.12em;font-family:var(--f-mono);margin-bottom:6px}
+.proof .brands{display:flex;gap:22px;font:700 18px var(--f-display);color:#fff;letter-spacing:-.01em}
+.proof .sep{width:1px;height:40px;background:rgba(255,255,255,.3)}
+.proof .stat{display:flex;gap:30px}
+.proof .stat div{font-size:13px;color:rgba(255,255,255,.75);line-height:1.25}
+.proof .stat b{display:block;font:700 26px var(--f-display);color:#fff}
+@media (max-width:960px){.hero .wrap{grid-template-columns:1fr;gap:40px}.hero{padding-block:120px 60px}.proof .sep{display:none}}
+
+/* stage: phone + floating alerts */
+.stage{transition:transform .4s cubic-bezier(.2,.8,.2,1);transform-style:preserve-3d;position:relative;justify-self:center;width:min(340px,100%);perspective:1200px}
+.toast{transition:opacity .5s,transform .6s cubic-bezier(.2,.9,.3,1.3),translate .4s;position:absolute;z-index:3;display:flex;gap:10px;align-items:center;padding:11px 14px;border-radius:16px;background:rgba(255,255,255,.92);color:#14163A;font-size:13px;line-height:1.3;box-shadow:0 20px 40px -12px rgba(10,12,40,.45);backdrop-filter:blur(10px);width:max-content;max-width:230px;opacity:0;transform:translateY(14px) scale(.92);}
+.toast.show{opacity:1;transform:none}
+.toast .ic{flex:none;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;font:700 14px var(--f-display);color:#fff}
+.toast b{display:block;font-weight:700;font-family:var(--f-display);font-size:13.5px}
+.t1{top:6%;left:-30%}.t1 .ic{background:#EC4B57}
+.t2{top:34%;right:-22%}.t2 .ic{background:#1E9E6E}
+.t3{bottom:24%;left:-34%}.t3 .ic{background:#7A4486}
+.t4{bottom:5%;right:-16%}.t4 .ic{background:#1E3F9E}
+@media (max-width:1100px){.t1,.t3{left:-12%}.t2,.t4{right:-10%}}
+@media (max-width:520px){.toast{max-width:190px;font-size:12px}.t1,.t3{left:-4%}.t2,.t4{right:-4%}}
 /* phone */
-.phone{justify-self:center;width:min(360px,100%);border-radius:40px;padding:10px;background:linear-gradient(160deg,rgba(255,255,255,.18),rgba(255,255,255,.03));box-shadow:0 40px 100px -30px rgba(35,70,176,.8),0 0 0 1px rgba(255,255,255,.08) inset;animation:float 7s ease-in-out infinite}
+.phone{width:100%;border-radius:40px;padding:10px;background:linear-gradient(160deg,rgba(255,255,255,.18),rgba(255,255,255,.03));box-shadow:0 40px 100px -30px rgba(35,70,176,.8),0 0 0 1px rgba(255,255,255,.08) inset;animation:float 7s ease-in-out infinite}
 @keyframes float{50%{transform:translateY(-10px)}}
-.screen{border-radius:31px;overflow:hidden;background:#0B141A;display:flex;flex-direction:column;height:560px}
+.screen{border-radius:31px;overflow:hidden;background:#0B141A;display:flex;flex-direction:column;height:540px}
 .wa-head{display:flex;align-items:center;gap:12px;padding:16px 16px 12px;background:#1F2C33}
 .wa-av{width:38px;height:38px;border-radius:50%;background:var(--grad);display:grid;place-items:center;font:700 13px var(--f-display);color:#fff}
 .wa-head b{font-size:15px;display:block;line-height:1.2}
@@ -124,19 +179,74 @@ section{position:relative}
 .sec-head p{color:var(--mute);font-size:19px;margin-top:18px;max-width:36em}
 @media (max-width:700px){.sec{padding-block:72px}}
 
-/* pain */
-.pain-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:56px}
-@media (max-width:960px){.pain-grid{grid-template-columns:repeat(2,1fr)}}
-@media (max-width:620px){.pain-grid{grid-template-columns:1fr}}
-.pain{position:relative;background:var(--ink-2);border:1px solid var(--line);border-radius:22px;padding:28px;overflow:hidden;transition:transform .35s,border-color .35s}
-.pain::before{content:"";position:absolute;inset:0;background:radial-gradient(400px circle at var(--mx,50%) var(--my,50%),rgba(236,75,87,.16),transparent 45%);opacity:0;transition:opacity .3s}
-.pain:hover{transform:translateY(-4px);border-color:rgba(236,75,87,.35)}
-.pain:hover::before{opacity:1}
-.pain .q{font:600 13px var(--f-mono);color:var(--coral);letter-spacing:.04em}
-.pain h3{font-size:24px;font-weight:600;margin-top:14px;position:relative}
-.pain p{color:var(--mute);margin-top:12px;font-size:16px;position:relative}
-.pain .fix{margin-top:20px;padding-top:16px;border-top:1px dashed var(--line);font-size:14.5px;color:#C9CDEA;display:flex;gap:10px;position:relative}
-.pain .fix b{color:var(--ok);font-family:var(--f-mono);font-weight:600;flex:none}
+/* pain band marquee */
+.band-wrap{overflow:hidden;padding-block:30px 10px}
+.band{background:var(--grad);transform:rotate(-2deg);margin:40px -20px 0;padding-block:20px;overflow:hidden;box-shadow:0 30px 60px -30px rgba(236,75,87,.5)}
+.band .track{animation-duration:28s;gap:36px}
+.band .track span{font:700 clamp(26px,3.4vw,44px) var(--f-display);color:#fff;letter-spacing:-.02em;display:inline-flex;align-items:center;gap:36px;text-transform:uppercase}
+.band .track span::after{content:"";width:.7em;height:.55em;background:#fff;opacity:.8;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 48'%3E%3Cpath d='M4 46 L22 4 L40 46M54 6V42' fill='none' stroke='%23000' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 48'%3E%3Cpath d='M4 46 L22 4 L40 46M54 6V42' fill='none' stroke='%23000' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat}
+.band .track span:nth-child(even){color:transparent;-webkit-text-stroke:1.5px rgba(255,255,255,.9)}
+
+/* team */
+.team-head{display:flex;justify-content:space-between;align-items:flex-end;gap:32px;flex-wrap:wrap}
+.clock{display:grid;gap:4px;text-align:right;padding:20px 26px;border-radius:20px;background:var(--ink-2);border:1px solid var(--line)}
+.clock b{font:700 52px/1 var(--f-display);font-variant-numeric:tabular-nums;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.clock small{color:var(--mute);font-size:13px}
+.clock .live{justify-self:end;font:500 11.5px var(--f-mono);text-transform:uppercase;letter-spacing:.1em}
+@media (max-width:700px){.clock{text-align:left}.clock .live{justify-self:start}}
+.team{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:48px}
+@media (max-width:1060px){.team{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:560px){.team{grid-template-columns:1fr}}
+.mate{position:relative;display:flex;flex-direction:column;padding:26px;border-radius:22px;background:var(--ink-2);border:1px solid var(--line);overflow:hidden;transition:transform .4s cubic-bezier(.2,.8,.2,1),border-color .4s}
+.mate::before{content:"";position:absolute;width:200px;height:200px;right:-90px;top:-90px;border-radius:50%;background:var(--grad);filter:blur(55px);opacity:.18;transition:opacity .5s}
+.mate:hover{transform:translateY(-6px);border-color:rgba(176,90,181,.45)}
+.mate:hover::before{opacity:.5}
+.mate h3{font-size:21px;font-weight:600;margin-top:20px;position:relative}
+.mate p{color:var(--mute);margin-top:8px;font-size:15px;position:relative;flex:1}
+.task{position:relative;display:flex;align-items:center;gap:10px;margin-top:18px;padding:10px 12px;border-radius:12px;background:rgba(75,214,163,.07);border:1px solid rgba(75,214,163,.2);font-size:13px;color:#CFF5E6;min-height:42px}
+.task i{flex:none;width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 10px var(--ok);animation:blink 1.4s infinite}
+.task span{transition:opacity .35s,transform .35s}
+.task span.swap{opacity:0;transform:translateY(6px)}
+.mate-you{background:var(--grad);border:0}
+.mate-you::before{display:none}
+.mate-you p{color:rgba(255,255,255,.9)}
+.mate-you .ico{background:linear-gradient(rgba(20,22,58,.35),rgba(20,22,58,.35)) padding-box,linear-gradient(rgba(255,255,255,.8),rgba(255,255,255,.8)) border-box}
+.mate-you .ico svg{stroke:#fff}
+.mate-you .btn{margin-top:18px;background:#fff;color:#14163A;align-self:flex-start;box-shadow:none}
+
+/* pillars */
+.pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:56px}
+@media (max-width:960px){.pillars{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:600px){.pillars{grid-template-columns:1fr}}
+.pil{position:relative;padding:30px;border-radius:24px;background:var(--ink-2);border:1px solid var(--line);overflow:hidden;transition:transform .4s cubic-bezier(.2,.8,.2,1),border-color .4s}
+.pil::before{content:"";position:absolute;width:220px;height:220px;right:-80px;top:-80px;border-radius:50%;background:var(--grad);filter:blur(60px);opacity:0;transition:opacity .5s}
+.pil:hover{transform:translateY(-6px);border-color:rgba(176,90,181,.45)}
+.pil:hover::before{opacity:.45}
+.pil h3{font-size:24px;font-weight:600;margin-top:22px;position:relative}
+.pil p{color:var(--mute);margin-top:10px;font-size:16px;position:relative}
+.pil .ico svg{animation:none}
+.pil:hover .ico svg{animation:wiggle .6s ease}
+@keyframes wiggle{30%{transform:rotate(-10deg) scale(1.1)}60%{transform:rotate(8deg)}}
+
+/* pain list */
+.plist{margin-top:56px;border-top:1px solid var(--line)}
+.prow{position:relative;display:grid;grid-template-columns:1.25fr 1fr;gap:32px;align-items:center;padding:34px 24px;border-bottom:1px solid var(--line);overflow:hidden;isolation:isolate;cursor:default}
+.prow::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--grad);transform:scaleY(0);transform-origin:bottom;transition:transform .55s cubic-bezier(.7,0,.2,1)}
+.prow:hover::before,.prow:focus-within::before{transform:scaleY(1)}
+.prow .ph{display:flex;gap:22px;align-items:center}
+.prow:hover .ico{background:linear-gradient(rgba(255,255,255,.15),rgba(255,255,255,.15)) padding-box,linear-gradient(135deg,#fff,#fff) border-box}
+.prow:hover .ico svg{stroke:#fff}
+@media (max-width:800px){.prow .ph{align-items:flex-start;gap:16px}.prow .ico{--s:44px}}
+.prow .tag{font:600 12px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--coral);transition:color .3s}
+.prow h3{font-size:clamp(28px,3.6vw,48px);font-weight:700;letter-spacing:-.03em;margin-top:8px;line-height:1.05;transition:transform .5s cubic-bezier(.2,.8,.2,1)}
+.prow:hover h3{transform:translateX(10px)}
+.prow:hover .tag{color:rgba(255,255,255,.85)}
+.prow .why{color:var(--mute);font-size:16.5px;transition:color .3s}
+.prow .fix{display:flex;gap:10px;margin-top:12px;font-weight:600;color:#fff;font-size:16px}
+.prow .fix::before{content:"→";color:var(--ok);transition:color .3s}
+.prow:hover .why{color:rgba(255,255,255,.88)}
+.prow:hover .fix::before{color:#fff}
+@media (max-width:800px){.prow{grid-template-columns:1fr;gap:12px;padding:28px 8px}}
 
 /* big statement */
 .statement{padding-block:40px 110px}
@@ -148,7 +258,8 @@ section{position:relative}
 .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:56px;counter-reset:s}
 @media (max-width:860px){.steps{grid-template-columns:1fr}}
 .step{padding:30px;border-radius:22px;background:linear-gradient(180deg,var(--ink-3),var(--ink-2));border:1px solid var(--line)}
-.step .n{font:700 64px/1 var(--f-display)}
+.step .sh{display:flex;justify-content:space-between;align-items:center}
+.step .n{font:700 64px/1 var(--f-display);opacity:.9}
 .step h3{font-size:24px;font-weight:600;margin-top:18px}
 .step p{color:var(--mute);margin-top:10px;font-size:16px}
 .step .when{display:inline-block;margin-top:18px;font:500 12px var(--f-mono);color:var(--lav);padding:6px 10px;border-radius:99px;border:1px solid var(--line)}
@@ -161,6 +272,9 @@ section{position:relative}
 .tab{all:unset;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-radius:14px;color:var(--mute);font-weight:500;transition:background .25s,color .25s;white-space:nowrap}
 .tab:hover{color:var(--fg);background:rgba(255,255,255,.04)}
 .tab[aria-selected="true"]{color:#fff;background:var(--ink-3);box-shadow:inset 0 0 0 1px var(--line)}
+.tab .tl{display:inline-flex;align-items:center;gap:12px}
+.ti{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:stroke .3s}
+.tab[aria-selected="true"] .ti{stroke:url(#g)}
 .tab small{font-family:var(--f-mono);font-size:11px;opacity:.6}
 .tab:focus-visible{outline:2px solid var(--coral)}
 .panel{background:var(--ink-2);border:1px solid var(--line);border-radius:26px;padding:34px;display:grid;grid-template-columns:1fr 1fr;gap:30px;min-height:420px;min-width:0}
@@ -171,6 +285,8 @@ section{position:relative}
 .panel li{display:flex;gap:12px;font-size:16px;color:#C9CDEA}
 .panel li::before{content:"";flex:none;width:18px;height:18px;margin-top:4px;border-radius:6px;background:var(--grad);mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Cpath d='M4 9.5l3.2 3L14 5.5' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Cpath d='M4 9.5l3.2 3L14 5.5' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat}
 .panel.swap{animation:swap .45s cubic-bezier(.2,.8,.2,1)}
+.panel.swap .ico svg{animation:drawin 1.2s cubic-bezier(.6,0,.2,1)}
+@keyframes drawin{from{stroke-dashoffset:80}}
 @keyframes swap{from{opacity:.2;transform:translateY(10px)}}
 .viz{background:var(--ink);border:1px solid var(--line);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:12px;font-size:14px}
 .viz-h{display:flex;justify-content:space-between;align-items:center;font-family:var(--f-mono);font-size:11.5px;color:var(--mute);text-transform:uppercase;letter-spacing:.08em}
@@ -205,6 +321,8 @@ input[type=range]:active::-webkit-slider-thumb{box-shadow:0 0 0 9px rgba(236,75,
 .calc-out>*{position:relative}
 .calc-out .lbl{font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.85}
 .big{font:700 clamp(52px,7vw,88px)/1 var(--f-display);font-variant-numeric:tabular-nums;letter-spacing:-.03em;margin-top:8px}
+.hrs{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:16px}
+.hrs b{font-family:var(--f-display)}
 .calc-split{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .calc-split div{background:rgba(8,10,22,.25);border-radius:14px;padding:14px}
 .calc-split small{display:block;font-size:12.5px;opacity:.85}
@@ -244,9 +362,9 @@ input[type=range]:active::-webkit-slider-thumb{box-shadow:0 0 0 9px rgba(236,75,
 .lp h2{font-size:clamp(32px,4.2vw,52px);font-weight:700;margin-top:16px}
 .lp p{color:#C9CDEA;margin-top:16px;font-size:18px;margin-bottom:28px}
 .perks{list-style:none;margin:0;padding:0;display:grid;gap:12px}
-.perks li{background:rgba(8,10,22,.5);border:1px solid var(--line);border-radius:16px;padding:16px 18px;display:grid;gap:2px;transition:transform .3s,border-color .3s}
+.perks li{background:rgba(8,10,22,.5);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:16px;transition:transform .3s,border-color .3s}
 .perks li:hover{transform:translateX(6px);border-color:rgba(236,75,87,.4)}
-.perks b{font:600 17px var(--f-display)}
+.perks b{display:block;font:600 17px var(--f-display)}
 .perks span{color:var(--mute);font-size:15px}
 /* faq */
 .faq{margin-top:48px;border-top:1px solid var(--line)}
@@ -287,6 +405,7 @@ footer img{height:30px;width:auto;opacity:.9}
 .js .rv:not(.in){transform:translateY(28px);opacity:.35}
 
 @media (prefers-reduced-motion:reduce){
+  .hero-mark path{stroke-dashoffset:0}
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
   .js .rv:not(.in){transform:none;opacity:1}
   html{scroll-behavior:auto}
@@ -297,10 +416,35 @@ footer img{height:30px;width:auto;opacity:.9}
 <body>
 
 
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5B7BFF"/><stop offset=".55" stop-color="#B05AB5"/><stop offset="1" stop-color="#FF5A66"/></linearGradient>
+  </defs>
+  <symbol id="brand" viewBox="0 0 64 48"><path d="M4 46 L22 4 L40 46" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 6 L22 0 L28 6" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity=".0"/><path d="M54 6 V42" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round"/></symbol>
+  <symbol id="i-staff" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="9" r="2.4"/><path d="M15.5 14.2c2.5-.3 4.5 1.3 5 4.3"/></symbol>
+  <symbol id="i-margin" viewBox="0 0 24 24"><path d="M3 17l5.5-5.5 4 4L21 7"/><path d="M15 7h6v6"/></symbol>
+  <symbol id="i-sales" viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4"/><path d="M12 13v4M8.5 20h7"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/><path d="M9 15l2 2 4-4"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="3"/><path d="M4 7.5l8 5.5 8-5.5"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 12.5l9 5 9-5"/><path d="M3 17l9 5 9-5"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 4v16h16"/><path d="M8 16v-4M12 16V8M16 16v-6M20 16V5"/></symbol>
+  <symbol id="i-chef" viewBox="0 0 24 24"><path d="M7 14.5a4 4 0 0 1-.5-7.9A5 5 0 0 1 16 5.5a4 4 0 0 1 1 9"/><path d="M7 14v5.5h10V14"/><path d="M7 17h10"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><path d="M3.5 7.5L12 3l8.5 4.5v9L12 21l-8.5-4.5z"/><path d="M3.5 7.5L12 12l8.5-4.5M12 12v9"/></symbol>
+  <symbol id="i-mega" viewBox="0 0 24 24"><path d="M4 10v4a1 1 0 0 0 1 1h2l7 4V5L7 9H5a1 1 0 0 0-1 1z"/><path d="M17.5 9a4 4 0 0 1 0 6"/><path d="M8 15l1 4.5"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8L3.5 9.7l5.9-.9z"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M20 12a8 8 0 0 1-11.8 7L4 20l1-4A8 8 0 1 1 20 12z"/><path d="M8.5 11h.01M12 11h.01M15.5 11h.01"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-7.5-4.4-7.5-10A4.3 4.3 0 0 1 12 7.3 4.3 4.3 0 0 1 19.5 10c0 5.6-7.5 10-7.5 10z"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/><path d="M12 8.5l1.3 2.2 2.2 1.3-2.2 1.3-1.3 2.2-1.3-2.2L8.5 12l2.2-1.3z"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></symbol>
+  <symbol id="i-calm" viewBox="0 0 24 24"><path d="M4 15c2.7-3 5.3-3 8 0s5.3 3 8 0"/><path d="M4 10c2.7-3 5.3-3 8 0s5.3 3 8 0"/></symbol>
+  <symbol id="i-euro" viewBox="0 0 24 24"><path d="M17 6.5A6.5 6.5 0 1 0 17 17.5"/><path d="M4.5 10.5h9M4.5 13.5h9"/></symbol>
+</svg>
 <nav class="nav" id="nav">
   <div class="wrap">
     <a class="logo" href="#top" aria-label="SERVAI home"><img src="data:image/png;base64,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" alt="SERVAI"></a>
     <div class="nav-links">
+      <a href="#team">Je team</a>
       <a href="#pijn">Herken je dit?</a>
       <a href="#hoe">Hoe het werkt</a>
       <a href="#modules">Platform</a>
@@ -312,42 +456,66 @@ footer img{height:30px;width:auto;opacity:.9}
 </nav>
 
 <header class="hero" id="top">
+  <div class="grad" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+  <svg class="hero-mark" viewBox="0 0 64 48" aria-hidden="true"><path class="hm1" d="M4 46 L22 4 L40 46"/><path class="hm2" d="M54 6 V42"/></svg>
   <div class="wrap">
     <div>
-      <span class="eyebrow">AI for hospitality</span>
+      <span class="pill"><b>24/7</b><svg class="mk" width="18" height="14"><use href="#brand"/></svg>Jouw digitale backoffice-team</span>
       <h1>
-        <span class="line"><span>Je zaak draait op data.</span></span>
-        <span class="line"><span class="gtext">Wij laten je het zien.</span></span>
+        <span class="l1">Jouw horeca backoffice.</span>
+        <span class="l2">Volledig geautomatiseerd.</span>
       </h1>
-      <p class="lede">SERVAI koppelt je kassa, reserveringen, rooster en inkoop. AI doet het werk, jij krijgt elke ochtend je cijfers op WhatsApp.</p>
+      <p class="roles">Je nieuwe
+        <span class="rot" id="rot" aria-live="off">
+          <span class="on"><em>controller</em></span>
+          <span><em>planner</em></span>
+          <span><em>inkoper</em></span>
+          <span><em>receptionist</em></span>
+          <span><em>marketeer</em></span>
+          <span><em>boekhouder</em></span>
+        </span>
+        werkt dag en nacht.</p>
+      <p class="lede">SERVAI is een digitaal team dat je hele backoffice overneemt. Administratie, planning, inkoop, reserveringen en marketing. 24/7, zonder ziekmeldingen, en het appt je alleen wat jij moet weten.</p>
       <div class="hero-ctas">
         <a class="btn btn-main" href="#demo">Plan een gratis demo <span class="arrow">→</span></a>
-        <a class="btn btn-ghost" href="#rekenen">Bereken je besparing</a>
+        <a class="btn btn-ghost" href="#rekenen">Wat laat ik liggen?</a>
       </div>
       <div class="proof">
         <div>
           <small>Gebouwd door het team achter</small>
           <div class="brands"><span>gosmart</span><span>TrueSafe</span><span>LUMIQ</span></div>
         </div>
+        <span class="sep"></span>
         <div class="stat">
           <div><b>16+</b>koppelingen</div>
-          <div><b>2 wk</b>tot live</div>
+          <div><b>14 dagen</b>tot live</div>
         </div>
       </div>
     </div>
 
-    <div class="phone" aria-label="Voorbeeld: SERVAI beantwoordt vragen via WhatsApp">
-      <div class="screen">
-        <div class="wa-head">
-          <div class="wa-av">S</div>
-          <div><b>SERVAI</b><small id="wa-status">online</small></div>
+    <div class="stage" id="stage">
+      <div class="toast t1"><span class="ic"><svg class="ti" style="stroke:#fff"><use href="#i-staff"/></svg></span><span><b>Loonkosten 34% vanavond</b>2 man te veel tot 21:00</span></div>
+      <div class="toast t2"><span class="ic"><svg class="ti" style="stroke:#fff"><use href="#i-sales"/></svg></span><span><b>Sanne: 14 desserts</b>Topverkoper van de week</span></div>
+      <div class="toast t3"><span class="ic"><svg class="ti" style="stroke:#fff"><use href="#i-euro"/></svg></span><span><b>Zalm +9% duurder</b>Marge zalmschotel −6%</span></div>
+      <div class="toast t4"><span class="ic"><svg class="ti" style="stroke:#fff"><use href="#i-cal"/></svg></span><span><b>Groep van 24 bevestigd</b>Aanbetaling ontvangen</span></div>
+      <div class="phone" aria-label="Voorbeeld: SERVAI beantwoordt vragen via WhatsApp">
+        <div class="screen">
+          <div class="wa-head">
+            <div class="wa-av">S</div>
+            <div><b>SERVAI</b><small id="wa-status">online</small></div>
+          </div>
+          <div class="wa-body" id="chat"></div>
+          <div class="wa-input"><div>Bericht</div><span><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M3 20l18-8L3 4v6l12 2-12 2z"/></svg></span></div>
         </div>
-        <div class="wa-body" id="chat"></div>
-        <div class="wa-input"><div>Bericht</div><span><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M3 20l18-8L3 4v6l12 2-12 2z"/></svg></span></div>
       </div>
     </div>
   </div>
 </header>
+
+<div class="band-wrap" aria-hidden="true"><div class="band"><div class="track" id="band">
+  <span>Controller</span><span>Planner</span><span>Inkoper</span><span>Receptie</span><span>Marketeer</span><span>Boekhouder</span><span>Analist</span><span>Dag en nacht</span>
+</div></div></div>
 
 <section class="logos" aria-label="Koppelingen">
   <p>Werkt samen met de systemen die je al gebruikt</p>
@@ -356,71 +524,81 @@ footer img{height:30px;width:auto;opacity:.9}
   </div></div>
 </section>
 
+<section class="sec" id="team" style="padding-bottom:60px">
+  <div class="wrap">
+    <div class="team-head">
+      <div class="sec-head rv">
+        <span class="eyebrow"><svg class="mk" viewBox="0 0 64 48"><use href="#brand" style="color:#8E95D0"/></svg>Je nieuwe backoffice</span>
+        <h2>Een heel team. <span class="gtext">Dat nooit slaapt.</span></h2>
+        <p>Zeven digitale collega's die het werk achter de schermen overnemen. Ze werken samen, kennen jouw zaak en melden zich alleen als jij iets moet beslissen.</p>
+      </div>
+      <div class="clock rv" aria-hidden="true"><span class="live">nu aan het werk</span><b id="clock">00:00</b><small>Jouw team werkt, ook nu.</small></div>
+    </div>
+    <div class="team" id="teamgrid">
+      <article class="mate rv" data-tasks="Facturen van vannacht geboekt|Kasverschil vrijdag gecontroleerd|Loonkosten-alert gestuurd|Cashflow-forecast bijgewerkt"><span class="ico"><svg><use href="#i-euro"/></svg></span><h3>De Controller</h3><p>Houdt omzet, kosten, kas en marges in de gaten en waarschuwt bij elke afwijking.</p><div class="task"><i></i><span></span></div></article>
+      <article class="mate rv" data-tasks="Rooster zaterdag geoptimaliseerd|Extra bediening ingepland 18:00|Uren gecheckt op Arbeidstijdenwet|Ziekmelding opgevangen"><span class="ico"><svg><use href="#i-staff"/></svg></span><h3>De Planner</h3><p>Maakt het rooster op basis van verwachte drukte, weer en reserveringen.</p><div class="task"><i></i><span></span></div></article>
+      <article class="mate rv" data-tasks="Bestelvoorstel Sligro klaargezet|Prijsstijging zalm gesignaleerd|Voorraad tegen verkoop gecheckt|Goedkopere friet gevonden"><span class="ico"><svg><use href="#i-box"/></svg></span><h3>De Inkoper</h3><p>Bestelt slim, vergelijkt leveranciers en ziet elke prijsstijging direct.</p><div class="task"><i></i><span></span></div></article>
+      <article class="mate rv" data-tasks="Groepsaanvraag 24p beantwoord|Aanbetaling opgevraagd|Wachtlijst: tafel 12 vergeven|No-show risico gemeld"><span class="ico"><svg><use href="#i-cal"/></svg></span><h3>De Receptionist</h3><p>Handelt reserveringen, partijen, mails en vragen af. Ook om drie uur 's nachts.</p><div class="task"><i></i><span></span></div></article>
+      <article class="mate rv" data-tasks="Post voor dinsdag ingepland|Actie naar 1.240 vaste gasten|Trend gespot: espresso martini|Nieuwe creative gemaakt"><span class="ico"><svg><use href="#i-mega"/></svg></span><h3>De Marketeer</h3><p>Plant social media, maakt creatives en vult rustige avonden met gerichte acties.</p><div class="task"><i></i><span></span></div></article>
+      <article class="mate rv" data-tasks="Antwoord op Google-review klaar|Verjaardagsmail verstuurd|Vaste gast herkend: tafel 7|Tevreden gast om review gevraagd"><span class="ico"><svg><use href="#i-heart"/></svg></span><h3>De Gastheer</h3><p>Beantwoordt reviews, herkent vaste gasten en zorgt dat ze terugkomen.</p><div class="task"><i></i><span></span></div></article>
+      <article class="mate rv" data-tasks="Dagrapport naar eigenaar gestuurd|Upselling-ranking bijgewerkt|Menu-analyse: risotto promoten|Weekcijfers naar het team"><span class="ico"><svg><use href="#i-chart"/></svg></span><h3>De Analist</h3><p>Zet alle data om in heldere rapportages en vertelt je wat je morgen anders moet doen.</p><div class="task"><i></i><span></span></div></article>
+      <article class="mate mate-you rv"><span class="ico"><svg><use href="#i-chat"/></svg></span><h3>En jij?</h3><p>Jij krijgt één WhatsApp met wat ertoe doet. De rest is geregeld.</p><a class="btn btn-main" href="#demo">Ontmoet je team <span class="arrow">→</span></a></article>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="waarde" style="padding-bottom:40px">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <span class="eyebrow"><svg class="mk" viewBox="0 0 64 48"><use href="#brand" style="color:#8E95D0"/></svg>Wat het je oplevert</span>
+      <h2>Alles wat je zaak <span class="gtext">beter maakt.</span></h2>
+      <p>Je backoffice draait vanzelf. Dat betekent meer dan betere cijfers: je krijgt je tijd terug, je team staat sterker en gasten komen vaker terug.</p>
+    </div>
+    <div class="pillars">
+      <div class="pil rv"><span class="ico"><svg><use href="#i-clock"/></svg></span><h3>Tijd terug</h3><p>Mails, offertes, facturen en rapportages lopen vanzelf. Jij staat weer op de vloer in plaats van achter de laptop.</p></div>
+      <div class="pil rv"><span class="ico"><svg><use href="#i-staff"/></svg></span><h3>Sterker team</h3><p>De juiste bezetting op elk uur, eerlijke inzichten per medewerker en coaching die je mensen beter maakt.</p></div>
+      <div class="pil rv"><span class="ico"><svg><use href="#i-heart"/></svg></span><h3>Blijere gasten</h3><p>Vaste gasten herkend, geen lege tafels, elke review beantwoord. Gastvrijheid die opvalt en bijblijft.</p></div>
+      <div class="pil rv"><span class="ico"><svg><use href="#i-euro"/></svg></span><h3>Meer omzet</h3><p>Betere upselling, slimmere prijzen, minder derving en voller op rustige dagen. Dat tikt elke dienst aan.</p></div>
+      <div class="pil rv"><span class="ico"><svg><use href="#i-calm"/></svg></span><h3>Rust in je hoofd</h3><p>Geen zeven systemen meer. Eén plek, één WhatsApp, en een seintje zodra er iets afwijkt.</p></div>
+      <div class="pil rv"><span class="ico"><svg><use href="#i-spark"/></svg></span><h3>Klaar voor groei</h3><p>Een tweede locatie of een hele keten: SERVAI schaalt mee zonder dat je overhead meegroeit.</p></div>
+    </div>
+  </div>
+</section>
+
 <section class="sec" id="pijn">
   <div class="wrap">
     <div class="sec-head rv">
-      <span class="eyebrow">Herken je dit?</span>
-      <h2>Hard werken, maar <span class="gtext">blind sturen.</span></h2>
-      <p>De meeste horecaondernemers hebben meer data dan ooit. Alleen kijkt er niemand naar, want daar is geen tijd voor. Ondertussen lekt het geld weg op plekken die je niet ziet.</p>
+      <span class="eyebrow"><svg class="mk" viewBox="0 0 64 48"><use href="#brand" style="color:#8E95D0"/></svg>De harde waarheid</span>
+      <h2>Je werkt je kapot. <span class="gtext">Het kan zoveel slimmer.</span></h2>
+      <p>Niet omdat je het slecht doet, maar omdat er geen tijd is. Je team draait diensten, jij draait alles. Herken je er één? Dan laat je tijd, gasten en geld liggen.</p>
     </div>
-
-    <div class="pain-grid">
-      <article class="pain rv">
-        <span class="q">"Waarom staan er vier man op een lege dinsdag?"</span>
-        <h3>Roosteren op gevoel</h3>
-        <p>Loonkosten zijn je grootste kostenpost, maar het rooster wordt gemaakt op onderbuik. Te druk met te weinig mensen, of te rustig met te veel.</p>
-        <div class="fix"><b>FIX</b>Roosteradvies per uur op basis van reserveringen, weer en historie.</div>
-      </article>
-      <article class="pain rv">
-        <span class="q">"Ik moet in zeven systemen inloggen."</span>
-        <h3>Data overal, inzicht nergens</h3>
-        <p>Kassa hier, reserveringen daar, uren in weer een andere app. Een totaalbeeld maken kost een avond Excel, dus het gebeurt niet.</p>
-        <div class="fix"><b>FIX</b>Alles in één overzicht, en elke ochtend een samenvatting op WhatsApp.</div>
-      </article>
-      <article class="pain rv">
-        <span class="q">"Ons populairste gerecht levert bijna niks op."</span>
-        <h3>Marge die verdampt</h3>
-        <p>De leverancier verhoogt stilletjes de prijs, maar je menukaart blijft hetzelfde. Je verkoopt meer en verdient minder.</p>
-        <div class="fix"><b>FIX</b>Alert bij elke prijsstijging, met het effect op de marge per gerecht.</div>
-      </article>
-      <article class="pain rv">
-        <span class="q">"Wie van mijn team verkoopt eigenlijk goed?"</span>
-        <h3>Upselling is onzichtbaar</h3>
-        <p>Het verschil tussen een gemiddelde en een sterke verkoper is een voorgerecht, een fles wijn, een koffie. Per avond, per tafel.</p>
-        <div class="fix"><b>FIX</b>Upselling-score per medewerker, met coaching en een teamscorebord.</div>
-      </article>
-      <article class="pain rv">
-        <span class="q">"Weer twee tafels niet komen opdagen."</span>
-        <h3>No-shows en lege stoelen</h3>
-        <p>Een gemiste tafel op zaterdag is omzet die nooit terugkomt. En de wachtlijst staat op een briefje bij de bar.</p>
-        <div class="fix"><b>FIX</b>No-show voorspelling, automatische aanbetaling en wachtlijst die zichzelf vult.</div>
-      </article>
-      <article class="pain rv">
-        <span class="q">"Ik zit 's avonds nog mails te beantwoorden."</span>
-        <h3>Admin die nooit ophoudt</h3>
-        <p>Groepsaanvragen, offertes, facturen, reviews, social media. Allemaal belangrijk, allemaal handwerk, allemaal na sluitingstijd.</p>
-        <div class="fix"><b>FIX</b>AI handelt mails, partijen en reviews af in jouw toon. Jij keurt goed.</div>
-      </article>
+    <div class="plist">
+      <div class="prow rv" tabindex="0"><div class="ph"><span class="ico"><svg><use href="#i-staff"/></svg></span><div><span class="tag">Personeel</span><h3>Vier man op een lege dinsdag.</h3></div></div><div><p class="why">Je rooster is een gok op basis van vorige week. Loonkosten zijn je grootste post, en die stuur je op onderbuik.</p><p class="fix">Roosteradvies per uur op reserveringen, weer en historie</p></div></div>
+      <div class="prow rv" tabindex="0"><div class="ph"><span class="ico"><svg><use href="#i-margin"/></svg></span><div><span class="tag">Marge</span><h3>Je bestseller kost je geld.</h3></div></div><div><p class="why">De leverancier verhoogt stilletjes de prijs. Je menukaart blijft gelijk. Je verkoopt meer en verdient minder.</p><p class="fix">Alert bij elke prijsstijging, met de marge per gerecht</p></div></div>
+      <div class="prow rv" tabindex="0"><div class="ph"><span class="ico"><svg><use href="#i-sales"/></svg></span><div><span class="tag">Verkoop</span><h3>Niemand weet wie goed verkoopt.</h3></div></div><div><p class="why">Eén medewerker verkoopt bij elke tafel een dessert, de ander nooit. Dat verschil zie je nergens terug.</p><p class="fix">Upselling-score per medewerker en een teamscorebord</p></div></div>
+      <div class="prow rv" tabindex="0"><div class="ph"><span class="ico"><svg><use href="#i-cal"/></svg></span><div><span class="tag">Reserveringen</span><h3>Zaterdag. Twee tafels komen niet.</h3></div></div><div><p class="why">Omzet die nooit terugkomt. En de wachtlijst? Die staat op een briefje bij de bar.</p><p class="fix">No-show voorspelling, aanbetaling en een wachtlijst die zichzelf vult</p></div></div>
+      <div class="prow rv" tabindex="0"><div class="ph"><span class="ico"><svg><use href="#i-mail"/></svg></span><div><span class="tag">Admin</span><h3>Om 01:00 nog mails beantwoorden.</h3></div></div><div><p class="why">Groepsaanvragen, facturen, reviews, social. Allemaal belangrijk, allemaal handwerk, allemaal na sluitingstijd.</p><p class="fix">AI handelt het af in jouw toon, jij keurt goed</p></div></div>
+      <div class="prow rv" tabindex="0"><div class="ph"><span class="ico"><svg><use href="#i-layers"/></svg></span><div><span class="tag">Overzicht</span><h3>Zeven systemen. Nul overzicht.</h3></div></div><div><p class="why">Kassa hier, rooster daar, inkoop in je mail. Een totaalbeeld kost een avond Excel, dus het gebeurt nooit.</p><p class="fix">Alles in één brein, elke ochtend je cijfers op WhatsApp</p></div></div>
     </div>
   </div>
 </section>
 
 <section class="statement">
   <div class="wrap">
-    <h2 id="statement"><span class="dim">SERVAI is geen</span> <span class="dim">extra systeem.</span> <span class="dim">Het is het brein</span> <span class="dim">boven al je systemen,</span> <span class="dim gtext-target">dat 24/7 meedenkt.</span></h2>
+    <h2 id="statement"><span class="dim">Jij runt de zaak.</span> <span class="dim">SERVAI runt</span> <span class="dim">alles daarachter.</span> <span class="dim">Dag en nacht,</span> <span class="dim">zonder pauze.</span></h2>
   </div>
 </section>
 
 <section class="sec" id="hoe" style="padding-top:0">
   <div class="wrap">
     <div class="sec-head rv">
-      <span class="eyebrow">Hoe het werkt</span>
+      <span class="eyebrow"><svg class="mk" viewBox="0 0 64 48"><use href="#brand" style="color:#8E95D0"/></svg>Hoe het werkt</span>
       <h2>Van losse data naar <span class="gtext">één brein</span> in drie stappen.</h2>
     </div>
     <div class="steps">
-      <div class="step rv"><div class="n gtext">1</div><h3>We koppelen alles</h3><p>Kassa, reserveringen, rooster, boekhouding en leveranciers. Jij hoeft niets te installeren of over te typen. Je team werkt gewoon door in hun eigen systemen.</p><span class="when">Week 1</span></div>
-      <div class="step rv"><div class="n gtext">2</div><h3>AI leert jouw zaak</h3><p>Je drukste uren, je hardlopers, je beste verkopers, je marges per gerecht. SERVAI bouwt een beeld dat precies klopt voor jouw situatie.</p><span class="when">Week 2</span></div>
-      <div class="step rv"><div class="n gtext">3</div><h3>Jij stuurt, AI doet het werk</h3><p>Elke ochtend je cijfers op WhatsApp, alerts als er iets afwijkt, en automatiseringen die uren handwerk overnemen. Vragen stel je gewoon in gewone taal.</p><span class="when">Vanaf dag 14</span></div>
+      <div class="step rv"><div class="sh"><span class="ico"><svg><use href="#i-link"/></svg></span><div class="n gtext">1</div></div><h3>We koppelen alles</h3><p>Kassa, reserveringen, rooster, boekhouding en leveranciers. Jij hoeft niets te installeren of over te typen. Je team werkt gewoon door in hun eigen systemen.</p><span class="when">Week 1</span></div>
+      <div class="step rv"><div class="sh"><span class="ico"><svg><use href="#i-spark"/></svg></span><div class="n gtext">2</div></div><h3>AI leert jouw zaak</h3><p>Je drukste uren, je hardlopers, je beste verkopers, je marges per gerecht. SERVAI bouwt een beeld dat precies klopt voor jouw situatie.</p><span class="when">Week 2</span></div>
+      <div class="step rv"><div class="sh"><span class="ico"><svg><use href="#i-chat"/></svg></span><div class="n gtext">3</div></div><h3>Jij stuurt, AI doet het werk</h3><p>Elke ochtend je cijfers op WhatsApp, alerts als er iets afwijkt, en automatiseringen die uren handwerk overnemen. Vragen stel je gewoon in gewone taal.</p><span class="when">Vanaf dag 14</span></div>
     </div>
   </div>
 </section>
@@ -428,7 +606,7 @@ footer img{height:30px;width:auto;opacity:.9}
 <section class="sec" id="modules" style="padding-top:20px">
   <div class="wrap">
     <div class="sec-head rv">
-      <span class="eyebrow">Het platform</span>
+      <span class="eyebrow"><svg class="mk" viewBox="0 0 64 48"><use href="#brand" style="color:#8E95D0"/></svg>Het platform</span>
       <h2>Elke afdeling. <span class="gtext">Eén platform.</span></h2>
       <p>Van keuken tot kantoor. Kies een afdeling en zie wat SERVAI daar voor je doet.</p>
     </div>
@@ -442,7 +620,7 @@ footer img{height:30px;width:auto;opacity:.9}
 <section class="sec" id="rekenen" style="padding-top:20px">
   <div class="wrap">
     <div class="sec-head rv">
-      <span class="eyebrow">Rekenvoorbeeld</span>
+      <span class="eyebrow"><svg class="mk" viewBox="0 0 64 48"><use href="#brand" style="color:#8E95D0"/></svg>Rekenvoorbeeld</span>
       <h2>Wat laat jij <span class="gtext">liggen?</span></h2>
       <p>Schuif met je eigen cijfers en zie een indicatie van wat slimmer roosteren, betere marges en minder handwerk per maand kunnen opleveren.</p>
     </div>
@@ -471,6 +649,7 @@ footer img{height:30px;width:auto;opacity:.9}
         <div>
           <div class="lbl">Indicatie besparing per maand</div>
           <div class="big" id="o-total">€ 0</div>
+          <div class="hrs"><svg class="ti" style="stroke:#fff"><use href="#i-clock"/></svg>en <b id="o-hrs">0</b> uur per maand terug, dat is <b id="o-fte">0</b> fte</div>
         </div>
         <div class="calc-split">
           <div><small>Slimmer roosteren</small><b id="o-staff">€ 0</b></div>
@@ -488,13 +667,13 @@ footer img{height:30px;width:auto;opacity:.9}
 <section class="sec" style="padding-top:20px">
   <div class="wrap">
     <div class="sec-head rv">
-      <span class="eyebrow">Voor wie</span>
+      <span class="eyebrow"><svg class="mk" viewBox="0 0 64 48"><use href="#brand" style="color:#8E95D0"/></svg>Voor wie</span>
       <h2>Gebouwd voor elke <span class="gtext">schaal.</span></h2>
     </div>
     <div class="who">
-      <div class="who-c rv"><span class="tag">1 locatie</span><h3>De zelfstandige zaak</h3><p>Je staat zelf achter de bar en in de keuken. Je hebt geen tijd voor dashboards en geen budget voor een controller.</p><div class="gain"><b>Wat het je oplevert</b>Groeien zonder extra mensen aan te nemen. Je cijfers op WhatsApp, de admin uit handen.</div></div>
-      <div class="who-c rv"><span class="tag">2 tot 5 locaties</span><h3>De groeiende groep</h3><p>Je kunt niet meer overal tegelijk zijn. Elke locatie werkt net iets anders, en je ziet pas aan het eind van de maand wat er misging.</p><div class="gain"><b>Wat het je oplevert</b>Locaties naast elkaar, alerts als er iets afwijkt, en sturen op dezelfde cijfers.</div></div>
-      <div class="who-c rv"><span class="tag">Keten &amp; enterprise</span><h3>De grote organisatie</h3><p>Veel data, veel systemen, veel mensen. De inzichten zitten erin, maar ze komen niet op tijd bij de juiste persoon.</p><div class="gain"><b>Wat het je oplevert</b>Benchmarking, eigen KPI's, rollen en rechten, en koppelingen met je BI en datawarehouse.</div></div>
+      <div class="who-c rv"><span class="ico"><svg><use href="#i-chef"/></svg></span><span class="tag" style="display:block;margin-top:22px">1 locatie</span><h3>De zelfstandige zaak</h3><p>Je staat zelf achter de bar en in de keuken. Je hebt geen tijd voor dashboards en geen budget voor een controller.</p><div class="gain"><b>Wat het je oplevert</b>Groeien zonder extra mensen aan te nemen. Je cijfers op WhatsApp, de admin uit handen.</div></div>
+      <div class="who-c rv"><span class="ico"><svg><use href="#i-layers"/></svg></span><span class="tag" style="display:block;margin-top:22px">2 tot 5 locaties</span><h3>De groeiende groep</h3><p>Je kunt niet meer overal tegelijk zijn. Elke locatie werkt net iets anders, en je ziet pas aan het eind van de maand wat er misging.</p><div class="gain"><b>Wat het je oplevert</b>Locaties naast elkaar, alerts als er iets afwijkt, en sturen op dezelfde cijfers.</div></div>
+      <div class="who-c rv"><span class="ico"><svg><use href="#i-chart"/></svg></span><span class="tag" style="display:block;margin-top:22px">Keten &amp; enterprise</span><h3>De grote organisatie</h3><p>Veel data, veel systemen, veel mensen. De inzichten zitten erin, maar ze komen niet op tijd bij de juiste persoon.</p><div class="gain"><b>Wat het je oplevert</b>Benchmarking, eigen KPI's, rollen en rechten, en koppelingen met je BI en datawarehouse.</div></div>
     </div>
   </div>
 </section>
@@ -503,7 +682,7 @@ footer img{height:30px;width:auto;opacity:.9}
   <div class="wrap">
     <div class="allin rv">
       <div>
-        <span class="eyebrow">Geen pakketten, geen gedoe</span>
+        <span class="eyebrow"><svg class="mk" viewBox="0 0 64 48"><use href="#brand" style="color:#8E95D0"/></svg>Geen pakketten, geen gedoe</span>
         <h2>Je krijgt alles. <span class="gtext">Wij zetten aan wat jij nodig hebt.</span></h2>
         <p>Geen ingewikkelde abonnementen waarbij de goede functies net in het duurdere pakket zitten. Bij de onboarding bekijken we samen je zaak en zetten we precies aan wat waarde oplevert. Groei je, dan groeit SERVAI mee.</p>
       </div>
@@ -526,16 +705,16 @@ footer img{height:30px;width:auto;opacity:.9}
   <div class="wrap">
     <div class="lp rv">
       <div>
-        <span class="eyebrow">Launching partners</span>
+        <span class="eyebrow"><svg class="mk" viewBox="0 0 64 48"><use href="#brand" style="color:#8E95D0"/></svg>Launching partners</span>
         <h2>We starten met <span class="gtext">5 horecazaken.</span></h2>
         <p>We bouwen SERVAI samen met ondernemers uit de praktijk. Als launching partner krijg je SERVAI met een flinke korting, persoonlijke onboarding door ons team en directe invloed op wat we als volgende bouwen.</p>
         <a class="btn btn-main" href="#demo">Meld je aan als partner <span class="arrow">→</span></a>
       </div>
       <ul class="perks">
-        <li><b>Introductieprijs</b><span>Vast tarief voor de eerste 12 maanden</span></li>
-        <li><b>Persoonlijke onboarding</b><span>We richten alles samen met je in, op locatie</span></li>
-        <li><b>Jouw wensen eerst</b><span>Maandelijks overleg over nieuwe functies</span></li>
-        <li><b>Je zaak als case</b><span>Samen laten zien wat het oplevert, als jij dat wilt</span></li>
+        <li><span class="ico" style="--s:44px"><svg><use href="#i-euro"/></svg></span><div><b>Introductieprijs</b><span>Vast tarief voor de eerste 12 maanden</span></div></li>
+        <li><span class="ico" style="--s:44px"><svg><use href="#i-staff"/></svg></span><div><b>Persoonlijke onboarding</b><span>We richten alles samen met je in, op locatie</span></div></li>
+        <li><span class="ico" style="--s:44px"><svg><use href="#i-chat"/></svg></span><div><b>Jouw wensen eerst</b><span>Maandelijks overleg over nieuwe functies</span></div></li>
+        <li><span class="ico" style="--s:44px"><svg><use href="#i-star"/></svg></span><div><b>Je zaak als case</b><span>Samen laten zien wat het oplevert, als jij dat wilt</span></div></li>
       </ul>
     </div>
   </div>
@@ -544,7 +723,7 @@ footer img{height:30px;width:auto;opacity:.9}
 <section class="sec" id="faq" style="padding-top:20px">
   <div class="wrap">
     <div class="sec-head rv">
-      <span class="eyebrow">Veelgestelde vragen</span>
+      <span class="eyebrow"><svg class="mk" viewBox="0 0 64 48"><use href="#brand" style="color:#8E95D0"/></svg>Veelgestelde vragen</span>
       <h2>Goede vraag.</h2>
     </div>
     <div class="faq">
@@ -563,8 +742,8 @@ footer img{height:30px;width:auto;opacity:.9}
     <div class="cta rv">
       <div class="cta-in">
         <div>
-          <h2>Zie je eigen zaak in 30 minuten.</h2>
-          <p>Plan een gratis demo. We laten zien wat SERVAI met jouw systemen en jouw cijfers kan doen.</p>
+          <h2>Ontmoet je nieuwe backoffice.</h2>
+          <p>Plan een gratis demo van 30 minuten. We laten zien welk werk SERVAI in jouw zaak overneemt, met jouw systemen en jouw cijfers.</p>
           <ul>
             <li>Gratis en vrijblijvend</li>
             <li>Inzicht in waar jouw besparing zit</li>
@@ -602,9 +781,24 @@ footer img{height:30px;width:auto;opacity:.9}
 document.documentElement.classList.add('js');
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-/* nav border */
+/* nav */
 const nav=document.getElementById('nav');
-addEventListener('scroll',()=>nav.classList.toggle('scrolled',scrollY>10),{passive:true});
+const onS=()=>nav.classList.toggle('scrolled',scrollY>20);addEventListener('scroll',onS,{passive:true});onS();
+
+/* rotating pain words */
+(()=>{const w=[...document.querySelectorAll('#rot > span')];if(RM)return;let i=0;
+const box=document.getElementById('rot');const fit=()=>box.style.width=w[i].firstElementChild.offsetWidth+'px';fit();addEventListener('resize',fit);
+setInterval(()=>{const a=w[i];a.classList.remove('on');a.classList.add('out');setTimeout(()=>a.classList.remove('out'),700);i=(i+1)%w.length;w[i].classList.add('on');fit()},2400)})();
+
+/* floating toasts + tilt */
+(()=>{const t=[...document.querySelectorAll('.toast')];
+if(RM){t.forEach(x=>x.classList.add('show'));return}
+t.forEach((x,i)=>setTimeout(()=>x.classList.add('show'),900+i*650));
+let k=0;setInterval(()=>{const x=t[k%t.length];x.classList.remove('show');setTimeout(()=>x.classList.add('show'),700);k++},3200);
+const st=document.getElementById('stage');
+document.querySelector('.hero').addEventListener('pointermove',e=>{if(e.pointerType!=='mouse')return;const r=st.getBoundingClientRect(),dx=(e.clientX-(r.left+r.width/2))/r.width,dy=(e.clientY-(r.top+r.height/2))/r.height;
+st.style.transform=`rotateY(${dx*8}deg) rotateX(${-dy*6}deg)`;t.forEach((x,i)=>x.style.translate=`${dx*(14+i*6)}px ${dy*(10+i*4)}px`)});
+document.querySelector('.hero').addEventListener('pointerleave',()=>{st.style.transform='';t.forEach(x=>x.style.translate='')});})();
 
 /* whatsapp demo */
 (()=>{const chat=document.getElementById('chat'),st=document.getElementById('wa-status');
@@ -623,11 +817,17 @@ let i=0;function step(){if(i>=conv.length){setTimeout(()=>{chat.innerHTML='';i=0
 const c=conv[i++];if(c.me){add(c.me,'me');setTimeout(step,900)}else{const ty=document.createElement('div');ty.className='typing';ty.innerHTML='<i></i><i></i><i></i>';chat.appendChild(ty);st.textContent='typt...';setTimeout(()=>{ty.remove();st.textContent='online';add(c.ai,'ai');setTimeout(step,2400)},1300)}}
 add(conv[0].me,'me');add(conv[1].ai,'ai');i=2;setTimeout(step,1800);})();
 
+/* team tasks + clock */
+(()=>{const ck=document.getElementById('clock');const tick=()=>{const d=new Date();ck.textContent=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};tick();setInterval(tick,15000);
+const mates=[...document.querySelectorAll('.mate[data-tasks]')];
+mates.forEach((m,i)=>{const t=m.dataset.tasks.split('|'),sp=m.querySelector('.task span');let k=0;sp.textContent=t[0];
+if(RM)return;setTimeout(()=>setInterval(()=>{sp.classList.add('swap');setTimeout(()=>{k=(k+1)%t.length;sp.textContent=t[k];sp.classList.remove('swap')},350)},3600+i*170),i*450)})})();
+
 /* marquee duplicate */
-const tr=document.getElementById('track');tr.innerHTML+=tr.innerHTML;
+['track','band'].forEach(id=>{const tr=document.getElementById(id);tr.innerHTML+=tr.innerHTML});
 
 /* pain glow */
-document.querySelectorAll('.pain').forEach(p=>p.addEventListener('pointermove',e=>{const r=p.getBoundingClientRect();p.style.setProperty('--mx',e.clientX-r.left+'px');p.style.setProperty('--my',e.clientY-r.top+'px')}));
+document.querySelectorAll('nothing-x').forEach(p=>p.addEventListener('pointermove',e=>{const r=p.getBoundingClientRect();p.style.setProperty('--mx',e.clientX-r.left+'px');p.style.setProperty('--my',e.clientY-r.top+'px')}));
 
 /* reveal */
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{rootMargin:'0px 0px -8% 0px'});
@@ -639,31 +839,31 @@ if(RM)parts.forEach(s=>s.classList.add('lit'));else{addEventListener('scroll',up
 
 /* modules */
 const M=[
- {k:'Finance',s:'marge & cashflow',h:'Weet elke ochtend waar je staat.',l:['Realtime omzet per uur, dienst en categorie','Loonkosten als % van omzet, live per dienst','Kasverschillen en storno\'s automatisch gecontroleerd','Facturen uit je mail herkend en geboekt','Cashflow-forecast: zie krapte aankomen'],
+ {i:'i-euro',k:'Finance',s:'marge & cashflow',h:'Weet elke ochtend waar je staat.',l:['Realtime omzet per uur, dienst en categorie','Loonkosten als % van omzet, live per dienst','Kasverschillen en storno\'s automatisch gecontroleerd','Facturen uit je mail herkend en geboekt','Cashflow-forecast: zie krapte aankomen'],
   v:`<div class="viz-h"><span>Gisteren</span><span class="live">live</span></div><div class="kpis"><div class="kpi"><small>Omzet</small><b>€ 8.940</b><em class="up">+12%</em></div><div class="kpi"><small>Loonkosten</small><b>27%</b><em class="up">−3%</em></div><div class="kpi"><small>Gem. besteding</small><b>€ 54,50</b><em class="up">+€ 3,10</em></div><div class="kpi"><small>Kasverschil</small><b>€ 0</b><em class="up">ok</em></div></div><p class="note">Voorbeelddata</p>`},
- {k:'Bediening',s:'upselling',h:'Zie wie er écht verkoopt.',l:['Upselling-score per medewerker','Omzet per gewerkt uur en per tafel','Wie verkoopt welk gerecht en wanneer','Teamscorebord en wekelijkse winnaar via WhatsApp','Afwijkende kortingen en voids gesignaleerd'],
+ {i:'i-sales',k:'Bediening',s:'upselling',h:'Zie wie er écht verkoopt.',l:['Upselling-score per medewerker','Omzet per gewerkt uur en per tafel','Wie verkoopt welk gerecht en wanneer','Teamscorebord en wekelijkse winnaar via WhatsApp','Afwijkende kortingen en voids gesignaleerd'],
   v:`<div class="viz-h"><span>Upselling deze week</span><span class="live">live</span></div>${[['Sanne',92,'92'],['Daan',78,'78'],['Yara',71,'71'],['Mo',54,'54'],['Lisa',38,'38']].map(r=>`<div class="bar-row"><span>${r[0]}</span><span class="bar"><i data-w="${r[1]}"></i></span><span>${r[2]}</span></div>`).join('')}<p class="note">Score 0–100 · voorbeelddata</p>`},
- {k:'Keuken & menu',s:'hardlopers',h:'Elk gerecht verdient zijn plek.',l:['Hardlopers en slapers per dag en seizoen','Menu engineering: populariteit × marge','Kostprijs per gerecht, automatisch bijgewerkt','Prep-lijst op basis van verwachte drukte','Allergenen per gerecht vastgelegd'],
+ {i:'i-chef',k:'Keuken & menu',s:'hardlopers',h:'Elk gerecht verdient zijn plek.',l:['Hardlopers en slapers per dag en seizoen','Menu engineering: populariteit × marge','Kostprijs per gerecht, automatisch bijgewerkt','Prep-lijst op basis van verwachte drukte','Allergenen per gerecht vastgelegd'],
   v:`<div class="viz-h"><span>Marge per gerecht</span><span>deze maand</span></div>${[['Steak',74,'74%'],['Burger',69,'69%'],['Risotto',81,'81%'],['Zalm',61,'61%'],['Dame blanche',86,'86%']].map(r=>`<div class="bar-row"><span>${r[0]}</span><span class="bar"><i data-w="${r[1]}"></i></span><span>${r[2]}</span></div>`).join('')}<div class="alert"><b>!</b><span>Zalm +9% bij leverancier. Marge zakte van 67% naar 61%.</span></div>`},
- {k:'Personeel',s:'roosters',h:'De juiste mensen op het juiste uur.',l:['Roosteradvies per uur op basis van forecast','Gepland vs. gewerkt, automatisch vergeleken','Arbeidstijdenwet-check, ook voor jongeren','Onboarding en menukennis via WhatsApp','Uren direct door naar je salarisverwerking'],
+ {i:'i-staff',k:'Personeel',s:'roosters',h:'De juiste mensen op het juiste uur.',l:['Roosteradvies per uur op basis van forecast','Gepland vs. gewerkt, automatisch vergeleken','Arbeidstijdenwet-check, ook voor jongeren','Onboarding en menukennis via WhatsApp','Uren direct door naar je salarisverwerking'],
   v:`<div class="viz-h"><span>Zaterdag · bezetting vs. advies</span></div>${[['16:00',40,'3 → 2'],['18:00',85,'5 → 6'],['20:00',100,'6 → 7'],['22:00',55,'5 → 3'],['00:00',20,'3 → 1']].map(r=>`<div class="bar-row"><span>${r[0]}</span><span class="bar"><i data-w="${r[1]}"></i></span><span>${r[2]}</span></div>`).join('')}<p class="note">Ingepland → advies SERVAI · voorbeelddata</p>`},
- {k:'Reserveringen',s:'bezetting',h:'Nooit meer een lege tafel op zaterdag.',l:['Bezettingsforecast met weer en evenementen','No-show voorspelling en automatische aanbetaling','Wachtlijst die vrije tafels zelf vult','Groepen en partijen zonder handwerk','Gastprofielen, verjaardagen en win-backmails'],
+ {i:'i-cal',k:'Reserveringen',s:'bezetting',h:'Nooit meer een lege tafel op zaterdag.',l:['Bezettingsforecast met weer en evenementen','No-show voorspelling en automatische aanbetaling','Wachtlijst die vrije tafels zelf vult','Groepen en partijen zonder handwerk','Gastprofielen, verjaardagen en win-backmails'],
   v:`<div class="viz-h"><span>Komende week</span><span>verwachte bezetting</span></div>${[['Ma',38,'38%'],['Di',44,'44%'],['Wo',61,'61%'],['Do',72,'72%'],['Vr',96,'96%'],['Za',100,'100%'],['Zo',83,'83%']].map(r=>`<div class="bar-row"><span>${r[0]}</span><span class="bar"><i data-w="${r[1]}"></i></span><span>${r[2]}</span></div>`).join('')}<p class="note">SERVAI stelt een actie voor op maandag en dinsdag</p>`},
- {k:'Inkoop',s:'leveranciers',h:'Koop slimmer, gooi minder weg.',l:['Prijsstijgingsalerts per leverancier','Bestelvoorstel op basis van forecast','Derving en afval inzichtelijk','Verbruik vs. verkoop: zie waar het lekt','Leveranciers vergelijken per product'],
+ {i:'i-box',k:'Inkoop',s:'leveranciers',h:'Koop slimmer, gooi minder weg.',l:['Prijsstijgingsalerts per leverancier','Bestelvoorstel op basis van forecast','Derving en afval inzichtelijk','Verbruik vs. verkoop: zie waar het lekt','Leveranciers vergelijken per product'],
   v:`<div class="viz-h"><span>Prijsalerts</span><span class="live">vandaag</span></div><div class="alert"><b>+9%</b><span>Zalmfilet · effect −€ 410 per maand</span></div><div class="alert"><b>+6%</b><span>Room 35% · effect −€ 95 per maand</span></div><div class="alert" style="background:rgba(75,214,163,.08);border-color:rgba(75,214,163,.35)"><b style="color:var(--ok)">−4%</b><span>Friet · andere leverancier goedkoper</span></div><p class="note">Voorbeelddata</p>`},
- {k:'Marketing',s:'social & creatives',h:'Vul rustige avonden automatisch.',l:['Contentkalender en AI-creatives','Automatisch een actie posten bij een rustige forecast','Zien welke posts reserveringen opleveren','Trends en concurrentie in de buurt','Nieuwsbrieven naar de juiste gasten'],
+ {i:'i-mega',k:'Marketing',s:'social & creatives',h:'Vul rustige avonden automatisch.',l:['Contentkalender en AI-creatives','Automatisch een actie posten bij een rustige forecast','Zien welke posts reserveringen opleveren','Trends en concurrentie in de buurt','Nieuwsbrieven naar de juiste gasten'],
   v:`<div class="viz-h"><span>Voorstel voor dinsdag</span></div><div class="kpi"><small>Forecast</small><b>44% bezet</b><em class="down">rustig</em></div><div class="kpi"><small>Actie</small><b style="font-size:17px">"Pasta-dinsdag" post + mail naar 1.240 vaste gasten</b></div><div class="kpi"><small>Verwacht effect</small><b>+18 couverts</b></div><p class="note">Jij keurt goed, SERVAI plaatst · voorbeelddata</p>`},
- {k:'Reviews',s:'reputatie',h:'Elke review beantwoord, in jouw toon.',l:['Google, TripAdvisor en TheFork op één plek','Waar klagen en complimenteren gasten over','AI-conceptantwoord voor elke review','Direct een WhatsApp bij een slechte review','Tevreden gasten automatisch om een review vragen'],
+ {i:'i-star',k:'Reviews',s:'reputatie',h:'Elke review beantwoord, in jouw toon.',l:['Google, TripAdvisor en TheFork op één plek','Waar klagen en complimenteren gasten over','AI-conceptantwoord voor elke review','Direct een WhatsApp bij een slechte review','Tevreden gasten automatisch om een review vragen'],
   v:`<div class="viz-h"><span>Waar gasten het over hebben</span><span>30 dagen</span></div>${[['Eten',88,'+'],['Sfeer',82,'+'],['Service',71,'+'],['Wachttijd',34,'−'],['Prijs',58,'±']].map(r=>`<div class="bar-row"><span>${r[0]}</span><span class="bar"><i data-w="${r[1]}"></i></span><span>${r[2]}</span></div>`).join('')}<p class="note">Sentiment 0–100 · voorbeelddata</p>`}
 ];
 const tabs=document.getElementById('tabs'),panel=document.getElementById('panel');
 function show(i,focus){[...tabs.children].forEach((t,j)=>{t.setAttribute('aria-selected',j===i);t.tabIndex=j===i?0:-1});const m=M[i];
-panel.innerHTML=`<div><h3>${m.h}</h3><ul>${m.l.map(x=>`<li>${x}</li>`).join('')}</ul></div><div class="viz">${m.v}</div>`;
+panel.innerHTML=`<div><span class="ico" style="margin-bottom:22px"><svg><use href="#${m.i}"/></svg></span><h3>${m.h}</h3><ul>${m.l.map(x=>`<li>${x}</li>`).join('')}</ul></div><div class="viz">${m.v}</div>`;
 panel.classList.remove('swap');void panel.offsetWidth;panel.classList.add('swap');
 requestAnimationFrame(()=>setTimeout(()=>panel.querySelectorAll('.bar i').forEach(b=>b.style.width=b.dataset.w+'%'),60));
 if(focus)tabs.children[i].focus();cur=i}
 let cur=0;
-M.forEach((m,i)=>{const b=document.createElement('button');b.className='tab';b.setAttribute('role','tab');b.innerHTML=`${m.k}<small>${m.s}</small>`;b.onclick=()=>{show(i);stopAuto()};tabs.appendChild(b)});
+M.forEach((m,i)=>{const b=document.createElement('button');b.className='tab';b.setAttribute('role','tab');b.innerHTML=`<span class="tl"><svg class="ti"><use href="#${m.i}"/></svg>${m.k}</span><small>${m.s}</small>`;b.onclick=()=>{show(i);stopAuto()};tabs.appendChild(b)});
 tabs.addEventListener('keydown',e=>{if(['ArrowDown','ArrowRight'].includes(e.key)){e.preventDefault();show((cur+1)%M.length,1);stopAuto()}if(['ArrowUp','ArrowLeft'].includes(e.key)){e.preventDefault();show((cur-1+M.length)%M.length,1);stopAuto()}});
 show(0);let auto=RM?null:setInterval(()=>{const r=panel.getBoundingClientRect();if(r.top<innerHeight&&r.bottom>0)show((cur+1)%M.length)},5500);function stopAuto(){clearInterval(auto)}
 
@@ -674,7 +874,7 @@ function calc(){C.forEach(i=>i.style.setProperty('--p',(i.value-i.min)/(i.max-i.
 const[rev,hrs,wage,adm]=C.map(i=>+i.value);
 document.getElementById('o-rev').textContent=eur(rev);document.getElementById('o-hours').textContent=hrs+' uur';document.getElementById('o-wage').textContent=eur(wage);document.getElementById('o-admin').textContent=adm+' uur';
 const staff=hrs*4.33*wage*.06,margin=rev*.015,time=adm*4.33*.6*35,tot=staff+margin+time;
-document.getElementById('o-staff').textContent=eur(staff);document.getElementById('o-margin').textContent=eur(margin);document.getElementById('o-time').textContent=eur(time);document.getElementById('o-year').textContent=eur(tot*12);
+document.getElementById('o-staff').textContent=eur(staff);document.getElementById('o-margin').textContent=eur(margin);document.getElementById('o-time').textContent=eur(time);document.getElementById('o-year').textContent=eur(tot*12);{const h=adm*4.33*.6+hrs*4.33*.06;document.getElementById('o-hrs').textContent=Math.round(h);document.getElementById('o-fte').textContent=(h/(38*4.33)).toLocaleString('nl-NL',{maximumFractionDigits:1});}
 tween(tot)}
 let shown=0,raf;function tween(to){cancelAnimationFrame(raf);const from=shown,t0=performance.now();const el=document.getElementById('o-total');(function f(t){const p=RM?1:Math.min(1,(t-t0)/450),v=from+(to-from)*(1-Math.pow(1-p,3));el.textContent=eur(v);shown=v;if(p<1)raf=requestAnimationFrame(f)})(t0)}
 C.forEach(i=>i.addEventListener('input',calc));calc();
