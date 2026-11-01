@@ -61,17 +61,17 @@ section{position:relative}
 .nav{position:fixed;top:0;left:0;right:0;z-index:50;padding-top:env(safe-area-inset-top,0px);transition:background .35s,border-color .35s,backdrop-filter .35s;border-bottom:1px solid transparent}
 .nav.scrolled{background:rgba(8,10,22,.72);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom-color:var(--line)}
 .nav .wrap{display:flex;align-items:center;justify-content:space-between;height:72px;gap:20px}
-.logo img{height:22px;width:auto;display:block}
-.nav-links{display:flex;gap:22px;white-space:nowrap;font-size:15px;color:rgba(255,255,255,.8);font-weight:500}
+.logo{flex:0 0 auto}.logo img{height:22px;width:auto;max-width:none;display:block;flex:none}
+.nav-links{display:flex;gap:24px;margin-left:16px;white-space:nowrap;min-width:0;font-size:15px;color:rgba(255,255,255,.8);font-weight:500}
 .nav-links a{text-decoration:none;transition:color .2s}.nav-links a:hover{color:#fff}
 .nav .btn{padding:11px 20px;font-size:14px;background:#fff;color:#14163A;box-shadow:none}
 .nav .btn:hover{transform:translateY(-1px)}
-@media (max-width:1180px){.nav-links{display:none}}
+@media (max-width:1360px){.nav-links{display:none}}
 .nav-cta{display:flex;align-items:center;gap:8px}
 .login{display:inline-flex;align-items:center;gap:8px;padding:11px 20px;line-height:1;border-radius:999px;font-size:14px;font-weight:600;color:#fff;text-decoration:none;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.08);backdrop-filter:blur(8px);transition:background .2s,border-color .2s}
 .login:hover{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.5)}
 .login svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
-.nav .login,.nav .btn{height:42px;padding:0 20px;min-width:136px;justify-content:center;box-sizing:border-box}
+.nav .login,.nav .btn{height:40px;padding:0 16px;min-width:0;font-size:14px;justify-content:center;box-sizing:border-box}
 @media (max-width:420px){.nav .login,.nav .btn{height:38px;padding:0 11px;min-width:0;font-size:13px;gap:6px}}
 
 /* icons */
@@ -514,7 +514,6 @@ footer img{height:30px;width:auto;opacity:.9}
     <div class="nav-links">
       <a href="#team">Je team</a>
       <a href="#personeel">Personeelskosten</a>
-      <a href="#pijn">Herken je dit?</a>
       <a href="#hoe">Hoe het werkt</a>
       <a href="#modules">Platform</a>
       <a href="#rekenen">Besparing</a>

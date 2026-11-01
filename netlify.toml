@@ -1,0 +1,23 @@
+[build]
+  publish   = "."
+  functions = "netlify/functions"
+
+# Broncode en databasebestanden horen niet publiek bereikbaar te zijn.
+[[redirects]]
+  from   = "/supabase/*"
+  to     = "/404.html"
+  status = 404
+  force  = true
+
+[[redirects]]
+  from   = "/netlify/*"
+  to     = "/404.html"
+  status = 404
+  force  = true
+
+[[headers]]
+  for = "/dashboard/*"
+  [headers.values]
+    X-Robots-Tag = "noindex"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Content-Type-Options = "nosniff"

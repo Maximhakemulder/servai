@@ -14,5 +14,5 @@ select k.id, l from k, unnest(array['<<Locatie 1>>','<<Locatie 2>>']) as l;
 -- 3. De eigenaar van de klant (zijn User UID uit Authentication > Users)
 insert into profielen (id, klant_id, naam, email, rol, toegang)
 select '<<UID-VAN-DE-EIGENAAR>>', id, '<<Naam eigenaar>>', '<<mail eigenaar>>', 'eigenaar',
-       array['overzicht','financien','menu','dranken','kansen','personeel','upselling','reserveringen','inkoop','gasten','assistent','meldingen','advies','koppelingen','gebruikers','support']
+       array['overzicht','financien','menu','dranken','kansen','personeel','upselling','reserveringen','inkoop','gasten','assistent','meldingen','advies','koppelingen','gebruikers','support','loonkosten']
 from klanten where naam = '<<Naam van de klant>>';
