@@ -191,6 +191,14 @@ body.on-assist .fab{display:none}
 .sec{grid-column:span 12;display:flex;align-items:center;flex-wrap:wrap;gap:10px 12px;margin:14px 0 -4px}.sec:first-child{margin-top:0}.sec h2{font-size:18px;font-weight:600}.sec small{color:var(--mute);font-size:13px}
 .tag{display:inline-flex;align-items:center;font:600 11px var(--f-m);letter-spacing:.04em;text-transform:uppercase;padding:4px 8px;border-radius:7px;white-space:nowrap}
 .kv{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);font-size:13.5px;color:var(--fg-2)}.kv:last-child{border-bottom:0}.kv b{color:var(--fg);font-variant-numeric:tabular-nums;font-weight:600}
+.tanks{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:14px}
+.tank{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:16px 10px 14px;border-radius:16px;background:var(--panel-2);border:1px solid var(--line)}
+.tank b{font:600 15px var(--f-d);margin-top:4px}.tank .tm{color:var(--fg-2);font-size:12.5px}
+.tank .tpc{font:600 21px var(--f-d);fill:#fff;paint-order:stroke;stroke:rgba(8,10,22,.55);stroke-width:3px;stroke-linejoin:round}
+.tank .tag{margin-top:4px}
+.tank .rise{animation:rise 1s cubic-bezier(.2,.8,.2,1) both}.tank .wave{animation:wave 3.2s linear infinite}
+@keyframes rise{from{transform:translateY(var(--y))}to{transform:none}}@keyframes wave{to{transform:translateX(-50px)}}
+@media (prefers-reduced-motion:reduce){.tank .rise,.tank .wave{animation:none}}
 </style>
 </head>
 <body>
@@ -498,6 +506,7 @@ V.dranken=()=>{
   const cat=x=>x.q>=aq&&x.m>=am?['Ster','#22B573']:x.q>=aq?['Trekpaard','#3987e5']:x.m>=am?['Puzzel','#c98500']:['Twijfelgeval','#e04848'];
   const adv=x=>{const c=cat(x)[0];return c==='Ster'?'Prominent op de kaart, vaste garnering':c==='Trekpaard'?'Prijs of portie bekijken':c==='Puzzel'?'Bediening laten aanraden':x.n==='Piña Colada'?'Schrappen of seizoensdrank, kokoscrème bijna over de datum':'Herzien bij volgende kaartwissel'};
   const tanks=TANKS.filter(t=>all||t[0]===state.loc).map(t=>({L:LOCS.find(l=>l.id===t[0]),n:t[1],cap:t[2],pc:t[3],lpd:t[4],left:t[2]*t[3]/100,days:t[2]*t[3]/100/t[4]}));
+  tanks.sort((a,b)=>a.pc-b.pc);
   const low=tanks.filter(t=>t.pc<25),lowP=[...LIQ,...GARN].filter(x=>x[1]<25);
   const dr=fin(state.loc,30).bev*3,pour=fin(state.loc,30).drinkP,qSum=d.reduce((a,b)=>a+b.q,0);
   const allD=[...d.map(x=>({n:x.n,q:x.q,m:x.m,t:'Cocktail'})),...OTHERD.map(x=>({n:x[0],q:Math.round(x[3]*f),m:(1-x[2]/x[1])*100,t:'Overig'}))];
@@ -521,9 +530,11 @@ V.dranken=()=>{
     </tbody></table></div></div>
 
     <div class="sec"><h2>Bier &amp; tanks</h2><span class="chip"><i style="background:var(--good)"></i>live via tanksensor</span><small>Vulling per tank · bijgewerkt 2 minuten geleden</small></div>
-    <div class="c span-12"><div class="tw"><table><thead><tr><th>${all?'Locatie':'Tank'}</th>${all?'<th>Bier</th>':''}<th>Vulling</th><th class="r">Over</th><th class="r">Verbruik</th><th class="r">Nog</th><th>Status</th></tr></thead><tbody>
-      ${tanks.sort((a,b)=>a.pc-b.pc).map(t=>`<tr>${all?`<td><span class="loc-name"><i style="background:${t.L.c}"></i>${t.L.name}</span></td><td><b>${t.n}</b></td>`:`<td><b>${t.n}</b></td>`}<td><div class="mbar"><span class="t"><i style="width:${t.pc}%;background:${stCol(t.pc)}"></i></span><span style="width:40px">${t.pc}%</span></div></td><td class="r">${nf(t.left)} L <span style="color:var(--mute)">/ ${t.cap}</span></td><td class="r">${t.lpd} L/dag</td><td class="r">${t.days<1.5?'<span style="color:#FF9A9A">'+t.days.toLocaleString('nl-NL',{maximumFractionDigits:1})+' dag</span>':t.days.toLocaleString('nl-NL',{maximumFractionDigits:1})+' dagen'}</td><td>${stat(t.pc)}</td></tr>`).join('')}
-    </tbody></table></div><p class="ctx" style="color:var(--mute);font-size:12px;margin-top:10px">Onder 20% zet je Inkoper automatisch een bestelling klaar bij de brouwerij. Jij geeft akkoord.</p></div>
+    <div class="c span-12"><div class="tanks">
+      ${tanks.map((t,i)=>{const col=stCol(t.pc),y=94-88*t.pc/100;return`<div class="tank"><svg viewBox="0 0 100 100" width="112" height="112" role="img" aria-label="${t.n}: ${t.pc}% gevuld"><defs><clipPath id="cp${i}"><circle cx="50" cy="50" r="44"/></clipPath></defs><circle cx="50" cy="50" r="46" fill="rgba(255,255,255,.04)" stroke="rgba(170,180,255,.28)" stroke-width="2"/><g clip-path="url(#cp${i})"><g class="rise" style="--y:${(94-y).toFixed(1)}px"><g class="wave"><path d="M0 ${y.toFixed(1)} q12.5 -5 25 0 t25 0 t25 0 t25 0 t25 0 t25 0 t25 0 t25 0 V110 H0z" fill="${col}" opacity=".9"/></g></g></g><text x="50" y="58" text-anchor="middle" class="tpc">${t.pc}%</text></svg>
+        <b>${t.n}</b>${all?`<span class="loc-name" style="justify-content:center"><i style="background:${t.L.c}"></i>${t.L.name}</span>`:''}
+        <span class="tm">${nf(t.left)} L van ${t.cap} L</span><span class="tm">${t.days<1.5?'<span style="color:#FF9A9A">nog '+t.days.toLocaleString('nl-NL',{maximumFractionDigits:1})+' dag</span>':'nog '+t.days.toLocaleString('nl-NL',{maximumFractionDigits:1})+' dagen'} · ${t.lpd} L/dag</span>${stat(t.pc)}</div>`}).join('')}
+    </div><p class="ctx" style="color:var(--mute);font-size:12px;margin-top:14px">Onder 20% zet je Inkoper automatisch een bestelling klaar bij de brouwerij. Jij geeft akkoord.</p></div>
 
     <div class="sec"><h2>Uitgangsproducten &amp; garneringen</h2><small>Voorraad in % · aantal dagen dat het nog meegaat</small></div>
     <div class="c span-6"><div class="ch"><div><h2>Uitgangsproducten</h2><p>Sterke drank, likeuren en mixers</p></div></div>${LIQ.map(stk).join('')}</div>
