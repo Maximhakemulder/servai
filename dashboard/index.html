@@ -109,6 +109,25 @@ button{font:inherit;color:inherit}
 .act.done{border-color:rgba(34,181,115,.4);color:#7FE0AE;background:rgba(34,181,115,.1);cursor:default}
 
 
+
+.sw{position:relative;width:42px;height:24px;border-radius:99px;border:1px solid var(--line);background:rgba(255,255,255,.08);cursor:pointer;padding:0;transition:background .2s}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#B9BEDD;transition:transform .2s,background .2s}
+.sw.on{background:linear-gradient(90deg,#3B4BC4,#C04F9C);border-color:transparent}.sw.on::after{transform:translateX(18px);background:#fff}
+.nt{width:100%;border-collapse:collapse}.nt th{font:600 11px var(--f-m);letter-spacing:.05em;text-transform:uppercase;color:var(--mute);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+.nt td{padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:middle}.nt tr:last-child td{border:0}
+.nt td b{display:block;font-weight:600;font-size:14.5px}.nt td small{color:var(--mute);font-size:12.5px;line-height:1.4}
+.nt .mini{min-width:150px}.nt input.th{width:64px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}.chips .act{padding:8px 14px}
+.nch{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media (max-width:800px){.nch{grid-template-columns:1fr}}
+.nch .cc{min-height:0}
+.wa{background:#0B141A;border-radius:16px;padding:16px;max-width:420px;border:1px solid var(--line)}
+.wa .bub{background:#005C4B;color:#E9EDEF;border-radius:10px 10px 10px 2px;padding:10px 12px;font-size:13.5px;line-height:1.5;white-space:pre-line}
+.wa .bub+.bub{margin-top:8px}.wa small{display:block;color:#8696A0;font-size:11px;margin-top:6px;text-align:right}
+.wahd{display:flex;align-items:center;gap:10px;margin-bottom:12px;color:#E9EDEF;font:600 14px var(--f-b)}.wahd i{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#3B4BC4,#EC4B57);display:block}
+.chk{display:flex;gap:8px;flex-wrap:wrap}.chk label{display:flex;gap:7px;align-items:center;border:1px solid var(--line);border-radius:99px;padding:7px 12px;font-size:13.5px;cursor:pointer}
+.chk input{accent-color:#C04F9C}
+textarea.fld{min-height:90px;resize:vertical;font-family:inherit}
+.aform{display:grid;gap:14px}.aform .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media (max-width:700px){.aform .two{grid-template-columns:1fr}}
 .cn{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
 .cc{background:var(--card,rgba(255,255,255,.04));border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px}
 .cc h3{font:600 15px var(--f-b);display:flex;align-items:center;gap:9px;margin:0}.cc h3 svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;color:var(--fg-2)}
@@ -274,6 +293,7 @@ body.on-assist .fab{display:none}
   <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="3"/><path d="M4 7.5l8 5.5 8-5.5"/></symbol>
   <symbol id="i-mega" viewBox="0 0 24 24"><path d="M4 10v4a1 1 0 0 0 1 1h2l7 4V5L7 9H5a1 1 0 0 0-1 1z"/><path d="M17.5 9a4 4 0 0 1 0 6"/></symbol>
   <symbol id="i-drink" viewBox="0 0 24 24"><path d="M5 4.5h14L12 13z"/><path d="M12 13v7M8 20h8"/><path d="M8.2 8.2h7.6"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 17V11a6 6 0 0 1 12 0v6l1.5 2h-15z"/><path d="M10 21h4"/></symbol>
   <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></symbol>
   <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="3.5"/><path d="M10.5 12.5L19 4M16 7l2.5 2.5M13.5 9.5l2 2"/></symbol>
   <symbol id="i-spark" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></symbol>
@@ -296,6 +316,8 @@ body.on-assist .fab{display:none}
       <a href="#gasten" data-v="gasten"><svg><use href="#i-star"/></svg><span>Gasten &amp; reviews</span></a>
       <div class="sep"></div>
       <a href="#kansen" data-v="kansen"><svg><use href="#i-spark"/></svg><span>Markt &amp; kansen</span></a>
+      <a href="#meldingen" data-v="meldingen"><svg><use href="#i-bell"/></svg><span>Meldingen</span></a>
+      <a href="#advies" data-v="advies"><svg><use href="#i-spark"/></svg><span>AI-advies</span></a>
       <a href="#koppelingen" data-v="koppelingen"><svg><use href="#i-link"/></svg><span>Koppelingen</span></a>
       <a href="#gebruikers" data-v="gebruikers"><svg><use href="#i-key"/></svg><span>Gebruikers</span></a>
       <div class="sep"></div>
@@ -733,9 +755,9 @@ V.assistent=()=>({html:`<div class="c"><div class="chat">
 }});
 
 /* ---------------- account, gebruikers & toegang (demo) ---------------- */
-const PAGES=[['overzicht','Overzicht'],['financien','Financiën'],['menu','Gerechten'],['dranken','Dranken'],['kansen','Kansen'],['personeel','Personeel'],['upselling','Upselling'],['reserveringen','Reserv.'],['inkoop','Inkoop'],['gasten','Gasten'],['assistent','Assistent'],['koppelingen','Koppelingen'],['gebruikers','Gebruikers']];
+const PAGES=[['overzicht','Overzicht'],['financien','Financiën'],['menu','Gerechten'],['dranken','Dranken'],['kansen','Kansen'],['personeel','Personeel'],['upselling','Upselling'],['reserveringen','Reserv.'],['inkoop','Inkoop'],['gasten','Gasten'],['assistent','Assistent'],['meldingen','Meldingen'],['advies','AI-advies'],['koppelingen','Koppelingen'],['gebruikers','Gebruikers']];
 const ALLP=PAGES.map(p=>p[0]);
-const PRESET={Eigenaar:ALLP,Bedrijfsleider:ALLP.filter(p=>p!=='gebruikers'&&p!=='koppelingen'),'Chef-kok':['overzicht','menu','dranken','kansen','inkoop','assistent'],'Boekhouder':['overzicht','financien','inkoop'],'Bar manager':['overzicht','dranken','personeel','upselling','inkoop','assistent'],'Gastvrouw':['overzicht','reserveringen','gasten','assistent']};
+const PRESET={Eigenaar:ALLP,Bedrijfsleider:ALLP.filter(p=>p!=='gebruikers'&&p!=='koppelingen'),'Chef-kok':['overzicht','menu','dranken','kansen','inkoop','meldingen','assistent'],'Boekhouder':['overzicht','financien','inkoop','meldingen'],'Bar manager':['overzicht','dranken','personeel','upselling','inkoop','meldingen','assistent'],'Gastvrouw':['overzicht','reserveringen','gasten','meldingen','assistent']};
 const USERS0=[
  {id:'u1',n:'Eva Bakker',e:'eva@struisenburg-demo.nl',r:'Eigenaar',locs:'all',st:'Actief',last:'Nu actief'},
  {id:'u2',n:'Mark de Wit',e:'mark@struisenburg-demo.nl',r:'Bedrijfsleider',locs:'cornelis',st:'Actief',last:'Vandaag 08:12'},
@@ -746,8 +768,8 @@ const USERS0=[
  {id:'u7',n:'Yara Hoekstra',e:'yara@struisenburg-demo.nl',r:'Gastvrouw',locs:'beau',st:'Uitgenodigd',last:'Nog niet ingelogd'}
 ].map(u=>({...u,access:[...PRESET[u.r]]}));
 let USERS=USERS0;
-try{const s=JSON.parse(localStorage.getItem('servai-users3')||'null');if(Array.isArray(s)&&s.length)USERS=s}catch(e){}
-const saveUsers=()=>{try{localStorage.setItem('servai-users3',JSON.stringify(USERS))}catch(e){}};
+try{const s=JSON.parse(localStorage.getItem('servai-users4')||'null');if(Array.isArray(s)&&s.length)USERS=s}catch(e){}
+const saveUsers=()=>{try{localStorage.setItem('servai-users4',JSON.stringify(USERS))}catch(e){}};
 try{state.uid=sessionStorage.getItem('servai-uid')||null}catch(e){state.uid=null}
 const cur=()=>USERS.find(u=>u.id===state.uid);
 const can=v=>{const u=cur();return !!u&&u.access.includes(v)};
@@ -791,6 +813,116 @@ V.gebruikers=()=>{
   </div>`,after(){}}
 };
 
+
+
+/* ---------------- meldingen (WhatsApp & mail, demo) ---------------- */
+const NCATS=[
+ ['Rapporten','i-chart',[
+  ['rap-och','Ochtendrapport','Gisteren in cijfers en wat er vandaag speelt',['Dagelijks 07:30','Dagelijks 09:00','Alleen werkdagen 07:30'],0,1,1],
+  ['rap-dag','Dagafsluiting','Omzet, loonkosten en hoogtepunten na sluiting',['Dagelijks 00:30','Dagelijks 23:00'],0,0,1],
+  ['rap-week','Weekrapport','Weekcijfers, vergelijking en de drie belangrijkste acties',['Maandag 08:00','Zondagavond 20:00'],0,1,1],
+  ['rap-mnd','Maandrapport','Resultaat, begroting en vooruitblik',['1e werkdag 09:00','Laatste dag 17:00'],0,0,1],
+  ['rap-kw','Kaartreview per kwartaal','Voorstellen voor prijzen en menu op basis van de analyse',['Elk kwartaal'],0,0,1]]],
+ ['Personeel','i-staff',[
+  ['p-loon','Loonkosten boven norm','Alert zodra loonkosten in % van omzet boven je grens komen',['Direct','Gebundeld per dienst'],0,1,0,['Grens',32,'%']],
+  ['p-uren','Uren wijken af van rooster','Gewerkte uren tegen geplande uren, per dienst',['Direct','Dagelijks samengevat'],1,1,1,['Afwijking',8,'%']],
+  ['p-over','Overwerk en Arbeidstijdenwet','Waarschuwing bij te lange diensten of te weinig rust',['Direct','Dagelijks samengevat'],0,1,1],
+  ['p-ziek','Ziekmeldingen en gaten in het rooster','Wie valt uit en wie kan invallen',['Direct'],0,1,0],
+  ['p-up','Upselling-ranking','Wie verkocht het meest bij tafel, per dag of week',['Dagelijks','Wekelijks'],0,0,1]]],
+ ['Financiën','i-euro',[
+  ['f-omz','Omzet onder verwachting','Als een dag of dienst achterblijft op de voorspelling',['Direct','Dagelijks samengevat'],1,1,1,['Achterstand',10,'%']],
+  ['f-kas','Kasverschil','Verschil tussen kassa en geteld geld',['Direct'],0,1,1,['Vanaf',50,'€']],
+  ['f-liq','Liquiditeit en btw','Waarschuwing als je geld voor btw of loon niet gedekt is',['Direct','Wekelijks'],0,1,1],
+  ['f-fact','Facturen om te betalen','Binnenkomende facturen en vervaldata',['Dagelijks samengevat','Wekelijks'],1,0,1],
+  ['f-beg','Begroting overschreden','Als een kostenpost boven het plan komt',['Direct','Wekelijks'],1,0,1,['Overschrijding',5,'%']]]],
+ ['Inkoop','i-box',[
+  ['i-prijs','Prijsstijging leverancier','Elke prijsverhoging, met effect op je marge',['Direct','Dagelijks samengevat'],0,1,1,['Vanaf',5,'%']],
+  ['i-best','Bestelvoorstel klaar','Voorstel om te bestellen, jij keurt goed',['Direct','Dagelijks samengevat'],1,1,1],
+  ['i-vrd','Voorraad laag','Producten die bijna op zijn',['Direct','Dagelijks samengevat'],1,0,1],
+  ['i-der','Derving te hoog','Afval en verlies boven je norm',['Wekelijks','Dagelijks samengevat'],0,0,1,['Norm',3,'%']]]],
+ ['Menu & dranken','i-chef',[
+  ['m-marge','Marge van een gerecht onder norm','Als een gerecht door prijsstijgingen te weinig oplevert',['Direct','Wekelijks'],1,1,1,['Norm',68,'%']],
+  ['m-hard','Hardloper of sluiper','Gerechten die opvallend goed of slecht lopen',['Wekelijks'],0,0,1],
+  ['m-tank','Biertank bijna leeg','Per tank, zodat je op tijd een nieuwe bestelt',['Direct'],0,1,0,['Onder',15,'%']],
+  ['m-kans','Markt en kansen','Nieuwe trends en gerechten die bij je zaak passen',['Maandelijks'],0,0,1]]],
+ ['Reserveringen & gasten','i-cal',[
+  ['r-grp','Groepsaanvraag','Nieuwe aanvraag voor een grote groep',['Direct'],0,1,1,['Vanaf',10,'pers.']],
+  ['r-ns','No-show risico','Reserveringen met kans dat gasten niet komen',['Dagelijks samengevat'],0,1,0],
+  ['r-rev','Nieuwe review','Elke nieuwe beoordeling, met antwoordvoorstel',['Direct','Dagelijks samengevat'],1,0,1],
+  ['r-slecht','Slechte review','Direct bij een lage score',['Direct'],0,1,1,['Onder',4,'sterren']]]],
+ ['Systeem','i-link',[
+  ['s-kop','Koppeling verbroken of sleutel verlopen','Zodat je data niet stilvalt zonder dat je het weet',['Direct'],0,1,1],
+  ['s-nw','Nieuwe functies van SERVAI','Updates over wat er nieuw is',['Maandelijks'],0,0,1]]]
+];
+const NALL=NCATS.flatMap(c=>c[2]);
+const nkey=()=>'servai-notif-'+(state.uid||'x');
+function nDefault(){const u=cur()||{n:'',e:''};const r={};NALL.forEach(x=>{r[x[0]]={wa:!!x[5],mail:!!x[6],opt:x[4],th:x[7]?x[7][1]:null}});
+  return{wa:{num:u.id==='u1'?'+31 6 12 34 56 78':'',ok:u.id==='u1'},mail:{addr:u.e||''},quiet:{on:true,from:'00:30',to:'07:00',urgent:true},rows:r}}
+function nLoad(){let d=nDefault();try{const s=JSON.parse(localStorage.getItem(nkey())||'null');if(s&&s.rows){d={...d,...s,rows:{...d.rows,...s.rows}}}}catch(e){}return d}
+function nSave(d){try{localStorage.setItem(nkey(),JSON.stringify(d))}catch(e){}}
+function nPreview(d){const R=d.rows,on=id=>R[id].wa;const first=(cur()||{n:'Eva'}).n.split(' ')[0];
+  let l=['Goedemorgen '+first+'. Gisteren in het kort:','Omzet €16.526 (+3,1%)','Loonkosten 30,5% van omzet (norm 30%)'];
+  if(on('p-uren'))l.push('Uren: 212 gewerkt, 205 gepland');
+  if(on('m-tank'))l.push('Tank Coconuts nr. 2: 12%, bestel vandaag');
+  if(on('i-prijs'))l.push('Zalm +9% duurder, marge zalmschotel −6%');
+  l.push('Vandaag: 2 groepen, 142 couverts verwacht');
+  return l.join('\n')}
+V.meldingen=()=>{
+  const d=nLoad();const R=d.rows;const wa=NALL.filter(x=>R[x[0]].wa).length,ml=NALL.filter(x=>R[x[0]].mail).length;
+  const sw=(on,a)=>`<button type="button" class="sw ${on?'on':''}" ${a} aria-pressed="${on}"></button>`;
+  const cat=c=>`<div class="sec" id="nc-${c[0].replace(/\W+/g,'')}"><h2>${c[0]}</h2><small>${c[2].filter(x=>R[x[0]].wa||R[x[0]].mail).length} van ${c[2].length} actief</small></div>
+   <div class="c span-12"><div class="chips" style="margin-bottom:10px"><button class="act ghost" data-ncat="${c[0]}" data-on="1">Alles aan</button><button class="act ghost" data-ncat="${c[0]}" data-on="0">Alles uit</button></div><div class="tw"><table class="nt"><thead><tr><th>Melding</th><th>WhatsApp</th><th>E-mail</th><th>Wanneer</th><th>Grens</th></tr></thead><tbody>
+   ${c[2].map(x=>{const r=R[x[0]];return `<tr><td><b>${x[1]}</b><small>${x[2]}</small></td><td>${sw(r.wa,`data-nw="${x[0]}:wa"`)}</td><td>${sw(r.mail,`data-nw="${x[0]}:mail"`)}</td><td><select class="mini" data-no="${x[0]}">${x[3].map((o,i)=>`<option value="${i}"${r.opt===i?' selected':''}>${o}</option>`).join('')}</select></td><td>${x[7]?`<span style="display:flex;align-items:center;gap:6px"><input class="fld th" type="number" data-nt="${x[0]}" value="${r.th}"><small>${x[7][2]}</small></span>`:'<small>–</small>'}</td></tr>`}).join('')}
+   </tbody></table></div></div>`;
+  return{html:`<div class="grid">
+    ${[['WhatsApp',d.wa.ok?'Verbonden':'Niet gekoppeld',d.wa.ok?`<span class="delta up">${d.wa.num}</span>`:`<span class="delta down">voeg je nummer toe</span>`,'meldingen op je telefoon'],['E-mail',d.mail.addr?'Actief':'Niet ingesteld',`<span class="delta up">${d.mail.addr||'–'}</span>`,'rapporten en samenvattingen'],['Actieve meldingen',String(NALL.filter(x=>R[x[0]].wa||R[x[0]].mail).length),`<span class="delta flat">${wa} via WhatsApp · ${ml} via mail</span>`,'van '+NALL.length+' mogelijk'],['Stille uren',d.quiet.on?d.quiet.from+' – '+d.quiet.to:'Uit',`<span class="delta flat">${d.quiet.urgent?'dringend komt door':'alles wacht'}</span>`,'niet storen']].map(k=>`<div class="c kpi span-3"><small>${k[0]}</small><b style="font-size:${k[1].length>9?'22px':'inherit'}">${k[1]}</b>${k[2]}<span class="ctx">${k[3]}</span></div>`).join('')}
+    <div class="sec" id="nc-kanalen"><h2>Kanalen</h2><small>Waar SERVAI je bereikt. Deze instellingen gelden voor ${cur()?cur().n:''}</small></div>
+    <div class="c span-12"><div class="nch">
+      <div class="cc"><h3>${ico('i-chat')}WhatsApp <span class="pill ${d.wa.ok?'ok':'off'}" style="margin-left:auto"><i></i>${d.wa.ok?'Verbonden':'Niet gekoppeld'}</span></h3>
+        <div class="rd">Je krijgt meldingen en rapporten in een WhatsApp-gesprek met SERVAI. Je kunt er ook gewoon op antwoorden of een vraag stellen.</div>
+        <label for="n-num">Telefoonnummer</label><input class="fld" id="n-num" value="${d.wa.num}" placeholder="+31 6 12345678" inputmode="tel">
+        <div class="row"><button class="act" data-nac="wa">${d.wa.ok?'Nummer opslaan':'Verbind WhatsApp'}</button><button class="act ghost" data-nac="watest">Stuur testbericht</button></div></div>
+      <div class="cc"><h3>${ico('i-mail')}E-mail <span class="pill ${d.mail.addr?'ok':'off'}" style="margin-left:auto"><i></i>${d.mail.addr?'Actief':'Niet ingesteld'}</span></h3>
+        <div class="rd">Rapporten, samenvattingen en facturen komen in je inbox. Handig voor wat je later rustig wilt lezen of doorsturen.</div>
+        <label for="n-mail">E-mailadres</label><input class="fld" id="n-mail" type="email" value="${d.mail.addr}" placeholder="naam@bedrijf.nl">
+        <div class="row"><button class="act" data-nac="mail">Adres opslaan</button><button class="act ghost" data-nac="mailtest">Stuur testmail</button></div></div>
+    </div></div>
+    <div class="sec" id="nc-snel"><h2>Snel instellen</h2><small>Kies een startpunt en pas daarna aan</small></div>
+    <div class="c span-12"><div class="chips"><button class="act ghost" data-npre="belangrijk">Alleen het belangrijkste</button><button class="act ghost" data-npre="alles">Alles aan</button><button class="act ghost" data-npre="mail">Alles via mail</button><button class="act ghost" data-npre="uit">Alles uit</button></div>
+      <p class="ctx" style="color:var(--mute);font-size:12.5px;margin-top:10px">"Alleen het belangrijkste" zet de dringende meldingen (loonkosten, kasverschil, prijsstijging, tanks, koppelingen) en het ochtendrapport aan.</p></div>
+    <div class="sec" id="nc-voor"><h2>Zo ziet je ochtendbericht eruit</h2><small>Verandert mee met je keuzes hieronder</small></div>
+    <div class="c span-12"><div class="wa"><div class="wahd"><i></i>SERVAI</div><div class="bub">${nPreview(d)}</div><small>${(NALL.find(x=>x[0]==='rap-och')[3][R['rap-och'].opt]).replace('Dagelijks ','')}</small></div></div>
+    ${NCATS.map(cat).join('')}
+    <div class="sec" id="nc-stil"><h2>Stille uren</h2><small>Dan blijft het rustig op je telefoon</small></div>
+    <div class="c span-12"><div class="aform"><div class="two"><div style="display:flex;align-items:center;gap:12px">${sw(d.quiet.on,'data-nq="on"')}<span>Niet storen tussen</span><input class="fld th" style="width:118px" type="time" data-nqt="from" value="${d.quiet.from}"><span>en</span><input class="fld th" style="width:118px" type="time" data-nqt="to" value="${d.quiet.to}"></div>
+      <div style="display:flex;align-items:center;gap:12px">${sw(d.quiet.urgent,'data-nq="urgent"')}<span>Dringende meldingen komen toch door (kasverschil, uitval, tank leeg)</span></div></div></div></div>
+  </div>`,after(){}}
+};
+function nEdit(fn){const d=nLoad();fn(d);nSave(d);const y=scrollY;render();scrollTo(0,y)}
+
+/* ---------------- AI-advies (consultancy aanvragen, demo) ---------------- */
+const ADV=[['scan','AI-scan van je zaak','In een gesprek en een data-check zien we waar jij de meeste winst pakt.','Start hier','i-spark'],['plan','Plan van aanpak','Een automatiseringsplan met prioriteiten, verwachte besparing en kosten.','1 tot 2 weken','i-layers'],['team','Team meenemen','Training en begeleiding voor jou en je managers.','Op maat','i-staff']];
+const ATOP=['Personeel & rooster','Inkoop & marge','Menu & prijzen','Reserveringen','Marketing & gasten','Financiën & rapportage','Anders'];
+let advPick='scan';
+const akey='servai-adv';
+const aLoad=()=>{try{return JSON.parse(localStorage.getItem(akey)||'[]')}catch(e){return[]}};
+V.advies=()=>{
+  const L=aLoad();
+  return{html:`<div class="grid">
+    <div class="sec" id="ad-traject"><h2>AI-advies voor je zaak</h2><small>Hulp van mensen die horeca en AI kennen</small></div>
+    <div class="c span-12"><p style="color:var(--fg-2);max-width:760px">Niet alles hoeft meteen geautomatiseerd. Met AI-advies kijken we samen naar jouw zaak, jouw cijfers en jouw team, en vertalen we dat naar een plan dat past. Kies een traject en laat weten waar je mee zit.</p></div>
+    <div class="c span-12"><div class="cn">${ADV.map(a=>`<div class="cc"><h3>${ico(a[4])}${a[1]}</h3><div class="rd">${a[2]}</div><span class="pill off" style="align-self:flex-start">${a[3]}</span><div class="row"><button class="act ${advPick===a[0]?'':'ghost'}" data-ap="${a[0]}">${advPick===a[0]?'✓ Gekozen':'Kies dit traject'}</button></div></div>`).join('')}</div></div>
+    <div class="sec" id="ad-aanvraag"><h2>Aanvraag</h2><small>We reageren binnen 24 uur</small></div>
+    <div class="c span-12"><form class="aform" id="advf">
+      <div><label>Waarover wil je advies?</label><div class="chk">${ATOP.map((t,i)=>`<label><input type="checkbox" name="top" value="${t}"${i===0?' checked':''}>${t}</label>`).join('')}</div></div>
+      <div class="two"><div><label for="ad-loc">Voor welke locatie(s)?</label><select class="fld" id="ad-loc"><option>Alle locaties</option>${LOCS.map(l=>`<option>${l.name}</option>`).join('')}</select></div>
+      <div><label for="ad-when">Voorkeur voor een gesprek</label><select class="fld" id="ad-when"><option>Zo snel mogelijk</option><option>Deze week</option><option>Volgende week</option><option>Over een maand</option></select></div></div>
+      <div><label for="ad-q">Wat wil je bereiken of oplossen?</label><textarea class="fld" id="ad-q" placeholder="Bijvoorbeeld: onze loonkosten zijn te hoog op doordeweekse avonden en ik weet niet waar het zit."></textarea></div>
+      <div><button class="act" style="padding:12px 20px" type="submit">Vraag AI-advies aan</button></div></form></div>
+    <div class="sec" id="ad-mijn"><h2>Mijn aanvragen</h2><small>${L.length?L.length+' verstuurd':'Nog geen aanvragen'}</small></div>
+    <div class="c span-12">${L.length?`<div class="feed">${L.slice().reverse().map(x=>`<div class="fe"><time>${x.t}</time><span class="who">${ico('i-spark')}</span><div><b>${x.k}</b> <span>${x.top} · ${x.loc} · ${x.when}</span><br><span style="color:var(--mute)">${x.q||'–'}</span></div></div>`).join('')}</div>`:`<p style="color:var(--mute)">Zodra je een aanvraag verstuurt, zie je die hier terug met de status.</p>`}</div>
+  </div>`,after(){}}
+};
 
 /* ---------------- koppelingen (demo, geen echte verbindingen) ---------------- */
 const CKINDS=[
@@ -983,14 +1115,14 @@ function jumpSpy(){
 }
 addEventListener('scroll',()=>{if(jumpNav)requestAnimationFrame(jumpSpy)},{passive:true});
 /* ---------------- router ---------------- */
-const TITLES={upselling:'Upselling',kansen:'Markt & kansen',gebruikers:'Gebruikers',koppelingen:'Koppelingen',dranken:'Dranken',overzicht:'Overzicht',financien:'Financiën',menu:'Menu & keuken',personeel:'Personeel',reserveringen:'Reserveringen',inkoop:'Inkoop',gasten:'Gasten & reviews',assistent:'Vraag SERVAI'};
+const TITLES={upselling:'Upselling',kansen:'Markt & kansen',gebruikers:'Gebruikers',koppelingen:'Koppelingen',meldingen:'Meldingen',advies:'AI-advies',dranken:'Dranken',overzicht:'Overzicht',financien:'Financiën',menu:'Menu & keuken',personeel:'Personeel',reserveringen:'Reserveringen',inkoop:'Inkoop',gasten:'Gasten & reviews',assistent:'Vraag SERVAI'};
 function render(){
   if(!state.uid||!cur())return;
   let v=(location.hash||'#overzicht').slice(1);if(!V[v]||!can(v))v=firstAllowed();state.view=v;killCharts();
   const h=new Date().getHours();const greet=h<12?'Goedemorgen':h<18?'Goedemiddag':'Goedenavond';
   document.getElementById('title').textContent=state.view==='overzicht'?greet+', '+cur().n.split(' ')[0]:TITLES[state.view];
-  document.getElementById('period').style.visibility=['kansen','gebruikers','koppelingen','assistent'].includes(state.view)?'hidden':'';
-  document.getElementById('subtitle').textContent=locName()+' · '+(state.view==='gebruikers'?'toegang & rollen':state.view==='koppelingen'?'systemen die data aanleveren':state.view==='kansen'?'markt, laatste 12 maanden':perName())+' · bijgewerkt '+String(new Date().getHours()).padStart(2,'0')+':'+String(new Date().getMinutes()).padStart(2,'0');
+  document.getElementById('period').style.visibility=['kansen','gebruikers','koppelingen','meldingen','advies','assistent'].includes(state.view)?'hidden':'';
+  document.getElementById('subtitle').textContent=locName()+' · '+(state.view==='gebruikers'?'toegang & rollen':state.view==='koppelingen'?'systemen die data aanleveren':state.view==='meldingen'?'WhatsApp en mail, per persoon':state.view==='advies'?'AI-consultancy voor je zaak':state.view==='kansen'?'markt, laatste 12 maanden':perName())+' · bijgewerkt '+String(new Date().getHours()).padStart(2,'0')+':'+String(new Date().getMinutes()).padStart(2,'0');
   document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===state.view));
   document.body.classList.toggle('on-assist',state.view==='assistent');
   const out=V[state.view]();const el=document.getElementById('view');el.innerHTML=`<div class="view">${out.html}</div>`;out.after&&out.after();buildJump();
@@ -1025,6 +1157,30 @@ vw.addEventListener('click',e=>{const b=e.target.closest('[data-cn]');if(!b)retu
 });
 vw.addEventListener('submit',e=>{if(e.target.id!=='cnf')return;e.preventDefault();const c=CONN.find(x=>x.id===connOpen);if(!c)return;
   c.sys=document.getElementById('cn-s').value;c.locs=document.getElementById('cn-l').value;c.sync=document.getElementById('cn-f').value;c.st='ok';c.last='zojuist';delete c.msg;connOpen=null;saveConn();render();flash('Koppeling opgeslagen en getest (demo)');scrollTo({top:0})});
+
+vw.addEventListener('click',e=>{
+  const nw=e.target.closest('[data-nw]');if(nw){const [id,k]=nw.dataset.nw.split(':');nEdit(d=>{d.rows[id][k]=!d.rows[id][k]});return}
+  const nq=e.target.closest('[data-nq]');if(nq){nEdit(d=>{d.quiet[nq.dataset.nq]=!d.quiet[nq.dataset.nq]});return}
+  const nc=e.target.closest('[data-ncat]');if(nc){const on=nc.dataset.on==='1';const c=NCATS.find(x=>x[0]===nc.dataset.ncat);nEdit(d=>{c[2].forEach(x=>{d.rows[x[0]].wa=on;d.rows[x[0]].mail=on})});flash(on?'Alles aan voor '+c[0]:'Alles uit voor '+c[0]);return}
+  const np=e.target.closest('[data-npre]');if(np){const m=np.dataset.npre,imp=['rap-och','p-loon','f-kas','i-prijs','m-tank','s-kop','f-liq'];nEdit(d=>{NALL.forEach(x=>{const r=d.rows[x[0]];if(m==='alles'){r.wa=true;r.mail=true}else if(m==='uit'){r.wa=false;r.mail=false}else if(m==='mail'){r.wa=false;r.mail=true}else{r.wa=imp.includes(x[0]);r.mail=imp.includes(x[0])&&x[0]!=='p-loon'&&x[0]!=='m-tank'}})});flash('Instelling toegepast');return}
+  const na=e.target.closest('[data-nac]');if(na){const a=na.dataset.nac;
+    if(a==='wa'){const v=document.getElementById('n-num').value.trim();if(v.replace(/\D/g,'').length<9){flash('Vul een geldig telefoonnummer in');return}nEdit(d=>{d.wa.num=v;d.wa.ok=true});flash('WhatsApp gekoppeld (demo)')}
+    if(a==='mail'){const v=document.getElementById('n-mail').value.trim();if(!/^\S+@\S+\.\S+$/.test(v)){flash('Vul een geldig e-mailadres in');return}nEdit(d=>{d.mail.addr=v});flash('E-mailadres opgeslagen')}
+    if(a==='watest')flash('Testbericht verstuurd naar WhatsApp (demo)');
+    if(a==='mailtest')flash('Testmail verstuurd (demo)');return}
+  const ap=e.target.closest('[data-ap]');if(ap){advPick=ap.dataset.ap;const y=scrollY;render();scrollTo(0,y)}
+});
+vw.addEventListener('change',e=>{
+  const o=e.target.closest('[data-no]');if(o){nEdit(d=>{d.rows[o.dataset.no].opt=+o.value});return}
+  const t=e.target.closest('[data-nt]');if(t){nEdit(d=>{d.rows[t.dataset.nt].th=+t.value});return}
+  const q=e.target.closest('[data-nqt]');if(q){nEdit(d=>{d.quiet[q.dataset.nqt]=q.value});return}
+});
+vw.addEventListener('submit',e=>{if(e.target.id!=='advf')return;e.preventDefault();
+  const top=[...e.target.querySelectorAll('input[name=top]:checked')].map(x=>x.value).join(', ')||'Algemeen';
+  const k=ADV.find(a=>a[0]===advPick)[1],now=new Date();
+  const L=aLoad();L.push({t:String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0'),k,top,loc:document.getElementById('ad-loc').value,when:document.getElementById('ad-when').value,q:document.getElementById('ad-q').value.trim().replace(/[<>&]/g,'')});
+  try{localStorage.setItem(akey,JSON.stringify(L))}catch(x){}
+  render();flash('Aanvraag verstuurd. We reageren binnen 24 uur (demo)');scrollTo({top:document.getElementById('ad-mijn').offsetTop-80,behavior:'smooth'})});
 if(cur()&&cur().st==='Actief'){applyUser();render()}else{state.uid=null;showLogin()}
 </script>
 </body>
