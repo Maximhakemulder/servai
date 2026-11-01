@@ -108,6 +108,16 @@ button{font:inherit;color:inherit}
 .act:hover{background:rgba(255,255,255,.1)}
 .act.done{border-color:rgba(34,181,115,.4);color:#7FE0AE;background:rgba(34,181,115,.1);cursor:default}
 
+
+.cn{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.cc{background:var(--card,rgba(255,255,255,.04));border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.cc h3{font:600 15px var(--f-b);display:flex;align-items:center;gap:9px;margin:0}.cc h3 svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;color:var(--fg-2)}
+.cc .sys{color:var(--fg-2);font-size:13.5px}.cc .rd{color:var(--mute);font-size:12.5px;line-height:1.45}
+.cc .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto}
+.pill{display:inline-flex;align-items:center;gap:6px;font:600 11px var(--f-m);letter-spacing:.04em;text-transform:uppercase;padding:3px 9px;border-radius:99px;border:1px solid var(--line)}
+.pill i{width:7px;height:7px;border-radius:50%;background:currentColor}
+.pill.ok{color:#5BD6A0}.pill.err{color:#FF8A8A}.pill.off{color:var(--mute)}.pill.wait{color:#FFD27A}
+.cform{display:grid;grid-template-columns:1fr 1.2fr 1.6fr 1fr auto;gap:10px;align-items:end}@media (max-width:1100px){.cform{grid-template-columns:1fr 1fr}}@media (max-width:640px){.cform{grid-template-columns:1fr}}
 .feed{display:grid;gap:2px}
 .fe{display:grid;grid-template-columns:52px 34px 1fr;gap:10px;align-items:center;padding:9px 4px;border-bottom:1px solid var(--line);font-size:13.5px}
 .fe:last-child{border-bottom:0}
@@ -213,7 +223,7 @@ body.on-assist .fab{display:none}
 .acct .an{display:flex;flex-direction:column;line-height:1.15;text-align:left}.acct .an small{color:var(--mute);font-size:11.5px;font-weight:400}
 @media (max-width:700px){.acct{padding:3px}.acct .an{display:none}}
 .amenu{position:absolute;right:0;top:calc(100% + 8px);z-index:70;width:290px;background:#12163A;border:1px solid var(--line-2);border-radius:16px;padding:8px;box-shadow:0 24px 60px rgba(0,0,0,.5)}
-.amenu[hidden]{display:none}
+.amenu[hidden]{display:none}#nav a[hidden]{display:none!important}
 .amenu .me{padding:10px 10px 12px;border-bottom:1px solid var(--line);margin-bottom:6px}.amenu .me b{display:block;font:600 14.5px var(--f-d)}.amenu .me span{color:var(--fg-2);font-size:12.5px}
 .amenu h4{margin:8px 10px 4px;font:600 10.5px var(--f-m);letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
 .amenu button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;border-radius:10px;padding:8px 10px;cursor:pointer;color:var(--fg-2);font:500 13.5px var(--f-b)}
@@ -264,6 +274,7 @@ body.on-assist .fab{display:none}
   <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="3"/><path d="M4 7.5l8 5.5 8-5.5"/></symbol>
   <symbol id="i-mega" viewBox="0 0 24 24"><path d="M4 10v4a1 1 0 0 0 1 1h2l7 4V5L7 9H5a1 1 0 0 0-1 1z"/><path d="M17.5 9a4 4 0 0 1 0 6"/></symbol>
   <symbol id="i-drink" viewBox="0 0 24 24"><path d="M5 4.5h14L12 13z"/><path d="M12 13v7M8 20h8"/><path d="M8.2 8.2h7.6"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></symbol>
   <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="3.5"/><path d="M10.5 12.5L19 4M16 7l2.5 2.5M13.5 9.5l2 2"/></symbol>
   <symbol id="i-spark" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></symbol>
   <symbol id="i-up" viewBox="0 0 24 24"><path d="M4 17l5-5 4 4 7-8"/><path d="M15 8h5v5"/></symbol>
@@ -285,6 +296,7 @@ body.on-assist .fab{display:none}
       <a href="#gasten" data-v="gasten"><svg><use href="#i-star"/></svg><span>Gasten &amp; reviews</span></a>
       <div class="sep"></div>
       <a href="#kansen" data-v="kansen"><svg><use href="#i-spark"/></svg><span>Markt &amp; kansen</span></a>
+      <a href="#koppelingen" data-v="koppelingen"><svg><use href="#i-link"/></svg><span>Koppelingen</span></a>
       <a href="#gebruikers" data-v="gebruikers"><svg><use href="#i-key"/></svg><span>Gebruikers</span></a>
       <div class="sep"></div>
       <a href="#assistent" data-v="assistent" class="ai"><svg><use href="#i-chat"/></svg><span>Vraag SERVAI</span></a>
@@ -721,9 +733,9 @@ V.assistent=()=>({html:`<div class="c"><div class="chat">
 }});
 
 /* ---------------- account, gebruikers & toegang (demo) ---------------- */
-const PAGES=[['overzicht','Overzicht'],['financien','Financiën'],['menu','Gerechten'],['dranken','Dranken'],['kansen','Kansen'],['personeel','Personeel'],['upselling','Upselling'],['reserveringen','Reserv.'],['inkoop','Inkoop'],['gasten','Gasten'],['assistent','Assistent'],['gebruikers','Gebruikers']];
+const PAGES=[['overzicht','Overzicht'],['financien','Financiën'],['menu','Gerechten'],['dranken','Dranken'],['kansen','Kansen'],['personeel','Personeel'],['upselling','Upselling'],['reserveringen','Reserv.'],['inkoop','Inkoop'],['gasten','Gasten'],['assistent','Assistent'],['koppelingen','Koppelingen'],['gebruikers','Gebruikers']];
 const ALLP=PAGES.map(p=>p[0]);
-const PRESET={Eigenaar:ALLP,Bedrijfsleider:ALLP.filter(p=>p!=='gebruikers'),'Chef-kok':['overzicht','menu','dranken','kansen','inkoop','assistent'],'Boekhouder':['overzicht','financien','inkoop'],'Bar manager':['overzicht','dranken','personeel','upselling','inkoop','assistent'],'Gastvrouw':['overzicht','reserveringen','gasten','assistent']};
+const PRESET={Eigenaar:ALLP,Bedrijfsleider:ALLP.filter(p=>p!=='gebruikers'&&p!=='koppelingen'),'Chef-kok':['overzicht','menu','dranken','kansen','inkoop','assistent'],'Boekhouder':['overzicht','financien','inkoop'],'Bar manager':['overzicht','dranken','personeel','upselling','inkoop','assistent'],'Gastvrouw':['overzicht','reserveringen','gasten','assistent']};
 const USERS0=[
  {id:'u1',n:'Eva Bakker',e:'eva@struisenburg-demo.nl',r:'Eigenaar',locs:'all',st:'Actief',last:'Nu actief'},
  {id:'u2',n:'Mark de Wit',e:'mark@struisenburg-demo.nl',r:'Bedrijfsleider',locs:'cornelis',st:'Actief',last:'Vandaag 08:12'},
@@ -734,8 +746,8 @@ const USERS0=[
  {id:'u7',n:'Yara Hoekstra',e:'yara@struisenburg-demo.nl',r:'Gastvrouw',locs:'beau',st:'Uitgenodigd',last:'Nog niet ingelogd'}
 ].map(u=>({...u,access:[...PRESET[u.r]]}));
 let USERS=USERS0;
-try{const s=JSON.parse(localStorage.getItem('servai-users2')||'null');if(Array.isArray(s)&&s.length)USERS=s}catch(e){}
-const saveUsers=()=>{try{localStorage.setItem('servai-users2',JSON.stringify(USERS))}catch(e){}};
+try{const s=JSON.parse(localStorage.getItem('servai-users3')||'null');if(Array.isArray(s)&&s.length)USERS=s}catch(e){}
+const saveUsers=()=>{try{localStorage.setItem('servai-users3',JSON.stringify(USERS))}catch(e){}};
 try{state.uid=sessionStorage.getItem('servai-uid')||null}catch(e){state.uid=null}
 const cur=()=>USERS.find(u=>u.id===state.uid);
 const can=v=>{const u=cur();return !!u&&u.access.includes(v)};
@@ -775,6 +787,67 @@ V.gebruikers=()=>{
       <div class="fe"><time>07:05</time><span class="who">${ico('i-chef')}</span><div><b>Tom Smit</b> <span>nam 2 prijsvoorstellen op in de kaartreview</span></div></div>
       <div class="fe"><time>gist.</time><span class="who">${ico('i-staff')}</span><div><b>Eva Bakker</b> <span>gaf Daan Visser toegang tot Personeel</span></div></div>
       <div class="fe"><time>vrij.</time><span class="who">${ico('i-box')}</span><div><b>Lisa Mulder</b> <span>exporteerde het btw-overzicht van het kwartaal</span></div></div>
+    </div></div>
+  </div>`,after(){}}
+};
+
+
+/* ---------------- koppelingen (demo, geen echte verbindingen) ---------------- */
+const CKINDS=[
+ ['kassa','Kassa','i-euro','Omzet, bonnen en verkoop per gerecht','Kassasysteem A,Kassasysteem B,Kassasysteem C'],
+ ['rooster','Rooster & uren','i-staff','Ingeplande en gewerkte uren per medewerker','Roostersysteem A,Roostersysteem B'],
+ ['boek','Boekhouding','i-euro','Kosten, facturen en btw','Boekhoudpakket A,Boekhoudpakket B,Boekhoudpakket C'],
+ ['res','Reserveringen','i-cal','Reserveringen, bezetting en no-shows','Reserveringssysteem A,Reserveringssysteem B'],
+ ['tank','Biertanken','i-drink','Vulniveau per tank','Tanksensor-API'],
+ ['inkoop','Leveranciers','i-box','Bestellingen, prijzen en leveringen','Groothandel A,Groothandel B'],
+ ['rev','Reviews','i-star','Beoordelingen en reacties van gasten','Reviewplatform A,Reviewplatform B']
+];
+const CDEF=[
+ {id:'c1',k:'kassa',sys:'Kassasysteem A',st:'ok',last:'vandaag 08:05',locs:'Alle 4 locaties',sync:'elk uur'},
+ {id:'c2',k:'rooster',sys:'Roostersysteem A',st:'ok',last:'vandaag 06:00',locs:'Alle 4 locaties',sync:'dagelijks'},
+ {id:'c3',k:'boek',sys:'Boekhoudpakket B',st:'err',last:'gisteren 06:00',locs:'Groepsadministratie',sync:'dagelijks',msg:'Sleutel verlopen. Plak een nieuwe sleutel om te herstellen.'},
+ {id:'c4',k:'tank',sys:'Tanksensor-API',st:'ok',last:'5 min geleden',locs:'Coconuts, Fust',sync:'elke 5 min'},
+ {id:'c5',k:'res',sys:'',st:'off',last:'',locs:'',sync:''},
+ {id:'c6',k:'inkoop',sys:'',st:'off',last:'',locs:'',sync:''},
+ {id:'c7',k:'rev',sys:'',st:'off',last:'',locs:'',sync:''}
+];
+let CONN=CDEF.map(x=>({...x}));
+try{const s=JSON.parse(localStorage.getItem('servai-conn')||'null');if(Array.isArray(s)&&s.length)CONN=s}catch(e){}
+const saveConn=()=>{try{localStorage.setItem('servai-conn',JSON.stringify(CONN))}catch(e){}};
+const PILL={ok:['ok','Verbonden'],err:['err','Actie nodig'],off:['off','Niet verbonden'],wait:['wait','Verbinding testen…']};
+let connOpen=null;
+V.koppelingen=()=>{
+  const ok=CONN.filter(c=>c.st==='ok').length,er=CONN.filter(c=>c.st==='err').length,off=CONN.filter(c=>c.st==='off').length;
+  const kind=k=>CKINDS.find(x=>x[0]===k);
+  const card=c=>{const K=kind(c.k),P=PILL[c.st];
+    return `<div class="cc"><h3>${ico(K[2])}${K[1]} <span class="pill ${P[0]}" style="margin-left:auto"><i></i>${P[1]}</span></h3>
+      ${c.st==='off'?`<div class="rd">${K[3]}. Nog niet gekoppeld.</div>`:`<div class="sys"><b>${c.sys}</b></div><div class="rd">${K[3]}<br>${c.locs} · ${c.sync}<br>Laatst ingelezen: ${c.last}</div>`}
+      ${c.st==='err'?`<div class="rd" style="color:#FF8A8A">${c.msg}</div>`:''}
+      <div class="row">${c.st==='off'?`<button class="act" data-cn="open" data-c="${c.id}">Koppelen</button>`:`<button class="act ghost" data-cn="test" data-c="${c.id}">Test verbinding</button><button class="act ghost" data-cn="open" data-c="${c.id}">${c.st==='err'?'Nieuwe sleutel':'Wijzig'}</button><button class="act ghost" data-cn="off" data-c="${c.id}">Ontkoppel</button>`}</div></div>`};
+  const oc=connOpen&&CONN.find(c=>c.id===connOpen);
+  return{html:`<div class="grid">
+    ${[['Verbonden',String(ok),`<span class="delta up">actief</span>`,'leveren automatisch data'],['Actie nodig',String(er),er?`<span class="delta down">controleer sleutel</span>`:`<span class="delta up">✓</span>`,'verlopen of foutmelding'],['Nog te koppelen',String(off),`<span class="delta flat">optioneel</span>`,'meer koppelingen = meer inzicht'],['Laatste inleesronde','08:05',`<span class="delta up">gelukt</span>`,'kassa, tanks en rooster']].map(k=>`<div class="c kpi span-3"><small>${k[0]}</small><b>${k[1]}</b>${k[2]}<span class="ctx">${k[3]}</span></div>`).join('')}
+    <div class="sec" id="cn-list"><h2>Koppelingen</h2><small>Hier verbind je de systemen waar SERVAI de cijfers uit haalt</small></div>
+    <div class="c span-12"><div class="cn">${CONN.map(card).join('')}</div></div>
+    ${oc?`<div class="sec"><h2>${oc.st==='off'?'Koppeling toevoegen':'Koppeling wijzigen'}: ${kind(oc.k)[1]}</h2><small>Je sleutel wordt versleuteld opgeslagen en is daarna niet meer zichtbaar</small></div>
+    <div class="c span-12"><form class="cform" id="cnf"><div><label for="cn-s">Systeem</label><select class="fld" id="cn-s">${kind(oc.k)[4].split(',').map(x=>`<option${x===oc.sys?' selected':''}>${x}</option>`).join('')}</select></div>
+      <div><label for="cn-l">Locatie</label><select class="fld" id="cn-l"><option>Alle locaties</option>${LOCS.map(l=>`<option>${l.name}</option>`).join('')}</select></div>
+      <div><label for="cn-k">API-sleutel</label><input class="fld" id="cn-k" type="password" autocomplete="off" required placeholder="Plak hier de sleutel"></div>
+      <div><label for="cn-f">Ophalen</label><select class="fld" id="cn-f"><option>elk uur</option><option>dagelijks</option><option>elke 5 min</option></select></div>
+      <button class="act" style="padding:12px 18px" type="submit">Opslaan &amp; testen</button></form>
+      <p class="ctx" style="color:var(--mute);font-size:12px;margin-top:10px">Tip: vraag bij je leverancier een sleutel met alleen leesrechten. SERVAI past niets aan in je systemen. Dit is een demo: er wordt niets echt opgeslagen of verbonden.</p></div>`:''}
+    <div class="sec"><h2>Zo werkt het</h2><small>In drie stappen</small></div>
+    <div class="c span-12"><div class="feed">
+      <div class="fe"><time>1</time><span class="who">${ico('i-key')}</span><div><b>Sleutel plakken</b> <span>je vraagt bij je leverancier een API-sleutel (alleen lezen) en plakt die hier</span></div></div>
+      <div class="fe"><time>2</time><span class="who">${ico('i-link')}</span><div><b>Test verbinding</b> <span>SERVAI controleert meteen of de gegevens binnenkomen</span></div></div>
+      <div class="fe"><time>3</time><span class="who">${ico('i-spark')}</span><div><b>Automatisch bijgewerkt</b> <span>de cijfers in het dashboard worden volgens het gekozen schema ververst</span></div></div>
+    </div></div>
+    <div class="sec"><h2>Logboek</h2><small>Laatste inleesrondes</small></div>
+    <div class="c span-12"><div class="feed">
+      <div class="fe"><time>08:05</time><span class="who">${ico('i-euro')}</span><div><b>Kassa</b> <span>412 bonnen ingelezen voor 4 locaties</span></div></div>
+      <div class="fe"><time>08:00</time><span class="who">${ico('i-drink')}</span><div><b>Biertanken</b> <span>6 tanks bijgewerkt</span></div></div>
+      <div class="fe"><time>06:00</time><span class="who">${ico('i-staff')}</span><div><b>Rooster &amp; uren</b> <span>gewerkte uren van gisteren ingelezen</span></div></div>
+      <div class="fe"><time>gist.</time><span class="who">${ico('i-euro')}</span><div><b>Boekhouding</b> <span style="color:#FF8A8A">mislukt: sleutel verlopen</span></div></div>
     </div></div>
   </div>`,after(){}}
 };
@@ -910,14 +983,14 @@ function jumpSpy(){
 }
 addEventListener('scroll',()=>{if(jumpNav)requestAnimationFrame(jumpSpy)},{passive:true});
 /* ---------------- router ---------------- */
-const TITLES={upselling:'Upselling',kansen:'Markt & kansen',gebruikers:'Gebruikers',dranken:'Dranken',overzicht:'Overzicht',financien:'Financiën',menu:'Menu & keuken',personeel:'Personeel',reserveringen:'Reserveringen',inkoop:'Inkoop',gasten:'Gasten & reviews',assistent:'Vraag SERVAI'};
+const TITLES={upselling:'Upselling',kansen:'Markt & kansen',gebruikers:'Gebruikers',koppelingen:'Koppelingen',dranken:'Dranken',overzicht:'Overzicht',financien:'Financiën',menu:'Menu & keuken',personeel:'Personeel',reserveringen:'Reserveringen',inkoop:'Inkoop',gasten:'Gasten & reviews',assistent:'Vraag SERVAI'};
 function render(){
   if(!state.uid||!cur())return;
   let v=(location.hash||'#overzicht').slice(1);if(!V[v]||!can(v))v=firstAllowed();state.view=v;killCharts();
   const h=new Date().getHours();const greet=h<12?'Goedemorgen':h<18?'Goedemiddag':'Goedenavond';
   document.getElementById('title').textContent=state.view==='overzicht'?greet+', '+cur().n.split(' ')[0]:TITLES[state.view];
-  document.getElementById('period').style.visibility=['kansen','gebruikers','assistent'].includes(state.view)?'hidden':'';
-  document.getElementById('subtitle').textContent=locName()+' · '+(state.view==='gebruikers'?'toegang & rollen':state.view==='kansen'?'markt, laatste 12 maanden':perName())+' · bijgewerkt '+String(new Date().getHours()).padStart(2,'0')+':'+String(new Date().getMinutes()).padStart(2,'0');
+  document.getElementById('period').style.visibility=['kansen','gebruikers','koppelingen','assistent'].includes(state.view)?'hidden':'';
+  document.getElementById('subtitle').textContent=locName()+' · '+(state.view==='gebruikers'?'toegang & rollen':state.view==='koppelingen'?'systemen die data aanleveren':state.view==='kansen'?'markt, laatste 12 maanden':perName())+' · bijgewerkt '+String(new Date().getHours()).padStart(2,'0')+':'+String(new Date().getMinutes()).padStart(2,'0');
   document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===state.view));
   document.body.classList.toggle('on-assist',state.view==='assistent');
   const out=V[state.view]();const el=document.getElementById('view');el.innerHTML=`<div class="view">${out.html}</div>`;out.after&&out.after();buildJump();
@@ -944,6 +1017,14 @@ vw.addEventListener('click',e=>{
 });
 vw.addEventListener('change',e=>{const m=e.target.closest('[data-locs]');if(m){USERS.find(x=>x.id===m.dataset.locs).locs=m.value;saveUsers();flash('Locatietoegang aangepast')}});
 vw.addEventListener('submit',e=>{if(e.target.id!=='invf')return;e.preventDefault();const r=document.getElementById('in-r').value;USERS.push({id:'u'+(USERS.length+1)+Date.now()%1000,n:document.getElementById('in-n').value.trim(),e:document.getElementById('in-e').value.trim(),r,locs:'all',st:'Uitgenodigd',last:'',access:[...PRESET[r]]});saveUsers();render();flash('Uitnodiging verstuurd (demo)')});
+
+vw.addEventListener('click',e=>{const b=e.target.closest('[data-cn]');if(!b)return;const c=CONN.find(x=>x.id===b.dataset.c);if(!c)return;const a=b.dataset.cn;
+  if(a==='open'){connOpen=c.id;render();setTimeout(()=>document.getElementById('cnf')&&document.getElementById('cnf').scrollIntoView({behavior:'smooth',block:'center'}),30)}
+  if(a==='off'){c.st='off';c.sys='';c.last='';c.locs='';c.sync='';delete c.msg;saveConn();const y=scrollY;render();scrollTo(0,y);flash('Koppeling verbroken')}
+  if(a==='test'){const old=c.st;c.st='wait';const y=scrollY;render();scrollTo(0,y);setTimeout(()=>{c.st=c.msg?'err':'ok';if(c.st==='ok')c.last='zojuist';saveConn();const y2=scrollY;render();scrollTo(0,y2);flash(c.st==='ok'?'Verbinding werkt':'Verbinding mislukt: nieuwe sleutel nodig')},900)}
+});
+vw.addEventListener('submit',e=>{if(e.target.id!=='cnf')return;e.preventDefault();const c=CONN.find(x=>x.id===connOpen);if(!c)return;
+  c.sys=document.getElementById('cn-s').value;c.locs=document.getElementById('cn-l').value;c.sync=document.getElementById('cn-f').value;c.st='ok';c.last='zojuist';delete c.msg;connOpen=null;saveConn();render();flash('Koppeling opgeslagen en getest (demo)');scrollTo({top:0})});
 if(cur()&&cur().st==='Actief'){applyUser();render()}else{state.uid=null;showLogin()}
 </script>
 </body>
