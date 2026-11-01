@@ -241,6 +241,11 @@ body.on-assist .fab{display:none}
 .inv label{display:block;font-size:12.5px;color:var(--mute);margin-bottom:5px}
 .opp{padding:16px;border-radius:14px;background:var(--panel-2);border:1px solid var(--line)}.opp h3{font:600 15px var(--f-d);margin-bottom:4px}.opp p{color:var(--fg-2);font-size:13px}.opp .big{font:600 22px var(--f-d);margin:6px 0 2px}
 .oppg{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.daychips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}.daychips::-webkit-scrollbar{display:none}
+.daychips button{flex:none;cursor:pointer;font:500 13px var(--f-b);color:var(--fg-2);background:transparent;border:1px solid var(--line-2);border-radius:99px;padding:6px 13px}
+.daychips button:hover{color:var(--fg);background:rgba(255,255,255,.05)}.daychips button.on{color:#fff;background:var(--panel-2);border-color:transparent;box-shadow:0 0 0 1px rgba(34,181,115,.6)}
+.medal{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:50%;font:700 17px var(--f-d);color:#10132A;flex:none}.medal.sm{width:20px;height:20px;font-size:11px;vertical-align:middle;margin-right:4px}
+#period{max-width:100%;overflow-x:auto;scrollbar-width:none}#period::-webkit-scrollbar{display:none}#period button{flex:none;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -261,6 +266,7 @@ body.on-assist .fab{display:none}
   <symbol id="i-drink" viewBox="0 0 24 24"><path d="M5 4.5h14L12 13z"/><path d="M12 13v7M8 20h8"/><path d="M8.2 8.2h7.6"/></symbol>
   <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="3.5"/><path d="M10.5 12.5L19 4M16 7l2.5 2.5M13.5 9.5l2 2"/></symbol>
   <symbol id="i-spark" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="M4 17l5-5 4 4 7-8"/><path d="M15 8h5v5"/></symbol>
   <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 4v16h16"/><path d="M8 16v-4M12 16V8M16 16v-6M20 16V5"/></symbol>
 </svg>
 
@@ -273,6 +279,7 @@ body.on-assist .fab{display:none}
       <a href="#menu" data-v="menu"><svg><use href="#i-chef"/></svg><span>Menu &amp; keuken</span></a>
       <a href="#dranken" data-v="dranken" class="sub"><svg><use href="#i-drink"/></svg><span>Dranken</span></a>
       <a href="#personeel" data-v="personeel"><svg><use href="#i-staff"/></svg><span>Personeel</span></a>
+      <a href="#upselling" data-v="upselling" class="sub"><svg><use href="#i-up"/></svg><span>Upselling</span></a>
       <a href="#reserveringen" data-v="reserveringen"><svg><use href="#i-cal"/></svg><span>Reserveringen</span></a>
       <a href="#inkoop" data-v="inkoop"><svg><use href="#i-box"/></svg><span>Inkoop</span></a>
       <a href="#gasten" data-v="gasten"><svg><use href="#i-star"/></svg><span>Gasten &amp; reviews</span></a>
@@ -291,9 +298,7 @@ body.on-assist .fab{display:none}
       <div class="ctrls">
         <div class="acct-w"><button class="acct" id="acct" aria-haspopup="true" aria-label="Account"><span class="av" id="av">?</span><span class="an" id="an"></span></button><div class="amenu" id="amenu" hidden></div></div>
         <label class="sel" for="loc" aria-label="Locatie"><select id="loc"></select></label>
-        <div class="seg" id="period" role="group" aria-label="Periode">
-          <button data-p="1">Gisteren</button><button data-p="7" class="on">7 dagen</button><button data-p="30">30 dagen</button>
-        </div>
+        <div class="seg" id="period" role="group" aria-label="Periode"></div>
       </div>
     </div>
     <div class="betabar"><b>BETA</b> Je kijkt naar voorbeelddata voor Struisenburg Horeca. Echte cijfers verschijnen zodra de koppelingen live staan.</div>
@@ -324,7 +329,7 @@ const dateLbl=d=>d.getDate()+' '+['jan','feb','mrt','apr','mei','jun','jul','aug
 
 function locData(L){
   const r=rng(L.seed);const wk=[.55,.6,.72,.85,1.25,1.4,1.0];
-  const days=[];for(let i=59;i>=1;i--){const d=new Date(TODAY);d.setDate(d.getDate()-i);
+  const days=[];for(let i=730;i>=1;i--){const d=new Date(TODAY);d.setDate(d.getDate()-i);
     const w=wk[dayIdx(d)],rev=Math.round(5200*L.f*w*(0.88+r()*0.24));const cov=Math.round(rev/(46+r()*10));
     const lab=rev*(0.24+r()*0.07)+ (w<0.7?600*L.f:0);const cogs=rev*(0.27+r()*0.03);
     days.push({d,rev,cov,lab,cogs,bev:rev*(.36+r()*.06)});}
@@ -332,7 +337,13 @@ function locData(L){
   return {L,days,hours,shape,r};
 }
 const DATA=Object.fromEntries(LOCS.map(L=>[L.id,locData(L)]));
+const YTD=Math.round((TODAY-new Date(TODAY.getFullYear(),0,1))/864e5);
+const PERS=[[0,'Vandaag'],[1,'Gisteren'],[7,'7 dagen'],[30,'30 dagen'],[90,'90 dagen'],[YTD,'Dit jaar']];
+function aggToday(locId,prev){
+  const T=todayCalc(locId),rev=prev?T.typNow:T.soFar,cov=T.parts.reduce((a,p)=>a+(prev?p.typNow:p.soFar)/p.avgSp,0),lab=T.lab;
+  const o={rev,cov,lab,cogs:rev*.285,bev:rev*.39};o.avg=o.rev/o.cov;o.labp=o.lab/o.rev*100;o.margin=(1-o.cogs/o.rev)*100;return o}
 function agg(locId,period,offset=0){
+  if(period===0)return aggToday(locId,offset!==0);
   const ids=locId==='all'?LOCS.map(l=>l.id):[locId];let o={rev:0,cov:0,lab:0,cogs:0,bev:0};
   ids.forEach(id=>{const ds=DATA[id].days;const end=ds.length-offset;ds.slice(end-period,end).forEach(x=>{o.rev+=x.rev;o.cov+=x.cov;o.lab+=x.lab;o.cogs+=x.cogs;o.bev+=x.bev})});
   o.avg=o.rev/o.cov;o.labp=o.lab/o.rev*100;o.margin=(1-o.cogs/o.rev)*100;return o}
@@ -344,10 +355,12 @@ function hourly(locId){const ids=locId==='all'?LOCS.map(l=>l.id):[locId];const H
 
 /* ---------------- state ---------------- */
 let state={loc:'all',period:7,view:'overzicht'};
-try{const s=JSON.parse(localStorage.getItem('servai-dash')||'{}');if(s.loc)state.loc=s.loc;if(s.period)state.period=s.period}catch(e){}
+try{const s=JSON.parse(localStorage.getItem('servai-dash')||'{}');if(s.loc)state.loc=s.loc;if(PERS.some(x=>x[0]===s.period))state.period=s.period}catch(e){}
 const save=()=>{try{localStorage.setItem('servai-dash',JSON.stringify({loc:state.loc,period:state.period}))}catch(e){}};
 const locName=()=>state.loc==='all'?'Alle locaties':LOCS.find(l=>l.id===state.loc).name;
-const perName=()=>({1:'gisteren',7:'afgelopen 7 dagen',30:'afgelopen 30 dagen'})[state.period];
+const perName=()=>state.period===0?'vandaag tot nu':state.period===1?'gisteren':state.period===YTD?'dit jaar (sinds 1 januari)':'afgelopen '+state.period+' dagen';
+const pd=()=>state.period===0?Math.max(.3,cumShape(DATA.cornelis.shape,nowH().h)):state.period;
+const vsT=()=>state.period===0?'vs normale dag tot nu':'vs vorige periode';
 
 /* ---------------- chart helpers ---------------- */
 Chart.defaults.font.family='"Instrument Sans",system-ui,sans-serif';Chart.defaults.font.size=12;Chart.defaults.color='#7D83A8';
@@ -364,14 +377,14 @@ const ico=n=>`<svg><use href="#${n}"/></svg>`;
 /* ---------------- views ---------------- */
 const V={};
 V.overzicht=()=>{
-  const p=state.period,cur=agg(state.loc,p),prev=agg(state.loc,p,p);
+  const p=state.period,cur=agg(state.loc,p),prev=agg(state.loc,p,p||1);
   const h=hourly(state.loc),s14=series(state.loc,14);
   const showLocs=state.loc==='all';
-  const locRows=LOCS.map(L=>({L,a:agg(L.id,p),b:agg(L.id,p,p)})).sort((x,y)=>y.a.rev-x.a.rev);
+  const locRows=LOCS.map(L=>({L,a:agg(L.id,p),b:agg(L.id,p,p||1)})).sort((x,y)=>y.a.rev-x.a.rev);
   const maxRev=Math.max(...locRows.map(x=>x.a.rev));
   return {html:`
   <div class="grid">
-    ${[['Omzet',eur(cur.rev),delta(cur.rev,prev.rev),'vs vorige periode'],['Couverts',nf(cur.cov),delta(cur.cov,prev.cov),'gasten bediend'],['Gem. besteding',eur(cur.avg,2),delta(cur.avg,prev.avg),'per gast'],['Loonkosten',pct(cur.labp),delta(cur.labp,prev.labp,true),'van omzet · doel 30%'],['Brutomarge',pct(cur.margin),delta(cur.margin,prev.margin),'na inkoop'],['Reviewscore','4,6',`<span class="delta up">▲ 0,1</span>`,'Google · 30 dagen']].map(k=>`
+    ${[['Omzet',eur(cur.rev),delta(cur.rev,prev.rev),vsT()],['Couverts',nf(cur.cov),delta(cur.cov,prev.cov),'gasten bediend'],['Gem. besteding',eur(cur.avg,2),delta(cur.avg,prev.avg),'per gast'],['Loonkosten',pct(cur.labp),delta(cur.labp,prev.labp,true),'van omzet · doel 30%'],['Brutomarge',pct(cur.margin),delta(cur.margin,prev.margin),'na inkoop'],['Reviewscore','4,6',`<span class="delta up">▲ 0,1</span>`,'Google · 30 dagen']].map(k=>`
       <div class="c kpi k6"><small>${k[0]}</small><b>${k[1]}</b>${k[2]}<span class="ctx">${k[3]}</span></div>`).join('')}
     <div class="c span-8"><div class="ch"><div><h2>Omzet per uur, gisteren</h2><p>${locName()} · vergeleken met dezelfde dag vorige week</p></div><div class="legend"><span><i style="background:var(--s1)"></i>Gisteren</span><span><i class="dash"></i>Vorige week</span></div></div><div class="cv"><canvas id="c-hour" role="img" aria-label="Omzet per uur gisteren en vorige week"></canvas></div></div>
     <div class="c span-4"><div class="ch"><div><h2>AI-inzichten</h2><p>Wat je team vannacht vond</p></div></div>
@@ -437,7 +450,7 @@ function fin(locId,p,off=0){
 const tagC=(c,t)=>`<span class="tag ${c}">${t}</span>`;
 
 V.financien=()=>{
-  const T=todayCalc(state.loc),p=state.period,F=fin(state.loc,p),Fp=fin(state.loc,p,p);
+  const T=todayCalc(state.loc),p=state.period,F=fin(state.loc,p),Fp=fin(state.loc,p,p||1);
   const s=series(state.loc,30),all=state.loc==='all',fx=all?LOCS.reduce((a,l)=>a+l.f,0)/1.15:LOCS.find(l=>l.id===state.loc).f/1.15;
   const wd=WDN[dayIdx(TODAY)];
   const cost=[['Inkoop',F.cogs],['Personeel',F.lab],['Huur & vaste lasten',F.rev*.11],['Energie',F.rev*.045],['Overig',F.rev*.06]];
@@ -450,11 +463,11 @@ V.financien=()=>{
   const inv=[['Sligro','Voeding',6842*fm,3,'ok'],['Hanos','Droogwaren',4118*fm,5,'ok'],['Bidfood','Vlees & vis',2390*fm,6,'warn'],['Brouwerij','Bier & fris',3206*fm,9,'ok'],['Energie','Elektra & gas',1940*fm,12,'ok'],['Huur','Pand',(all?18200:4550),15,'ok']];
   const invTot=inv.reduce((a,x)=>a+x[2],0);
   /* btw */
-  const btw=F.rev/p*91*.04;
+  const btw=F.rev/pd()*91*.04;
   /* prognose */
   const fc=[];for(let i=0;i<7;i++){const d=new Date(TODAY);d.setDate(d.getDate()+i);fc.push({d,v:Math.round(5200*fx*1.15*WK[dayIdx(d)]*(i===0?T.est/T.typDay:1))})}
   const worst=[...T.parts].sort((a,b)=>b.labp-a.labp)[0];
-  const rows=LOCS.map(L=>({L,f:fin(L.id,p),g:fin(L.id,p,p)})).sort((a,b)=>b.f.result-a.f.result);
+  const rows=LOCS.map(L=>({L,f:fin(L.id,p),g:fin(L.id,p,p||1)})).sort((a,b)=>b.f.result-a.f.result);
   const maxR=Math.max(...rows.map(x=>x.f.rev));
   const tag=(k,v,c)=>`<div class="kv"><span>${k}</span><b${c?` style="color:${c}"`:''}>${v}</b></div>`;
   return{html:`<div class="grid">
@@ -469,7 +482,7 @@ V.financien=()=>{
       ${tag('Open tafels',nf(T.open))}${tag('Open rekeningen',eur(T.openV))}${tag('Gem. besteding',eur(T.avg,2))}${tag('Verwacht einde dag',eur(T.est))}${tag('Normale '+wd,eur(T.typDay))}${tag('Loonkosten nu',pct(T.labp),T.labp>32?'#FF9A9A':'')}`}</div>
 
     <div class="sec"><h2>Resultaat</h2><small>${locName()} · ${perName()}</small></div>
-    ${[['Omzet',eur(F.rev),delta(F.rev,Fp.rev),'vs vorige periode'],['Prime cost',pct(F.prime),delta(F.prime,Fp.prime,true),'inkoop + personeel · doel 60%'],['Food cost',pct(F.foodP),delta(F.foodP,Fp.foodP,true),'van foodomzet · doel 30%'],['Drankkosten',pct(F.drinkP),delta(F.drinkP,Fp.drinkP,true),'van drankomzet · doel 22%'],['Bedrijfsresultaat',eur(F.result),delta(F.result,Fp.result),pct(F.resP)+' van omzet'],['Kasverschillen','€ 0',`<span class="delta up">✓ alles klopt</span>`,'dagafsluiting klopt']].map(k=>`
+    ${[['Omzet',eur(F.rev),delta(F.rev,Fp.rev),vsT()],['Prime cost',pct(F.prime),delta(F.prime,Fp.prime,true),'inkoop + personeel · doel 60%'],['Food cost',pct(F.foodP),delta(F.foodP,Fp.foodP,true),'van foodomzet · doel 30%'],['Drankkosten',pct(F.drinkP),delta(F.drinkP,Fp.drinkP,true),'van drankomzet · doel 22%'],['Bedrijfsresultaat',eur(F.result),delta(F.result,Fp.result),pct(F.resP)+' van omzet'],['Kasverschillen','€ 0',`<span class="delta up">✓ alles klopt</span>`,'dagafsluiting klopt']].map(k=>`
       <div class="c kpi k6"><small>${k[0]}</small><b>${k[1]}</b>${k[2]}<span class="ctx">${k[3]}</span></div>`).join('')}
     <div class="c span-8"><div class="ch"><div><h2>Loonkosten als % van omzet</h2><p>${locName()} · laatste 30 dagen</p></div><div class="legend"><span><i class="sq" style="background:var(--s1)"></i>Loonkosten %</span><span><i class="dash"></i>Doel 30%</span></div></div><div class="cv"><canvas id="c-lab" role="img" aria-label="Loonkosten percentage per dag"></canvas></div></div>
     <div class="c span-4"><div class="ch"><div><h2>Waar het geld heen gaat</h2><p>${perName()} · % van omzet</p></div></div><div class="cv"><canvas id="c-cost" role="img" aria-label="Kostenverdeling"></canvas></div></div>
@@ -482,7 +495,7 @@ V.financien=()=>{
       ${inv.map(x=>`<tr><td><b>${x[0]}</b></td><td style="color:var(--fg-2)">${x[1]}</td><td class="r">${eur(x[2])}</td><td class="r">${dl(x[3])}</td><td>${x[4]==='ok'?tagC('good','✓ klaar voor betaling'):tagC('warn','△ 2 regels wijken af')}</td></tr>`).join('')}
       </tbody></table></div></div>
     <div class="c span-5"><div class="ch"><div><h2>Btw &amp; reserves</h2><p>Dit kwartaal, geschat</p></div></div>
-      ${tag('Btw te reserveren',eur(btw))}${tag('Af te dragen op','31 jan')}${tag('Huur komende maand',eur(all?18200:4550))}${tag('Loonbetaling 25e',eur(F.lab*(30/p)))}${tag('Vrij besteedbaar',eur(cf[0]-btw*.4),'#7FE0AE')}
+      ${tag('Btw te reserveren',eur(btw))}${tag('Af te dragen op','31 jan')}${tag('Huur komende maand',eur(all?18200:4550))}${tag('Loonbetaling 25e',eur(F.lab*(30/pd())))}${tag('Vrij besteedbaar',eur(cf[0]-btw*.4),'#7FE0AE')}
     </div>
 
     <div class="sec"><h2>Vooruitblik &amp; afwijkingen</h2><small>Wat je team nu voor je ziet aankomen</small></div>
@@ -511,26 +524,26 @@ V.financien=()=>{
 
 const DISHES=[['Steak frites',29.5,9.4,212],['Burger Struis',19.5,6.1,264],['Zalmschotel',26,10.1,138],['Risotto paddenstoel',21,4.2,96],['Caesar salade',16.5,4.8,124],['Saté van de grill',22,7.9,188],['Vis van de dag',27.5,11.3,71],['Spareribs',24.5,8.8,156],['Bitterballen',8.5,2.1,342],['Nachos',12.5,3.1,208],['Dame blanche',8.75,1.7,161],['Cheesecake',9.5,2.4,74],['Tomatensoep',7.5,1.4,119],['Kipsaté kids',11,3.4,58]];
 V.menu=()=>{
-  const f=(state.loc==='all'?3.6:LOCS.find(l=>l.id===state.loc).f)*(90/7);
-  const d=DISHES.map(x=>({n:x[0],p:x[1],k:x[2],q:Math.round(x[3]*f),m:(1-x[2]/x[1])*100}));
+  const fb=state.loc==='all'?3.6:LOCS.find(l=>l.id===state.loc).f,f=fb*(pd()/7);
+  const d=DISHES.map(x=>({n:x[0],p:x[1],k:x[2],q:Math.round(x[3]*f),q90:Math.round(x[3]*fb*(90/7)),m:(1-x[2]/x[1])*100}));
   const aq=d.reduce((a,b)=>a+b.q,0)/d.length,am=d.reduce((a,b)=>a+b.m,0)/d.length;
   const cat=x=>x.q>=aq&&x.m>=am?['Ster','#22B573']:x.q>=aq?['Trekpaard','#3987e5']:x.m>=am?['Puzzel','#c98500']:['Twijfelgeval','#e04848'];
   const adv=x=>{const c=cat(x)[0];return c==='Ster'?'Prominent houden, prijs laten staan':c==='Trekpaard'?'Prijs licht omhoog of portie herzien':c==='Puzzel'?'Betere plek op de kaart, actief aanraden':x.n.includes('kids')?'Houden: trekt gezinnen':'Herzien of vervangen'};
-  const prop=d.filter(x=>cat(x)[0]==='Trekpaard').map(x=>{const st=x.p<12?.25:.5;return{n:x.n,from:x.p,to:x.p+st,gain:x.q*st/1.09}}).sort((a,b)=>b.gain-a.gain);
+  const prop=d.filter(x=>cat(x)[0]==='Trekpaard').map(x=>{const st=x.p<12?.25:.5;return{n:x.n,from:x.p,to:x.p+st,gain:x.q90*st/1.09}}).sort((a,b)=>b.gain-a.gain);
   const gainTot=prop.reduce((a,b)=>a+b.gain,0);
   return{html:`<div class="grid">
     <div class="c span-12" style="background:linear-gradient(135deg,rgba(30,63,158,.28),rgba(138,68,130,.16) 60%,rgba(236,75,87,.1));border-color:var(--line-2)"><div class="ch" style="margin-bottom:6px"><div><h2>Kaartreview voor 1 januari</h2><p>Prijzen en kaart pas je niet dagelijks aan, maar per kwartaal. Je team bereidt de review voor, jij beslist.</p></div><span class="chip"><i style="background:var(--s4)"></i>volgende review over 60 dagen</span></div>
       <div class="tw"><table><thead><tr><th>Voorstel</th><th>Soort</th><th class="r">Prijs nu</th><th class="r">Nieuw</th><th class="r">Effect per kwartaal</th><th></th></tr></thead><tbody>
       ${prop.map(x=>`<tr><td><b>${x.n}</b></td><td><span class="chip"><i style="background:#3987e5"></i>Trekpaard</span></td><td class="r">${eur(x.from,2)}</td><td class="r"><b>${eur(x.to,2)}</b></td><td class="r" style="color:#7FE0AE">+ ${eur(x.gain)}</td><td class="r"><button class="act" data-done="Opgenomen">Opnemen</button></td></tr>`).join('')}
-      </tbody></table></div><p class="ctx" style="color:var(--mute);font-size:12px;margin-top:10px">Totaal bij akkoord ± ${eur(gainTot)} per kwartaal, uitgaande van gelijk verkoopvolume. Inkoopprijswijzigingen, zoals zalm, nemen we hier ook in mee.</p></div>
-    <div class="c span-7"><div class="ch"><div><h2>Menu engineering</h2><p>${locName()} · laatste 90 dagen · populariteit × marge</p></div></div><div class="cv tall"><canvas id="c-me" role="img" aria-label="Menu engineering: verkochte aantallen tegen marge per gerecht"></canvas></div></div>
+      </tbody></table></div><p class="ctx" style="color:var(--mute);font-size:12px;margin-top:10px">Totaal bij akkoord ± ${eur(gainTot)} per kwartaal, uitgaande van gelijk verkoopvolume en de verkoop van de laatste 90 dagen. Inkoopprijswijzigingen, zoals zalm, nemen we hier ook in mee.</p></div>
+    <div class="c span-7"><div class="ch"><div><h2>Menu engineering</h2><p>${locName()} · ${perName()} · populariteit × marge</p></div></div><div class="cv tall"><canvas id="c-me" role="img" aria-label="Menu engineering: verkochte aantallen tegen marge per gerecht"></canvas></div></div>
     <div class="c span-5"><div class="ch"><div><h2>Wat te doen</h2><p>Advies per kwadrant</p></div></div><div class="ins">
       <div class="in"><span class="st good">Ster</span><div><h3>Populair en winstgevend</h3><p>Prominent op de kaart houden, niet aan de prijs komen.</p></div><span></span></div>
       <div class="in"><span class="st info">Trekpaard</span><div><h3>Populair, lage marge</h3><p>Portie of receptuur bekijken, of prijs licht verhogen.</p></div><span></span></div>
       <div class="in"><span class="st warn">Puzzel</span><div><h3>Hoge marge, weinig verkocht</h3><p>Laat bediening het aanraden, betere plek op de kaart.</p></div><span></span></div>
       <div class="in"><span class="st crit">Twijfel</span><div><h3>Weinig verkocht, lage marge</h3><p>Vervangen of herzien bij de volgende kaartwissel.</p></div><span></span></div>
     </div></div>
-    <div class="c span-12"><div class="ch"><div><h2>Gerechten</h2><p>Laatste 90 dagen · gesorteerd op aantal verkocht</p></div></div><div class="tw"><table><thead><tr><th>Gerecht</th><th>Kwadrant</th><th class="r">Verkocht</th><th class="r">Prijs</th><th class="r">Kostprijs</th><th>Marge</th><th class="r">Bijdrage</th><th>Advies voor de review</th></tr></thead><tbody>
+    <div class="c span-12"><div class="ch"><div><h2>Gerechten</h2><p>${perName()} · gesorteerd op aantal verkocht</p></div></div><div class="tw"><table><thead><tr><th>Gerecht</th><th>Kwadrant</th><th class="r">Verkocht</th><th class="r">Prijs</th><th class="r">Kostprijs</th><th>Marge</th><th class="r">Bijdrage</th><th>Advies voor de review</th></tr></thead><tbody>
       ${d.sort((a,b)=>b.q-a.q).map(x=>{const c=cat(x);return`<tr><td><b>${x.n}</b>${x.n==='Zalmschotel'?' <span class="chip" style="margin-left:6px;color:#FFD27A;border-color:rgba(250,178,25,.35)">△ inkoop +9% · in review</span>':''}</td><td><span class="chip"><i style="background:${c[1]}"></i>${c[0]}</span></td><td class="r">${nf(x.q)}</td><td class="r">${eur(x.p,2)}</td><td class="r">${eur(x.k,2)}</td><td><div class="mbar"><span class="t"><i style="width:${x.m}%"></i></span><span>${Math.round(x.m)}%</span></div></td><td class="r"><b>${eur(x.q*(x.p/1.09-x.k))}</b></td><td style="color:var(--fg-2);white-space:normal;min-width:200px">${adv(x)}</td></tr>`}).join('')}
     </tbody></table></div><p class="ctx" style="color:var(--mute);font-size:12px;margin-top:10px">Bijdrage = aantal × (prijs excl. 9% btw − kostprijs)</p></div>
   </div>`,after(){
@@ -551,7 +564,7 @@ const LIQ=[['Vodka',64,12,'Espresso Martini, Moscow Mule'],['Gin',38,6,'Gin Toni
 const GARN=[['Limoen',22,2,'Gin Tonic, Mojito, Margarita'],['Munt',15,1,'Mojito, Moscow Mule, Hugo'],['Sinaasappel',44,3,'Aperol Spritz, Negroni'],['Komkommer',61,4,'Gin Tonic'],['Rozemarijn',70,6,'Seizoenscocktail'],['Olijven',83,15,'Martini, borrelplank'],['Koffiebonen',58,10,'Espresso Martini'],['IJs (blokjes)',49,2,'Alle cocktails']];
 const stCol=p=>p<20?'#e04848':p<40?'#c98500':'#3987e5';
 V.dranken=()=>{
-  const all=state.loc==='all',L=all?null:LOCS.find(l=>l.id===state.loc),f=(all?3.6:L.f)*(90/7);
+  const all=state.loc==='all',L=all?null:LOCS.find(l=>l.id===state.loc),f=(all?3.6:L.f)*(pd()/7);
   const d=COCK.map(x=>({n:x[0],p:x[1],k:x[2],q:Math.round(x[3]*f),m:(1-x[2]/x[1])*100,b:x[4]}));
   const aq=d.reduce((a,b)=>a+b.q,0)/d.length,am=d.reduce((a,b)=>a+b.m,0)/d.length;
   const cat=x=>x.q>=aq&&x.m>=am?['Ster','#22B573']:x.q>=aq?['Trekpaard','#3987e5']:x.m>=am?['Puzzel','#c98500']:['Twijfelgeval','#e04848'];
@@ -559,16 +572,16 @@ V.dranken=()=>{
   const tanks=TANKS.filter(t=>all||t[0]===state.loc).map(t=>({L:LOCS.find(l=>l.id===t[0]),n:t[1],cap:t[2],pc:t[3],lpd:t[4],left:t[2]*t[3]/100,days:t[2]*t[3]/100/t[4]}));
   tanks.sort((a,b)=>a.pc-b.pc);
   const low=tanks.filter(t=>t.pc<25),lowP=[...LIQ,...GARN].filter(x=>x[1]<25);
-  const dr=fin(state.loc,30).bev*3,pour=fin(state.loc,30).drinkP,qSum=d.reduce((a,b)=>a+b.q,0);
+  const dr=fin(state.loc,state.period).bev,pour=fin(state.loc,state.period).drinkP,qSum=d.reduce((a,b)=>a+b.q,0);
   const allD=[...d.map(x=>({n:x.n,q:x.q,m:x.m,t:'Cocktail'})),...OTHERD.map(x=>({n:x[0],q:Math.round(x[3]*f),m:(1-x[2]/x[1])*100,t:'Overig'}))];
   const rank=[...allD].sort((a,b)=>b.q-a.q),top=rank.slice(0,5),slow=rank.slice(-5).reverse();
   const stk=(x,i)=>`<div class="mbar" style="margin:11px 0"><span style="width:112px;text-align:left;font-size:13.5px;color:var(--fg-2)">${x[0]}</span><span class="t"><i style="width:${x[1]}%;background:${stCol(x[1])}"></i></span><span style="width:40px">${x[1]}%</span><span style="width:54px;color:var(--mute)">${x[2]} d</span></div>`;
   const stat=pc=>pc<15?tagC('crit','Bestelling klaar'):pc<30?tagC('warn','Bijna leeg'):tagC('good','Voldoende');
   return{html:`<div class="grid">
-    ${[['Drankomzet',eur(dr),`<span class="delta up">▲ 2,4%</span>`,'laatste 90 dagen'],['Pour cost',pct(pour),`<span class="delta up">▼ 0,4 punt</span>`,'inkoop van drankomzet · doel 22%'],['Cocktails',nf(qSum),`<span class="delta flat">90 dagen</span>`,'verkocht'],['Bier getapt',nf(tanks.reduce((a,b)=>a+b.lpd,0))+' L',`<span class="delta flat">per dag</span>`,'uit '+tanks.length+' tanks'],['Tanks onder 25%',String(low.length),low.length?`<span class="delta down">▲ aandacht</span>`:`<span class="delta up">✓ ruim</span>`,'bestelling staat klaar'],['Bijna op',String(lowP.length),lowP.length?`<span class="delta down">▲ ${lowP.map(x=>x[0].toLowerCase()).slice(0,2).join(', ')}</span>`:`<span class="delta up">✓</span>`,'uitgangsproducten & garnering']].map(k=>`
+    ${[['Drankomzet',eur(dr),`<span class="delta up">▲ 2,4%</span>`,perName()],['Pour cost',pct(pour),`<span class="delta up">▼ 0,4 punt</span>`,'inkoop van drankomzet · doel 22%'],['Cocktails',nf(qSum),`<span class="delta flat">90 dagen</span>`,'verkocht'],['Bier getapt',nf(tanks.reduce((a,b)=>a+b.lpd,0))+' L',`<span class="delta flat">per dag</span>`,'uit '+tanks.length+' tanks'],['Tanks onder 25%',String(low.length),low.length?`<span class="delta down">▲ aandacht</span>`:`<span class="delta up">✓ ruim</span>`,'bestelling staat klaar'],['Bijna op',String(lowP.length),lowP.length?`<span class="delta down">▲ ${lowP.map(x=>x[0].toLowerCase()).slice(0,2).join(', ')}</span>`:`<span class="delta up">✓</span>`,'uitgangsproducten & garnering']].map(k=>`
       <div class="c kpi k6"><small>${k[0]}</small><b>${k[1]}</b>${k[2]}<span class="ctx">${k[3]}</span></div>`).join('')}
 
-    <div class="sec"><h2>Cocktails</h2><small>${locName()} · laatste 90 dagen · populariteit × marge</small></div>
+    <div class="sec"><h2>Cocktails</h2><small>${locName()} · ${perName()} · populariteit × marge</small></div>
     <div class="c span-7"><div class="ch"><div><h2>Menu engineering cocktails</h2><p>Welke cocktails verdienen hun plek op de kaart</p></div></div><div class="cv tall"><canvas id="c-cock" role="img" aria-label="Cocktails: verkochte aantallen tegen marge"></canvas></div></div>
     <div class="c span-5"><div class="ch"><div><h2>Wat te doen</h2><p>Advies per kwadrant</p></div></div><div class="ins">
       <div class="in"><span class="st good">Ster</span><div><h3>Hardlopers met marge</h3><p>Vaste garnering, prominent op de kaart. Ruim inkopen.</p></div><span></span></div>
@@ -591,7 +604,7 @@ V.dranken=()=>{
     <div class="c span-6"><div class="ch"><div><h2>Uitgangsproducten</h2><p>Sterke drank, likeuren en mixers</p></div></div>${LIQ.map(stk).join('')}</div>
     <div class="c span-6"><div class="ch"><div><h2>Garneringen &amp; vers</h2><p>Houdbaar tot, per dag opgemaakt</p></div></div>${GARN.map(stk).join('')}<p style="color:var(--fg-2);font-size:13px;margin-top:12px">△ Munt en limoen zijn morgen op. Inkoper heeft een bestelling bij de groenteboer klaargezet voor bezorging om 07:00.</p></div>
 
-    <div class="sec"><h2>Hardlopers &amp; slow movers</h2><small>Alle dranken · laatste 90 dagen</small></div>
+    <div class="sec"><h2>Hardlopers &amp; slow movers</h2><small>Alle dranken · ${perName()}</small></div>
     <div class="c span-6"><div class="ch"><div><h2>Hardlopers</h2><p>Wat het hardst gaat</p></div><span class="chip"><i style="background:var(--good)"></i>top 5</span></div>
       ${top.map((x,i)=>`<div class="kv"><span>${i+1}. ${x.n} <span style="color:var(--mute);font-size:12px">· ${x.t}</span></span><b>${nf(x.q)} <span style="color:var(--mute);font-weight:400">· marge ${Math.round(x.m)}%</span></b></div>`).join('')}</div>
     <div class="c span-6"><div class="ch"><div><h2>Slow movers</h2><p>Wat weinig gaat en voorraad kost</p></div><span class="chip"><i style="background:var(--crit)"></i>onderaan 5</span></div>
@@ -612,7 +625,7 @@ V.personeel=()=>{
   const H=['11','12','13','14','15','16','17','18','19','20','21','22','23'];const plan=[3,4,4,4,4,4,5,6,6,6,5,4,3],adv=[2,4,4,3,2,3,5,7,7,7,5,3,2];
   const st=[...STAFF].sort((a,b)=>b[2]-a[2]);
   return{html:`<div class="grid">
-    <div class="c span-3 kpi"><small>Gewerkte uren</small><b>${nf(412*(state.loc==='all'?3.9:1)*state.period/7)}</b><span class="ctx">${perName()}</span></div>
+    <div class="c span-3 kpi"><small>Gewerkte uren</small><b>${nf(412*(state.loc==='all'?3.9:1)*pd()/7)}</b><span class="ctx">${perName()}</span></div>
     <div class="c span-3 kpi"><small>Omzet per gewerkt uur</small><b>€ 71,40</b><span class="delta up">▲ 4,2%</span></div>
     <div class="c span-3 kpi"><small>Te veel ingepland</small><b>23 uur</b><span class="ctx">≈ € 550 te besparen</span></div>
     <div class="c span-3 kpi"><small>Arbeidstijdenwet</small><b>1 melding</b><span class="delta down">△ rusttijd Tim</span></div>
@@ -622,7 +635,7 @@ V.personeel=()=>{
       ${st.map((x,i)=>`<tr><td><span class="rank">${i+1}</span><b>${x[0]}</b> <span style="color:var(--mute);font-size:12px">${x[1]}</span></td><td style="width:55%"><div class="mbar"><span class="t"><i style="width:${x[2]}%;background:${i===0?'var(--good)':'var(--s1)'}"></i></span><span>${x[2]}</span></div></td></tr>`).join('')}
     </tbody></table></div></div>
     <div class="c span-12"><div class="ch"><div><h2>Productiviteit per medewerker</h2><p>${perName()}</p></div></div><div class="tw"><table><thead><tr><th>Medewerker</th><th>Functie</th><th class="r">Uren</th><th class="r">Omzet / uur</th><th class="r">Desserts per 10 tafels</th><th>Coaching-tip</th></tr></thead><tbody>
-      ${st.map((x,i)=>`<tr><td><b>${x[0]}</b></td><td>${x[1]}</td><td class="r">${nf((32-i*2)*state.period/7)}</td><td class="r">${eur(x[3],2)}</td><td class="r">${(x[2]/12).toLocaleString('nl-NL',{maximumFractionDigits:1})}</td><td style="color:var(--fg-2);white-space:normal;min-width:220px">${x[2]>80?'Laat collega\'s meelopen: topper in desserts':x[2]>65?'Wijn per glas actiever aanraden':'Koffie en dessert standaard aanbieden'}</td></tr>`).join('')}
+      ${st.map((x,i)=>`<tr><td><b>${x[0]}</b></td><td>${x[1]}</td><td class="r">${nf((32-i*2)*pd()/7)}</td><td class="r">${eur(x[3],2)}</td><td class="r">${(x[2]/12).toLocaleString('nl-NL',{maximumFractionDigits:1})}</td><td style="color:var(--fg-2);white-space:normal;min-width:220px">${x[2]>80?'Laat collega\'s meelopen: topper in desserts':x[2]>65?'Wijn per glas actiever aanraden':'Koffie en dessert standaard aanbieden'}</td></tr>`).join('')}
     </tbody></table></div></div>
   </div>`,after(){
     mk('c-ros',{type:'bar',data:{labels:H.map(h=>h+':00'),datasets:[{label:'Ingepland',data:plan,backgroundColor:'#6B7199',borderRadius:4,borderSkipped:'start',maxBarThickness:16},{label:'Advies SERVAI',data:adv,backgroundColor:'#3987e5',borderRadius:4,borderSkipped:'start',maxBarThickness:16}]},
@@ -650,7 +663,7 @@ V.reserveringen=()=>{
 };
 
 V.inkoop=()=>{
-  const sup=[['Sligro',18400],['Hanos',11200],['Bidfood',7900],['Brouwerij',6300],['Groenteboer',3100],['Overig',2400]].map(x=>[x[0],x[1]*(state.loc==='all'?1:.28)*state.period/30]);
+  const sup=[['Sligro',18400],['Hanos',11200],['Bidfood',7900],['Brouwerij',6300],['Groenteboer',3100],['Overig',2400]].map(x=>[x[0],x[1]*(state.loc==='all'?1:.28)*pd()/30]);
   const al=[['Zalmfilet','Hanos','+9%',-410,'crit'],['Room 35%','Sligro','+6%',-95,'warn'],['Runderbavette','Hanos','+4%',-180,'warn'],['Friet 10mm','Bidfood','−4% bij Sligro',120,'good'],['Limoenen','Groenteboer','+12%',-35,'warn']];
   return{html:`<div class="grid">
     <div class="c span-4 kpi"><small>Inkoop</small><b>${eur(sup.reduce((a,b)=>a+b[1],0))}</b><span class="ctx">${perName()}</span></div>
@@ -670,7 +683,7 @@ V.gasten=()=>{
   const top=[['Eten',86],['Sfeer',81],['Service',72],['Prijs-kwaliteit',61],['Wachttijd',38]];
   return{html:`<div class="grid">
     <div class="c span-3 kpi"><small>Google-score</small><b>4,6 ★</b><span class="delta up">▲ 0,3 in 12 weken</span></div>
-    <div class="c span-3 kpi"><small>Nieuwe reviews</small><b>${state.loc==='all'?'64':'17'}</b><span class="ctx">${perName()}</span></div>
+    <div class="c span-3 kpi"><small>Nieuwe reviews</small><b>${nf((state.loc==='all'?64:17)*pd()/30)}</b><span class="ctx">${perName()}</span></div>
     <div class="c span-3 kpi"><small>Beantwoord</small><b>100%</b><span class="ctx">gem. binnen 2 uur</span></div>
     <div class="c span-3 kpi"><small>Vaste gasten</small><b>38%</b><span class="ctx">kwam vaker dan 3× dit jaar</span></div>
     <div class="c span-7"><div class="ch"><div><h2>Gemiddelde reviewscore</h2><p>${locName()} · Google, TripAdvisor en TheFork samen</p></div></div><div class="cv short"><canvas id="c-sc" role="img" aria-label="Reviewscore per week"></canvas></div></div>
@@ -708,9 +721,9 @@ V.assistent=()=>({html:`<div class="c"><div class="chat">
 }});
 
 /* ---------------- account, gebruikers & toegang (demo) ---------------- */
-const PAGES=[['overzicht','Overzicht'],['financien','Financiën'],['menu','Gerechten'],['dranken','Dranken'],['kansen','Kansen'],['personeel','Personeel'],['reserveringen','Reserv.'],['inkoop','Inkoop'],['gasten','Gasten'],['assistent','Assistent'],['gebruikers','Gebruikers']];
+const PAGES=[['overzicht','Overzicht'],['financien','Financiën'],['menu','Gerechten'],['dranken','Dranken'],['kansen','Kansen'],['personeel','Personeel'],['upselling','Upselling'],['reserveringen','Reserv.'],['inkoop','Inkoop'],['gasten','Gasten'],['assistent','Assistent'],['gebruikers','Gebruikers']];
 const ALLP=PAGES.map(p=>p[0]);
-const PRESET={Eigenaar:ALLP,Bedrijfsleider:ALLP.filter(p=>p!=='gebruikers'),'Chef-kok':['overzicht','menu','dranken','kansen','inkoop','assistent'],'Boekhouder':['overzicht','financien','inkoop'],'Bar manager':['overzicht','dranken','personeel','inkoop','assistent'],'Gastvrouw':['overzicht','reserveringen','gasten','assistent']};
+const PRESET={Eigenaar:ALLP,Bedrijfsleider:ALLP.filter(p=>p!=='gebruikers'),'Chef-kok':['overzicht','menu','dranken','kansen','inkoop','assistent'],'Boekhouder':['overzicht','financien','inkoop'],'Bar manager':['overzicht','dranken','personeel','upselling','inkoop','assistent'],'Gastvrouw':['overzicht','reserveringen','gasten','assistent']};
 const USERS0=[
  {id:'u1',n:'Eva Bakker',e:'eva@struisenburg-demo.nl',r:'Eigenaar',locs:'all',st:'Actief',last:'Nu actief'},
  {id:'u2',n:'Mark de Wit',e:'mark@struisenburg-demo.nl',r:'Bedrijfsleider',locs:'cornelis',st:'Actief',last:'Vandaag 08:12'},
@@ -721,8 +734,8 @@ const USERS0=[
  {id:'u7',n:'Yara Hoekstra',e:'yara@struisenburg-demo.nl',r:'Gastvrouw',locs:'beau',st:'Uitgenodigd',last:'Nog niet ingelogd'}
 ].map(u=>({...u,access:[...PRESET[u.r]]}));
 let USERS=USERS0;
-try{const s=JSON.parse(localStorage.getItem('servai-users')||'null');if(Array.isArray(s)&&s.length)USERS=s}catch(e){}
-const saveUsers=()=>{try{localStorage.setItem('servai-users',JSON.stringify(USERS))}catch(e){}};
+try{const s=JSON.parse(localStorage.getItem('servai-users2')||'null');if(Array.isArray(s)&&s.length)USERS=s}catch(e){}
+const saveUsers=()=>{try{localStorage.setItem('servai-users2',JSON.stringify(USERS))}catch(e){}};
 try{state.uid=sessionStorage.getItem('servai-uid')||null}catch(e){state.uid=null}
 const cur=()=>USERS.find(u=>u.id===state.uid);
 const can=v=>{const u=cur();return !!u&&u.access.includes(v)};
@@ -805,6 +818,77 @@ V.kansen=()=>{
   }}
 };
 
+/* ---------------- upselling per dag ---------------- */
+const UPS=[['sanne','Sanne','Bediening','cornelis',.62],['daan','Daan','Bediening','cornelis',.54],['mo','Mo','Bediening','fust',.43],['lisa','Lisa','Bediening','fust',.37],['tim','Tim','Runner','fust',.22],['yara','Yara','Bar','coconuts',.5],['noor','Noor','Bar','coconuts',.46],['emma','Emma','Bediening','coconuts',.52],['jesse','Jesse','Bediening','beau',.34],['femke','Femke','Bediening','beau',.48],['ruben','Ruben','Bediening','beau',.41]];
+const UCAT=[['Aperitief',9],['Dessert',8.5],['Wijn per glas',6.5],['Koffie & digestief',4.2],['Bijgerecht',5.5]];
+let upDaySel=1;
+const dLbl=o=>{const d=new Date(TODAY);d.setDate(d.getDate()-o);return DAYS[dayIdx(d)]+' '+d.getDate()};
+function upDay(off,i){
+  const u=UPS[i],d=new Date(TODAY);d.setDate(d.getDate()-off);const di=dayIdx(d);
+  if(di<5&&(di===i%5||di===(i+3)%5))return null;
+  const L=LOCS.find(l=>l.id===u[3]),r=rng(i*977+Math.floor(d.getTime()/864e5)*31+7);
+  let T=Math.round((11+r()*7)*(di>=4?1.5:di===3?1.1:.8)*L.f/1.1);if(off===0)T=Math.max(1,Math.round(T*cumShape(DATA.cornelis.shape,nowH().h)));
+  const rate=Math.min(.95,u[4]*(.85+r()*.3)),tw=Math.round(T*rate),ups=Math.round(tw*1.4);
+  const w=UCAT.map(()=>r()+.3),ws=w.reduce((a,b)=>a+b,0),cats=w.map(x=>Math.round(ups*x/ws));
+  const extra=cats.reduce((a,c,k)=>a+c*UCAT[k][1],0)*(.92+r()*.16);
+  return{i,u,T,rate:tw/Math.max(1,T),tw,ups,cats,extra,pt:extra/T};
+}
+const upScope=()=>UPS.map((u,i)=>i).filter(i=>state.loc==='all'||UPS[i][3]===state.loc);
+const upOffs=(p,prev)=>{const a=[];if(p===0)return prev?[1]:[0];for(let k=1;k<=p;k++)a.push(k+(prev?p:0));return a};
+function upSum(offs){
+  const S=upScope(),o={}; S.forEach(i=>o[i]={i,u:UPS[i],T:0,tw:0,ups:0,extra:0,cats:UCAT.map(()=>0),days:0,wins:0});
+  offs.forEach(off=>{const day=S.map(i=>upDay(off,i)).filter(Boolean).sort((a,b)=>b.extra-a.extra);day.forEach((x,k)=>{const t=o[x.i];t.T+=x.T;t.tw+=x.tw;t.ups+=x.ups;t.extra+=x.extra;t.days++;x.cats.forEach((c,j)=>t.cats[j]+=c);if(k===0)t.wins++})});
+  return Object.values(o).filter(x=>x.T>0).map(x=>({...x,rate:x.tw/x.T,pt:x.extra/x.T}));
+}
+V.upselling=()=>{
+  const p=state.period,S=upScope();
+  const cur=upSum(upOffs(p)),prev=upSum(upOffs(p,true));
+  const tot=a=>({e:a.reduce((x,y)=>x+y.extra,0),T:a.reduce((x,y)=>x+y.T,0),u:a.reduce((x,y)=>x+y.tw,0)});
+  const C=tot(cur),P=tot(prev),best=[...cur].sort((a,b)=>b.extra-a.extra);
+  const day=S.map(i=>upDay(upDaySel,i)).filter(Boolean).sort((a,b)=>b.extra-a.extra);
+  const off=S.filter(i=>!day.some(x=>x.i===i)).map(i=>UPS[i][1]);
+  const own=i=>{const a=upSum2(i);return a};
+  function upSum2(i){let T=0,u=0;for(let k=1;k<=28;k++){const x=upDay(k,i);if(x){T+=x.T;u+=x.ups}}return u/Math.max(1,T)}
+  const medal=['#E8B84A','#B9BEDD','#C98A5A'];
+  const days14=[];for(let k=13;k>=0;k--){const ds=S.map(i=>upDay(k,i)).filter(Boolean).sort((a,b)=>b.extra-a.extra);days14.push({k,ds,tot:ds.reduce((a,b)=>a+b.extra,0)})}
+  const top3=best.slice(0,3),restA=best.slice(3);
+  const catRate=(a,j)=>a.reduce((x,y)=>x+y.cats[j],0)/Math.max(1,a.reduce((x,y)=>x+y.T,0));
+  const gaps=UCAT.map((c,j)=>({n:c[0],t:catRate(top3,j),r:catRate(restA.length?restA:best,j)})).sort((a,b)=>(b.t/Math.max(.001,b.r))-(a.t/Math.max(.001,a.r)));
+  const worst=[...cur].filter(x=>x.u[2]!=='Runner').sort((a,b)=>a.pt-b.pt)[0];
+  const chips=[0,1,2,3,4,5,6,7,8,9,10,11,12,13].map(o=>`<button type="button" class="${o===upDaySel?'on':''}" data-ud="${o}">${o===0?'Vandaag':o===1?'Gisteren':dLbl(o)}</button>`).join('');
+  return{html:`<div class="grid">
+    ${[['Extra omzet',eur(C.e),delta(C.e,P.e),perName()+' · door upselling'],['Upsell-score',pct(C.u/Math.max(1,C.T)*100,0),delta(C.u/Math.max(1,C.T),P.u/Math.max(1,P.T)),'extra item per tafel'],['Extra per tafel',eur(C.e/Math.max(1,C.T),2),delta(C.e/Math.max(1,C.T),P.e/Math.max(1,P.T)),'gemiddeld'],['Beste medewerker',best[0]?best[0].u[1]:'-',`<span class="delta up">${best[0]?eur(best[0].extra):''}</span>`,'meeste extra omzet · '+perName()]].map(k=>`<div class="c kpi span-3"><small>${k[0]}</small><b>${k[1]}</b>${k[2]}<span class="ctx">${k[3]}</span></div>`).join('')}
+
+    <div class="sec"><h2>Ranglijst van de dag</h2><small>${locName()} · kies een dag</small></div>
+    <div class="c span-12"><div class="daychips">${chips}</div></div>
+    ${day.slice(0,3).map((x,k)=>{const a=own(x.i),dl=(x.rate-a)*100;return`<div class="c span-4"><div style="display:flex;align-items:center;gap:12px"><span class="medal" style="background:${medal[k]}">${k+1}</span><div><h2 style="font-size:18px">${x.u[1]}</h2><p style="color:var(--mute);font-size:12.5px">${x.u[2]} · ${LOCS.find(l=>l.id===x.u[3]).name}</p></div></div><div class="kpi" style="margin-top:14px"><b style="font-size:26px">${eur(x.extra)}</b><span class="ctx">extra omzet · ${pct(x.rate*100,0)} upsell-score · ${nf(x.T)} tafels</span></div><p style="margin-top:10px;font-size:13px;color:${dl>=0?'#7FE0AE':'#FF9A9A'}">${dl>=0?'▲':'▼'} ${pct(Math.abs(dl),0).replace('%',' punt')} t.o.v. eigen gemiddelde</p></div>`}).join('')||`<div class="c span-12"><p style="color:var(--fg-2)">Niemand ingeroosterd op deze dag.</p></div>`}
+    <div class="c span-12"><div class="tw"><table><thead><tr><th>#</th><th>Medewerker</th><th>Locatie</th><th class="r">Tafels</th><th>Upsell-score</th><th class="r">Extra omzet</th>${UCAT.map(c=>`<th class="r">${c[0]}</th>`).join('')}</tr></thead><tbody>
+      ${day.map((x,k)=>`<tr><td><span class="rank">${k+1}</span></td><td><b>${x.u[1]}</b> <span style="color:var(--mute);font-size:12px">${x.u[2]}</span></td><td><span class="loc-name"><i style="background:${LOCS.find(l=>l.id===x.u[3]).c}"></i>${LOCS.find(l=>l.id===x.u[3]).name}</span></td><td class="r">${nf(x.T)}</td><td><div class="mbar"><span class="t"><i style="width:${Math.min(100,x.rate*100)}%;background:${k===0?'var(--good)':'var(--s1)'}"></i></span><span style="width:40px">${pct(x.rate*100,0)}</span></div></td><td class="r"><b>${eur(x.extra)}</b></td>${x.cats.map(c=>`<td class="r">${c}</td>`).join('')}</tr>`).join('')}
+    </tbody></table></div>${off.length?`<p class="ctx" style="color:var(--mute);font-size:12px;margin-top:10px">Niet ingeroosterd: ${off.join(', ')}</p>`:''}</div>
+
+    <div class="sec"><h2>Dagwinnaars</h2><small>Laatste 14 dagen · wie de meeste extra omzet haalde</small></div>
+    <div class="c span-7"><div class="ch"><div><h2>Extra omzet per dag</h2><p>${locName()} · alle medewerkers samen</p></div></div><div class="cv"><canvas id="c-up" role="img" aria-label="Extra omzet door upselling per dag"></canvas></div></div>
+    <div class="c span-5"><div class="ch"><div><h2>Winnaar per dag</h2><p>Nummer 1 van de dag</p></div></div>
+      ${[...days14].reverse().map(x=>x.ds[0]?`<div class="kv"><span>${x.k===0?'Vandaag':x.k===1?'Gisteren':dLbl(x.k)}</span><b><span class="medal sm" style="background:${medal[0]}">1</span> ${x.ds[0].u[1]} <span style="color:var(--mute);font-weight:400">· ${eur(x.ds[0].extra)}</span></b></div>`:'').join('')}</div>
+
+    <div class="sec"><h2>Ranglijst periode</h2><small>${locName()} · ${perName()}</small></div>
+    <div class="c span-12"><div class="tw"><table><thead><tr><th>#</th><th>Medewerker</th><th>Locatie</th><th class="r">Tafels</th><th>Upsell-score</th><th class="r">Extra per tafel</th><th>Extra omzet</th>${p>1?'<th class="r">Dagen op #1</th>':''}</tr></thead><tbody>
+      ${(()=>{const mx=Math.max(...best.map(x=>x.extra),1);return best.map((x,k)=>`<tr><td><span class="rank">${k+1}</span></td><td><b>${x.u[1]}</b> <span style="color:var(--mute);font-size:12px">${x.u[2]}</span></td><td><span class="loc-name"><i style="background:${LOCS.find(l=>l.id===x.u[3]).c}"></i>${LOCS.find(l=>l.id===x.u[3]).name}</span></td><td class="r">${nf(x.T)}</td><td><div class="mbar"><span class="t"><i style="width:${Math.min(100,x.rate*100)}%;background:${k===0?'var(--good)':'var(--s1)'}"></i></span><span style="width:40px">${pct(x.rate*100,0)}</span></div></td><td class="r">${eur(x.pt,2)}</td><td><div class="mbar"><span class="t"><i style="width:${x.extra/mx*100}%;background:${k===0?'var(--good)':'var(--s1)'}"></i></span><b class="num" style="width:auto">${eur(x.extra)}</b></div></td>${p>1?`<td class="r">${x.wins}</td>`:''}</tr>`).join('')})()}
+    </tbody></table></div></div>
+
+    <div class="sec"><h2>Wat de top anders doet</h2><small>Top 3 tegenover de rest · ${perName()}</small></div>
+    <div class="c span-7"><div class="ch"><div><h2>Aandeel tafels met extra</h2><p>Per categorie, top 3 tegenover de rest van het team</p></div><div class="legend"><span><i class="sq" style="background:var(--good)"></i>Top 3</span><span><i class="sq" style="background:var(--ref)"></i>Rest</span></div></div>
+      ${UCAT.map((c,j)=>{const t=catRate(top3,j)*100,r=catRate(restA.length?restA:best,j)*100,m=Math.max(t,r,1)*1.15;return`<div style="margin:12px 0"><div style="display:flex;justify-content:space-between;font-size:13.5px;color:var(--fg-2);margin-bottom:5px"><span>${c[0]}</span><span>${pct(t,0)} <span style="color:var(--mute)">vs ${pct(r,0)}</span></span></div><div class="mbar" style="margin-bottom:4px"><span class="t"><i style="width:${t/m*100}%;background:var(--good)"></i></span></div><div class="mbar"><span class="t"><i style="width:${r/m*100}%;background:var(--ref)"></i></span></div></div>`}).join('')}</div>
+    <div class="c span-5"><div class="ch"><div><h2>Coaching</h2><p>Automatisch afgeleid uit de cijfers</p></div></div><div class="ins">
+      <div class="in"><span class="st good">✓ Leren</span><div><h3>${gaps[0].n}: top verkoopt ${(gaps[0].t/Math.max(.001,gaps[0].r)).toLocaleString('nl-NL',{maximumFractionDigits:1})}× zo vaak</h3><p>${best[0]?best[0].u[1]:''} haalt dit er vaker uit. Laat een collega een avond meelopen.</p></div><span></span></div>
+      ${worst?`<div class="in"><span class="st warn">△ Aandacht</span><div><h3>${worst.u[1]}: ${eur(worst.pt,2)} extra per tafel</h3><p>Laagste van het team. Gesprekje over ${gaps[0].n.toLowerCase()} en ${gaps[1].n.toLowerCase()} kan snel schelen.</p></div><button class="act" data-done="Coaching ingepland">Coaching plannen</button></div>`:''}
+      <div class="in"><span class="st info">Idee</span><div><h3>Maak er een wedstrijd van</h3><p>Weekprijs voor de meeste extra omzet. Je Planner zet de dagwinnaar op de beste dienst.</p></div><button class="act" data-done="Actie ingepland">Inplannen</button></div>
+    </div></div>
+  </div>`,after(){
+    mk('c-up',{type:'bar',data:{labels:days14.map(x=>x.k===0?'vandaag':dLbl(x.k)),datasets:[{label:'Extra omzet',data:days14.map(x=>x.tot),backgroundColor:days14.map(x=>x.k===upDaySel?'#22B573':'rgba(57,135,229,.6)'),borderRadius:4,borderSkipped:'start',maxBarThickness:28}]},options:{scales:{y:yEur,x:{...xPlain,ticks:{maxRotation:0,autoSkip:true,maxTicksLimit:7}}},plugins:{tooltip:{...tip,callbacks:{label:c=>' '+eur(c.raw)}}}}});
+  }}
+};
+
 /* sprongmenu per pagina */
 let jumpT=[],jumpNav=null;
 function buildJump(){
@@ -826,20 +910,21 @@ function jumpSpy(){
 }
 addEventListener('scroll',()=>{if(jumpNav)requestAnimationFrame(jumpSpy)},{passive:true});
 /* ---------------- router ---------------- */
-const TITLES={kansen:'Markt & kansen',gebruikers:'Gebruikers',dranken:'Dranken',overzicht:'Overzicht',financien:'Financiën',menu:'Menu & keuken',personeel:'Personeel',reserveringen:'Reserveringen',inkoop:'Inkoop',gasten:'Gasten & reviews',assistent:'Vraag SERVAI'};
+const TITLES={upselling:'Upselling',kansen:'Markt & kansen',gebruikers:'Gebruikers',dranken:'Dranken',overzicht:'Overzicht',financien:'Financiën',menu:'Menu & keuken',personeel:'Personeel',reserveringen:'Reserveringen',inkoop:'Inkoop',gasten:'Gasten & reviews',assistent:'Vraag SERVAI'};
 function render(){
   if(!state.uid||!cur())return;
   let v=(location.hash||'#overzicht').slice(1);if(!V[v]||!can(v))v=firstAllowed();state.view=v;killCharts();
   const h=new Date().getHours();const greet=h<12?'Goedemorgen':h<18?'Goedemiddag':'Goedenavond';
   document.getElementById('title').textContent=state.view==='overzicht'?greet+', '+cur().n.split(' ')[0]:TITLES[state.view];
-  document.getElementById('period').style.visibility=['menu','dranken','kansen','gebruikers'].includes(state.view)?'hidden':'';
-  document.getElementById('subtitle').textContent=locName()+' · '+(state.view==='gebruikers'?'toegang & rollen':['menu','dranken','kansen'].includes(state.view)?'laatste 90 dagen':perName())+' · bijgewerkt '+String(new Date().getHours()).padStart(2,'0')+':'+String(new Date().getMinutes()).padStart(2,'0');
+  document.getElementById('period').style.visibility=['kansen','gebruikers','assistent'].includes(state.view)?'hidden':'';
+  document.getElementById('subtitle').textContent=locName()+' · '+(state.view==='gebruikers'?'toegang & rollen':state.view==='kansen'?'markt, laatste 12 maanden':perName())+' · bijgewerkt '+String(new Date().getHours()).padStart(2,'0')+':'+String(new Date().getMinutes()).padStart(2,'0');
   document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===state.view));
   document.body.classList.toggle('on-assist',state.view==='assistent');
   const out=V[state.view]();const el=document.getElementById('view');el.innerHTML=`<div class="view">${out.html}</div>`;out.after&&out.after();buildJump();
   document.querySelectorAll('#period button').forEach(b=>b.classList.toggle('on',+b.dataset.p===state.period));
 }
 document.getElementById('view').addEventListener('click',e=>{const b=e.target.closest('.act[data-done]');if(!b)return;b.textContent='✓ '+b.dataset.done;b.classList.add('done');b.removeAttribute('data-done')});
+document.getElementById('period').innerHTML=PERS.map(x=>`<button data-p="${x[0]}">${x[1]}</button>`).join('');
 const sel=document.getElementById('loc');sel.innerHTML=`<option value="all">Struisenburg · alle locaties</option>`+LOCS.map(l=>`<option value="${l.id}">${l.name}</option>`).join('');sel.value=state.loc;
 sel.addEventListener('change',()=>{state.loc=sel.value;save();render()});
 document.getElementById('period').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;state.period=+b.dataset.p;save();render()});
@@ -854,7 +939,8 @@ document.getElementById('amenu').addEventListener('click',e=>{const a=e.target.c
 const vw=document.getElementById('view');
 vw.addEventListener('click',e=>{
   const t=e.target.closest('.tg');if(t&&!t.disabled){const u=USERS.find(x=>x.id===t.dataset.u),p=t.dataset.p;u.access=u.access.includes(p)?u.access.filter(a=>a!==p):[...u.access,p];saveUsers();const y=scrollY;render();scrollTo(0,y);return}
-  const as=e.target.closest('[data-as]');if(as){doLogin(as.dataset.as);flash('Je bekijkt het dashboard als '+cur().n+' ('+cur().r+')')}
+  const as=e.target.closest('[data-as]');if(as){doLogin(as.dataset.as);flash('Je bekijkt het dashboard als '+cur().n+' ('+cur().r+')');return}
+  const ud=e.target.closest('[data-ud]');if(ud){upDaySel=+ud.dataset.ud;const y=scrollY;render();scrollTo(0,y)}
 });
 vw.addEventListener('change',e=>{const m=e.target.closest('[data-locs]');if(m){USERS.find(x=>x.id===m.dataset.locs).locs=m.value;saveUsers();flash('Locatietoegang aangepast')}});
 vw.addEventListener('submit',e=>{if(e.target.id!=='invf')return;e.preventDefault();const r=document.getElementById('in-r').value;USERS.push({id:'u'+(USERS.length+1)+Date.now()%1000,n:document.getElementById('in-n').value.trim(),e:document.getElementById('in-e').value.trim(),r,locs:'all',st:'Uitgenodigd',last:'',access:[...PRESET[r]]});saveUsers();render();flash('Uitnodiging verstuurd (demo)')});
