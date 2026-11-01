@@ -186,8 +186,10 @@ body.on-assist .fab{display:none}
   .cv{min-height:230px}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.sec{grid-column:span 12;display:flex;align-items:center;flex-wrap:wrap;gap:10px 12px;margin:14px 0 -4px}.sec:first-child{margin-top:0}.sec h2{font-size:18px;font-weight:600}.sec small{color:var(--mute);font-size:13px}
+.tag{display:inline-flex;align-items:center;font:600 11px var(--f-m);letter-spacing:.04em;text-transform:uppercase;padding:4px 8px;border-radius:7px;white-space:nowrap}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);font-size:13.5px;color:var(--fg-2)}.kv:last-child{border-bottom:0}.kv b{color:var(--fg);font-variant-numeric:tabular-nums;font-weight:600}
 </style>
-<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 </head>
 <body>
 
@@ -337,27 +339,110 @@ V.overzicht=()=>{
   }}
 };
 
+/* ---- Vandaag (live demo) ---- */
+const WK=[.55,.6,.72,.85,1.25,1.4,1.0];
+function nowH(){const n=new Date();let h=n.getHours()+n.getMinutes()/60,demo=false;if(h<13){h=20.5;demo=true}return{h,demo}}
+function cumShape(sh,t,m){let c=0;sh.forEach((s,i)=>{const a=12+i,v=s*(m?m[i]:1);if(t>=a+1)c+=v;else if(t>a)c+=v*(t-a)});return c}
+function todayLoc(L){
+  const D=DATA[L.id],r=rng(L.seed*7+TODAY.getDate()*13+TODAY.getMonth()),di=dayIdx(TODAY);
+  const same=D.days.filter(x=>dayIdx(x.d)===di).slice(-4);
+  const typ=same.reduce((a,b)=>a+b.rev,0)/same.length;
+  const m=D.shape.map(()=>.9+r()*.2),lvl=.95+r()*.12;
+  const labDay=typ*(.26+(L.seed%6)/100);
+  const open=Math.max(3,Math.round((6+r()*10)*L.f)),bill=82+r()*18;
+  return{L,sh:D.shape,typ,m,lvl,labDay,open,openV:open*bill,avgSp:47+L.seed%7}}
+function todayCalc(locId){
+  const {h:t,demo}=nowH(),ids=locId==='all'?LOCS:[LOCS.find(l=>l.id===locId)];
+  const parts=ids.map(L=>{const p=todayLoc(L),frac=cumShape(p.sh,t);
+    p.soFar=p.typ*p.lvl*cumShape(p.sh,t,p.m);p.typNow=p.typ*frac;p.est=p.soFar/frac;
+    p.lab=p.labDay*(t-12)/12;p.labp=p.lab/p.soFar*100;p.cov=p.soFar/p.avgSp;return p});
+  const sum=k=>parts.reduce((a,p)=>a+p[k],0);
+  const curve=(x,typical)=>parts.reduce((a,p)=>a+p.typ*(typical?1:p.lvl)*cumShape(p.sh,x,typical?null:p.m),0);
+  const tp=[];for(let x=12;x<=Math.floor(t);x++)tp.push({x,y:curve(x)});tp.push({x:t,y:curve(t)});
+  const ty=[];for(let x=12;x<=24;x++)ty.push({x,y:curve(x,true)});
+  const o={t,demo,parts,soFar:sum('soFar'),typNow:sum('typNow'),est:sum('est'),typDay:sum('typ'),lab:sum('lab'),cov:sum('cov'),open:sum('open'),openV:sum('openV'),tp,ty};
+  o.labp=o.lab/o.soFar*100;o.avg=o.soFar/o.cov;return o}
+const clk=t=>String(Math.floor(t)).padStart(2,'0')+':'+String(Math.round((t%1)*60)).padStart(2,'0');
+const WDN=['maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag','zondag'];
+
+/* ---- Periode (financieel) ---- */
+function fin(locId,p,off=0){
+  const ids=locId==='all'?LOCS:[LOCS.find(l=>l.id===locId)];const o={rev:0,cogs:0,lab:0,bev:0,drinkCogs:0};
+  ids.forEach(L=>{const a=agg(L.id,p,off);o.rev+=a.rev;o.cogs+=a.cogs;o.lab+=a.lab;o.bev+=a.bev;o.drinkCogs+=a.bev*(.19+(L.seed%6)/100)});
+  o.foodP=(o.cogs-o.drinkCogs)/(o.rev-o.bev)*100;o.drinkP=o.drinkCogs/o.bev*100;o.labp=o.lab/o.rev*100;o.prime=(o.cogs+o.lab)/o.rev*100;
+  o.fixed=o.rev*.215;o.result=o.rev-o.cogs-o.lab-o.fixed;o.resP=o.result/o.rev*100;return o}
+const tagC=(c,t)=>`<span class="tag ${c}">${t}</span>`;
+
 V.financien=()=>{
-  const s=series(state.loc,30),p=state.period,cur=agg(state.loc,p);
-  const cost=[['Inkoop',cur.cogs],['Personeel',cur.lab],['Huur & vaste lasten',cur.rev*.11],['Energie',cur.rev*.045],['Overig',cur.rev*.06]];
-  const result=cur.rev-cost.reduce((a,b)=>a+b[1],0);
-  const r=rng(7+state.loc.length);let bal=48000*(state.loc==='all'?3.2:1);const cf=[];for(let i=0;i<8;i++){bal+= (i%4===3?-22000:6500)*(state.loc==='all'?3:1)*(0.8+r()*.4);cf.push(Math.round(bal))}
+  const T=todayCalc(state.loc),p=state.period,F=fin(state.loc,p),Fp=fin(state.loc,p,p);
+  const s=series(state.loc,30),all=state.loc==='all',fx=all?LOCS.reduce((a,l)=>a+l.f,0)/1.15:LOCS.find(l=>l.id===state.loc).f/1.15;
+  const wd=WDN[dayIdx(TODAY)];
+  const cost=[['Inkoop',F.cogs],['Personeel',F.lab],['Huur & vaste lasten',F.rev*.11],['Energie',F.rev*.045],['Overig',F.rev*.06]];
+  const r=rng(7+state.loc.length);let bal=48000*(all?3.2:1);const cf=[];for(let i=0;i<8;i++){bal+=(i%4===3?-22000:6500)*(all?3:1)*(0.8+r()*.4);cf.push(Math.round(bal))}
+  /* begroting vs werkelijk */
+  const bud=all?LOCS.map(L=>{const a=agg(L.id,30).rev;return{n:L.name,a,b:a*(.93+((L.seed*3)%11)/60)}}):[3,2,1,0].map(w=>{const a=agg(state.loc,7,w*7).rev;return{n:'wk '+(4-w),a,b:a*(.95+((w*5)%7)/50)}});
+  /* facturen */
+  const dl=n=>{const d=new Date(TODAY);d.setDate(d.getDate()+n);return dateLbl(d)};
+  const fm=all?1:.3;
+  const inv=[['Sligro','Voeding',6842*fm,3,'ok'],['Hanos','Droogwaren',4118*fm,5,'ok'],['Bidfood','Vlees & vis',2390*fm,6,'warn'],['Brouwerij','Bier & fris',3206*fm,9,'ok'],['Energie','Elektra & gas',1940*fm,12,'ok'],['Huur','Pand',(all?18200:4550),15,'ok']];
+  const invTot=inv.reduce((a,x)=>a+x[2],0);
+  /* btw */
+  const btw=F.rev/p*91*.04;
+  /* prognose */
+  const fc=[];for(let i=0;i<7;i++){const d=new Date(TODAY);d.setDate(d.getDate()+i);fc.push({d,v:Math.round(5200*fx*1.15*WK[dayIdx(d)]*(i===0?T.est/T.typDay:1))})}
+  const worst=[...T.parts].sort((a,b)=>b.labp-a.labp)[0];
+  const rows=LOCS.map(L=>({L,f:fin(L.id,p),g:fin(L.id,p,p)})).sort((a,b)=>b.f.result-a.f.result);
+  const maxR=Math.max(...rows.map(x=>x.f.rev));
+  const tag=(k,v,c)=>`<div class="kv"><span>${k}</span><b${c?` style="color:${c}"`:''}>${v}</b></div>`;
   return{html:`<div class="grid">
-    <div class="c span-3 kpi"><small>Omzet</small><b>${eur(cur.rev)}</b><span class="ctx">${perName()}</span></div>
-    <div class="c span-3 kpi"><small>Kosten</small><b>${eur(cur.rev-result)}</b><span class="ctx">alle posten</span></div>
-    <div class="c span-3 kpi"><small>Bedrijfsresultaat</small><b>${eur(result)}</b><span class="ctx">${pct(result/cur.rev*100)} van omzet</span></div>
-    <div class="c span-3 kpi"><small>Kasverschillen</small><b>€ 0</b><span class="delta up">✓ alles klopt</span></div>
+    <div class="sec"><h2>Vandaag</h2><span class="chip"><i style="background:var(--good)"></i>live${T.demo?' · voorbeeldstand '+clk(T.t):' · '+clk(T.t)}</span><small>${locName()} · ${wd}</small></div>
+    ${[['Omzet tot nu',eur(T.soFar),delta(T.soFar,T.typNow),'vs normale '+wd+' om '+clk(T.t)],['Verwacht einde dag',eur(T.est),delta(T.est,T.typDay),'normaal '+eur(T.typDay)],['Couverts',nf(T.cov),`<span class="delta flat">tot nu</span>`,'gem. '+eur(T.avg,2)+' per gast'],['Loonkosten nu',pct(T.labp),`<span class="delta ${T.labp>30?'down':'up'}">${T.labp>30?'▲':'▼'} ${pct(Math.abs(T.labp-30))} punt</span>`,'van omzet · doel 30%'],['Open rekeningen',nf(T.open)+' tafels',`<span class="delta flat">${eur(T.openV)}</span>`,'nog te innen'],['Uurtarief omzet',eur(T.soFar/(T.t-12)),`<span class="delta flat">per uur</span>`,'sinds opening 12:00']].map(k=>`
+      <div class="c kpi k6"><small>${k[0]}</small><b>${k[1]}</b>${k[2]}<span class="ctx">${k[3]}</span></div>`).join('')}
+    <div class="c span-7"><div class="ch"><div><h2>Omzet vandaag, opgebouwd</h2><p>${locName()} · lopend totaal per uur</p></div><div class="legend"><span><i style="background:var(--s1)"></i>Vandaag</span><span><i class="dash"></i>Normale ${wd}</span></div></div><div class="cv"><canvas id="c-today" role="img" aria-label="Omzet vandaag opgebouwd, vergeleken met een normale dag"></canvas></div></div>
+    <div class="c span-5">${all?`<div class="ch"><div><h2>Vandaag per locatie</h2><p>Omzet tot nu · loonkosten · open rekeningen</p></div></div><div class="tw"><table>
+      <thead><tr><th>Locatie</th><th class="r">Omzet</th><th class="r">Δ</th><th class="r">Loon</th><th class="r">Open</th></tr></thead><tbody>
+      ${[...T.parts].sort((a,b)=>b.soFar-a.soFar).map(x=>`<tr><td><span class="loc-name"><i style="background:${x.L.c}"></i>${x.L.name}</span></td><td class="r"><b class="num">${eur(x.soFar)}</b></td><td class="r">${delta(x.soFar,x.typNow)}</td><td class="r">${x.labp>32?`<span style="color:#FF9A9A">▲ ${pct(x.labp)}</span>`:pct(x.labp)}</td><td class="r">${x.open}</td></tr>`).join('')}
+      </tbody></table></div>`:`<div class="ch"><div><h2>Nu in de zaak</h2><p>${locName()}</p></div></div>
+      ${tag('Open tafels',nf(T.open))}${tag('Open rekeningen',eur(T.openV))}${tag('Gem. besteding',eur(T.avg,2))}${tag('Verwacht einde dag',eur(T.est))}${tag('Normale '+wd,eur(T.typDay))}${tag('Loonkosten nu',pct(T.labp),T.labp>32?'#FF9A9A':'')}`}</div>
+
+    <div class="sec"><h2>Resultaat</h2><small>${locName()} · ${perName()}</small></div>
+    ${[['Omzet',eur(F.rev),delta(F.rev,Fp.rev),'vs vorige periode'],['Prime cost',pct(F.prime),delta(F.prime,Fp.prime,true),'inkoop + personeel · doel 60%'],['Food cost',pct(F.foodP),delta(F.foodP,Fp.foodP,true),'van foodomzet · doel 30%'],['Drankkosten',pct(F.drinkP),delta(F.drinkP,Fp.drinkP,true),'van drankomzet · doel 22%'],['Bedrijfsresultaat',eur(F.result),delta(F.result,Fp.result),pct(F.resP)+' van omzet'],['Kasverschillen','€ 0',`<span class="delta up">✓ alles klopt</span>`,'dagafsluiting klopt']].map(k=>`
+      <div class="c kpi k6"><small>${k[0]}</small><b>${k[1]}</b>${k[2]}<span class="ctx">${k[3]}</span></div>`).join('')}
     <div class="c span-8"><div class="ch"><div><h2>Loonkosten als % van omzet</h2><p>${locName()} · laatste 30 dagen</p></div><div class="legend"><span><i class="sq" style="background:var(--s1)"></i>Loonkosten %</span><span><i class="dash"></i>Doel 30%</span></div></div><div class="cv"><canvas id="c-lab" role="img" aria-label="Loonkosten percentage per dag"></canvas></div></div>
     <div class="c span-4"><div class="ch"><div><h2>Waar het geld heen gaat</h2><p>${perName()} · % van omzet</p></div></div><div class="cv"><canvas id="c-cost" role="img" aria-label="Kostenverdeling"></canvas></div></div>
-    <div class="c span-6"><div class="ch"><div><h2>Omzet laatste 30 dagen</h2><p>${locName()}</p></div></div><div class="cv short"><canvas id="c-30" role="img" aria-label="Omzet laatste 30 dagen"></canvas></div></div>
+
+    <div class="sec"><h2>Begroting &amp; geld</h2><small>Wat je verwachtte, wat er binnenkomt en wat eruit gaat</small></div>
+    <div class="c span-6"><div class="ch"><div><h2>Begroting tegenover werkelijk</h2><p>Omzet · ${all?'per locatie, laatste 30 dagen':'per week, laatste 4 weken'}</p></div><div class="legend"><span><i class="sq" style="background:var(--ref)"></i>Begroting</span><span><i class="sq" style="background:var(--s1)"></i>Werkelijk</span></div></div><div class="cv short"><canvas id="c-bud" role="img" aria-label="Begroting tegenover werkelijke omzet"></canvas></div></div>
     <div class="c span-6"><div class="ch"><div><h2>Cashflow-forecast</h2><p>Verwacht banksaldo komende 8 weken · dip door btw en huur</p></div></div><div class="cv short"><canvas id="c-cf" role="img" aria-label="Cashflow forecast"></canvas></div></div>
+    <div class="c span-7"><div class="ch"><div><h2>Openstaande facturen</h2><p>${eur(invTot)} te betalen · gecontroleerd door je Controller</p></div></div><div class="tw"><table>
+      <thead><tr><th>Leverancier</th><th>Soort</th><th class="r">Bedrag</th><th class="r">Vervalt</th><th>Status</th></tr></thead><tbody>
+      ${inv.map(x=>`<tr><td><b>${x[0]}</b></td><td style="color:var(--fg-2)">${x[1]}</td><td class="r">${eur(x[2])}</td><td class="r">${dl(x[3])}</td><td>${x[4]==='ok'?tagC('good','✓ klaar voor betaling'):tagC('warn','△ 2 regels wijken af')}</td></tr>`).join('')}
+      </tbody></table></div></div>
+    <div class="c span-5"><div class="ch"><div><h2>Btw &amp; reserves</h2><p>Dit kwartaal, geschat</p></div></div>
+      ${tag('Btw te reserveren',eur(btw))}${tag('Af te dragen op','31 jan')}${tag('Huur komende maand',eur(all?18200:4550))}${tag('Loonbetaling 25e',eur(F.lab*(30/p)))}${tag('Vrij besteedbaar',eur(cf[0]-btw*.4),'#7FE0AE')}
+    </div>
+
+    <div class="sec"><h2>Vooruitblik &amp; afwijkingen</h2><small>Wat je team nu voor je ziet aankomen</small></div>
+    <div class="c span-7"><div class="ch"><div><h2>Verwachte omzet, komende 7 dagen</h2><p>${locName()} · op basis van reserveringen, weer en eerdere weken</p></div></div><div class="cv short"><canvas id="c-fc" role="img" aria-label="Verwachte omzet komende 7 dagen"></canvas></div></div>
+    <div class="c span-5"><div class="ch"><div><h2>Afwijkingen</h2><p>Automatisch gesignaleerd</p></div></div><div class="ins">
+      ${worst.labp>30?`<div class="in"><span class="st crit">! Actie</span><div><h3>Loonkosten ${worst.L.name} op ${pct(worst.labp)}</h3><p>Boven je doel van 30% op dit tijdstip. Rooster voor het late deel bijsturen kan ± € ${nf(worst.labDay*.08)} schelen.</p></div><button class="act" data-done="Rooster aangepast">Rooster aanpassen</button></div>`:`<div class="in"><span class="st good">✓ Op koers</span><div><h3>Loonkosten binnen doel</h3><p>Alle locaties zitten nu onder de 30% van omzet.</p></div><span></span></div>`}
+      <div class="in"><span class="st warn">△ Let op</span><div><h3>Factuur Bidfood wijkt af</h3><p>2 regels zijn 11% duurder dan de afgesproken prijs. Controller heeft de factuur klaargezet om te reclameren.</p></div><button class="act" data-done="Reclamatie verstuurd">Reclameren</button></div>
+      <div class="in"><span class="st good">✓ Op koers</span><div><h3>Cashflow blijft positief</h3><p>Ook na btw en huur blijft het saldo boven € ${nf(Math.min(...cf)/1000)}k. Geen actie nodig.</p></div><span></span></div>
+    </div></div>
+    ${all?`<div class="c span-12"><div class="ch"><div><h2>Locaties vergeleken</h2><p>${perName()} · gesorteerd op bedrijfsresultaat</p></div></div><div class="tw"><table>
+      <thead><tr><th>Locatie</th><th>Omzet</th><th class="r">Food cost</th><th class="r">Drank</th><th class="r">Loon</th><th class="r">Prime cost</th><th class="r">Resultaat</th><th class="r">Δ</th></tr></thead><tbody>
+      ${rows.map(x=>`<tr><td><span class="loc-name"><i style="background:${x.L.c}"></i>${x.L.name}</span></td><td><div class="mbar"><span class="t"><i style="width:${x.f.rev/maxR*100}%;background:${x.L.c}"></i></span><b class="num">${eur(x.f.rev)}</b></div></td><td class="r">${x.f.foodP>32?`<span style="color:#FF9A9A">▲ ${pct(x.f.foodP)}</span>`:pct(x.f.foodP)}</td><td class="r">${pct(x.f.drinkP)}</td><td class="r">${x.f.labp>31?`<span style="color:#FF9A9A">▲ ${pct(x.f.labp)}</span>`:pct(x.f.labp)}</td><td class="r">${x.f.prime>60?`<span style="color:#FF9A9A">▲ ${pct(x.f.prime)}</span>`:pct(x.f.prime)}</td><td class="r"><b>${eur(x.f.result)}</b></td><td class="r">${delta(x.f.result,x.g.result)}</td></tr>`).join('')}
+      </tbody></table></div></div>`:''}
   </div>`,after(){
+    mk('c-today',{type:'scatter',data:{datasets:[{label:'Normale '+wd,data:T.ty,showLine:true,borderColor:'#6B7199',borderDash:[5,4],borderWidth:2,tension:.3,pointRadius:0,pointHoverRadius:4},{label:'Vandaag',data:T.tp,showLine:true,borderColor:'#3987e5',backgroundColor:ctx=>{const g=ctx.chart.ctx.createLinearGradient(0,0,0,260);g.addColorStop(0,'rgba(57,135,229,.28)');g.addColorStop(1,'rgba(57,135,229,0)');return g},fill:true,tension:.3,borderWidth:2.5,pointRadius:c=>c.dataIndex===T.tp.length-1?5:0,pointBackgroundColor:'#3987e5',pointBorderColor:'#10132A',pointBorderWidth:2,pointHoverRadius:5}]},
+      options:{interaction:{mode:'nearest',axis:'x',intersect:false},scales:{x:{type:'linear',min:12,max:24,ticks:{stepSize:2,callback:v=>v+':00'},grid:{display:false},border:{color:'rgba(170,180,255,.15)'}},y:{...yEur,beginAtZero:true}},plugins:{tooltip:{...tip,callbacks:{title:c=>clk(c[0].parsed.x),label:c=>' '+c.dataset.label+': '+eur(c.parsed.y)}}}}});
     mk('c-lab',{type:'bar',data:{labels:s.map(x=>x.d.getDate()+'/'+(x.d.getMonth()+1)),datasets:[{type:'line',label:'Doel',data:s.map(()=>30),borderColor:'#6B7199',borderDash:[5,4],borderWidth:2,pointRadius:0},{label:'Loonkosten',data:s.map(x=>x.labp),backgroundColor:s.map(x=>x.labp>32?'#e04848':'#3987e5'),borderRadius:4,borderSkipped:'start',maxBarThickness:18}]},
       options:{scales:{y:{min:15,ticks:{callback:v=>v+'%'},grid:{color:'rgba(170,180,255,.07)'},border:{display:false}},x:{...xPlain,ticks:{maxRotation:0,autoSkip:true,maxTicksLimit:10}}},plugins:{tooltip:{...tip,callbacks:{label:c=>' '+c.dataset.label+': '+pct(c.raw)}}}}});
-    mk('c-cost',{type:'bar',data:{labels:cost.map(c=>c[0]),datasets:[{data:cost.map(c=>c[1]/cur.rev*100),backgroundColor:'#3987e5',borderRadius:4,borderSkipped:'start',barThickness:16}]},
+    mk('c-cost',{type:'bar',data:{labels:cost.map(c=>c[0]),datasets:[{data:cost.map(c=>c[1]/F.rev*100),backgroundColor:'#3987e5',borderRadius:4,borderSkipped:'start',barThickness:16}]},
       options:{indexAxis:'y',interaction:{mode:'nearest',intersect:true},scales:{x:{ticks:{callback:v=>v+'%'},grid:{color:'rgba(170,180,255,.07)'},border:{display:false}},y:{grid:{display:false},border:{display:false},ticks:{color:'#B9BEDD'}}},plugins:{tooltip:{...tip,callbacks:{label:c=>' '+pct(c.raw)+' · '+eur(cost[c.dataIndex][1])}}}}});
-    mk('c-30',{type:'line',data:{labels:s.map(x=>x.d.getDate()+'/'+(x.d.getMonth()+1)),datasets:[{label:'Omzet',data:s.map(x=>x.rev),borderColor:'#3987e5',backgroundColor:'rgba(57,135,229,.12)',fill:true,tension:.3,borderWidth:2,pointRadius:0,pointHoverRadius:5}]},options:{scales:{y:yEur,x:{...xPlain,ticks:{maxTicksLimit:8,maxRotation:0}}},plugins:{tooltip:{...tip,callbacks:{label:c=>' '+eur(c.raw)}}}}});
+    mk('c-bud',{type:'bar',data:{labels:bud.map(x=>x.n),datasets:[{label:'Begroting',data:bud.map(x=>x.b),backgroundColor:'#6B7199',borderRadius:4,borderSkipped:'start',maxBarThickness:26},{label:'Werkelijk',data:bud.map(x=>x.a),backgroundColor:'#3987e5',borderRadius:4,borderSkipped:'start',maxBarThickness:26}]},options:{scales:{y:yEur,x:xPlain},plugins:{tooltip:{...tip,callbacks:{label:c=>' '+c.dataset.label+': '+eur(c.raw)}}}}});
     mk('c-cf',{type:'line',data:{labels:['wk 45','wk 46','wk 47','wk 48','wk 49','wk 50','wk 51','wk 52'],datasets:[{label:'Saldo',data:cf,borderColor:'#199e70',backgroundColor:'rgba(25,158,112,.12)',fill:true,tension:.3,borderWidth:2,pointRadius:3,pointBackgroundColor:'#199e70',pointBorderColor:'#10132A',pointBorderWidth:2}]},options:{scales:{y:{...yEur,beginAtZero:true},x:xPlain},plugins:{tooltip:{...tip,callbacks:{label:c=>' '+eur(c.raw)}}}}});
+    mk('c-fc',{type:'bar',data:{labels:fc.map((x,i)=>i===0?'vandaag':DAYS[dayIdx(x.d)]+' '+x.d.getDate()),datasets:[{label:'Verwacht',data:fc.map(x=>x.v),backgroundColor:fc.map((x,i)=>i===0?'#5aa0f0':[4,5].includes(dayIdx(x.d))?'#3987e5':'rgba(57,135,229,.55)'),borderRadius:4,borderSkipped:'start',maxBarThickness:34}]},options:{scales:{y:yEur,x:xPlain},plugins:{tooltip:{...tip,callbacks:{label:c=>' '+eur(c.raw)}}}}});
   }}
 };
 
@@ -508,6 +593,5 @@ addEventListener('hashchange',()=>{render();scrollTo({top:0})});
 let rz;addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{if(state.view==='gasten')render()},250)});
 render();
 </script>
-
 </body>
 </html>
