@@ -314,7 +314,7 @@ V.overzicht=()=>{
     <div class="c span-4"><div class="ch"><div><h2>AI-inzichten</h2><p>Wat je team vannacht vond</p></div></div>
       <div class="ins">
         <div class="in"><span class="st crit">! Actie</span><div><h3>Loonkosten Fust 34% op dinsdag</h3><p>2 mensen te veel tussen 15:00 en 18:00. Besparing ca. € 290 per week.</p></div><button class="act" data-done="Rooster aangepast">Rooster aanpassen</button></div>
-        <div class="in"><span class="st warn">△ Let op</span><div><h3>Zalm 9% duurder bij leverancier</h3><p>Marge op de zalmschotel zakt van 67% naar 61%.</p></div><button class="act" data-done="Prijsadvies verstuurd">Prijsadvies</button></div>
+        <div class="in"><span class="st warn">△ Let op</span><div><h3>Zalm 9% duurder bij leverancier</h3><p>Marge op de zalmschotel zakt van 67% naar 61%.</p></div><button class="act" data-done="In kaartreview">Naar kaartreview</button></div>
         <div class="in"><span class="st good">✓ Kans</span><div><h3>Terras Coconuts vol verwacht</h3><p>Zaterdag 22° en 96% bezet. Extra bediening ingepland.</p></div><button class="act done">Gedaan</button></div>
       </div></div>
     <div class="c span-7"><div class="ch"><div><h2>Omzet laatste 14 dagen</h2><p>${locName()} · per dag</p></div></div><div class="cv short"><canvas id="c-14" role="img" aria-label="Omzet per dag, laatste 14 dagen"></canvas></div></div>
@@ -448,20 +448,27 @@ V.financien=()=>{
 
 const DISHES=[['Steak frites',29.5,9.4,212],['Burger Struis',19.5,6.1,264],['Zalmschotel',26,10.1,138],['Risotto paddenstoel',21,4.2,96],['Caesar salade',16.5,4.8,124],['Saté van de grill',22,7.9,188],['Vis van de dag',27.5,11.3,71],['Spareribs',24.5,8.8,156],['Bitterballen',8.5,2.1,342],['Nachos',12.5,3.1,208],['Dame blanche',8.75,1.7,161],['Cheesecake',9.5,2.4,74],['Tomatensoep',7.5,1.4,119],['Kipsaté kids',11,3.4,58]];
 V.menu=()=>{
-  const f=state.loc==='all'?3.6:LOCS.find(l=>l.id===state.loc).f*(state.period/7);
-  const d=DISHES.map(x=>({n:x[0],p:x[1],k:x[2],q:Math.round(x[3]*f*(state.loc==='all'?state.period/7:1)),m:(1-x[2]/x[1])*100}));
+  const f=(state.loc==='all'?3.6:LOCS.find(l=>l.id===state.loc).f)*(90/7);
+  const d=DISHES.map(x=>({n:x[0],p:x[1],k:x[2],q:Math.round(x[3]*f),m:(1-x[2]/x[1])*100}));
   const aq=d.reduce((a,b)=>a+b.q,0)/d.length,am=d.reduce((a,b)=>a+b.m,0)/d.length;
   const cat=x=>x.q>=aq&&x.m>=am?['Ster','#22B573']:x.q>=aq?['Trekpaard','#3987e5']:x.m>=am?['Puzzel','#c98500']:['Twijfelgeval','#e04848'];
+  const adv=x=>{const c=cat(x)[0];return c==='Ster'?'Prominent houden, prijs laten staan':c==='Trekpaard'?'Prijs licht omhoog of portie herzien':c==='Puzzel'?'Betere plek op de kaart, actief aanraden':x.n.includes('kids')?'Houden: trekt gezinnen':'Herzien of vervangen'};
+  const prop=d.filter(x=>cat(x)[0]==='Trekpaard').map(x=>{const st=x.p<12?.25:.5;return{n:x.n,from:x.p,to:x.p+st,gain:x.q*st/1.09}}).sort((a,b)=>b.gain-a.gain);
+  const gainTot=prop.reduce((a,b)=>a+b.gain,0);
   return{html:`<div class="grid">
-    <div class="c span-7"><div class="ch"><div><h2>Menu engineering</h2><p>${locName()} · ${perName()} · populariteit × marge</p></div></div><div class="cv tall"><canvas id="c-me" role="img" aria-label="Menu engineering: verkochte aantallen tegen marge per gerecht"></canvas></div></div>
+    <div class="c span-12" style="background:linear-gradient(135deg,rgba(30,63,158,.28),rgba(138,68,130,.16) 60%,rgba(236,75,87,.1));border-color:var(--line-2)"><div class="ch" style="margin-bottom:6px"><div><h2>Kaartreview voor 1 januari</h2><p>Prijzen en kaart pas je niet dagelijks aan, maar per kwartaal. Je team bereidt de review voor, jij beslist.</p></div><span class="chip"><i style="background:var(--s4)"></i>volgende review over 60 dagen</span></div>
+      <div class="tw"><table><thead><tr><th>Voorstel</th><th>Soort</th><th class="r">Prijs nu</th><th class="r">Nieuw</th><th class="r">Effect per kwartaal</th><th></th></tr></thead><tbody>
+      ${prop.map(x=>`<tr><td><b>${x.n}</b></td><td><span class="chip"><i style="background:#3987e5"></i>Trekpaard</span></td><td class="r">${eur(x.from,2)}</td><td class="r"><b>${eur(x.to,2)}</b></td><td class="r" style="color:#7FE0AE">+ ${eur(x.gain)}</td><td class="r"><button class="act" data-done="Opgenomen">Opnemen</button></td></tr>`).join('')}
+      </tbody></table></div><p class="ctx" style="color:var(--mute);font-size:12px;margin-top:10px">Totaal bij akkoord ± ${eur(gainTot)} per kwartaal, uitgaande van gelijk verkoopvolume. Inkoopprijswijzigingen, zoals zalm, nemen we hier ook in mee.</p></div>
+    <div class="c span-7"><div class="ch"><div><h2>Menu engineering</h2><p>${locName()} · laatste 90 dagen · populariteit × marge</p></div></div><div class="cv tall"><canvas id="c-me" role="img" aria-label="Menu engineering: verkochte aantallen tegen marge per gerecht"></canvas></div></div>
     <div class="c span-5"><div class="ch"><div><h2>Wat te doen</h2><p>Advies per kwadrant</p></div></div><div class="ins">
       <div class="in"><span class="st good">Ster</span><div><h3>Populair en winstgevend</h3><p>Prominent op de kaart houden, niet aan de prijs komen.</p></div><span></span></div>
       <div class="in"><span class="st info">Trekpaard</span><div><h3>Populair, lage marge</h3><p>Portie of receptuur bekijken, of prijs licht verhogen.</p></div><span></span></div>
       <div class="in"><span class="st warn">Puzzel</span><div><h3>Hoge marge, weinig verkocht</h3><p>Laat bediening het aanraden, betere plek op de kaart.</p></div><span></span></div>
       <div class="in"><span class="st crit">Twijfel</span><div><h3>Weinig verkocht, lage marge</h3><p>Vervangen of herzien bij de volgende kaartwissel.</p></div><span></span></div>
     </div></div>
-    <div class="c span-12"><div class="ch"><div><h2>Gerechten</h2><p>Gesorteerd op aantal verkocht</p></div></div><div class="tw"><table><thead><tr><th>Gerecht</th><th>Kwadrant</th><th class="r">Verkocht</th><th class="r">Prijs</th><th class="r">Kostprijs</th><th>Marge</th><th class="r">Bijdrage</th></tr></thead><tbody>
-      ${d.sort((a,b)=>b.q-a.q).map(x=>{const c=cat(x);return`<tr><td><b>${x.n}</b>${x.n==='Zalmschotel'?' <span class="chip" style="margin-left:6px;color:#FFD27A;border-color:rgba(250,178,25,.35)">△ inkoop +9%</span>':''}</td><td><span class="chip"><i style="background:${c[1]}"></i>${c[0]}</span></td><td class="r">${nf(x.q)}</td><td class="r">${eur(x.p,2)}</td><td class="r">${eur(x.k,2)}</td><td><div class="mbar"><span class="t"><i style="width:${x.m}%"></i></span><span>${Math.round(x.m)}%</span></div></td><td class="r"><b>${eur(x.q*(x.p/1.09-x.k))}</b></td></tr>`}).join('')}
+    <div class="c span-12"><div class="ch"><div><h2>Gerechten</h2><p>Laatste 90 dagen · gesorteerd op aantal verkocht</p></div></div><div class="tw"><table><thead><tr><th>Gerecht</th><th>Kwadrant</th><th class="r">Verkocht</th><th class="r">Prijs</th><th class="r">Kostprijs</th><th>Marge</th><th class="r">Bijdrage</th><th>Advies voor de review</th></tr></thead><tbody>
+      ${d.sort((a,b)=>b.q-a.q).map(x=>{const c=cat(x);return`<tr><td><b>${x.n}</b>${x.n==='Zalmschotel'?' <span class="chip" style="margin-left:6px;color:#FFD27A;border-color:rgba(250,178,25,.35)">△ inkoop +9% · in review</span>':''}</td><td><span class="chip"><i style="background:${c[1]}"></i>${c[0]}</span></td><td class="r">${nf(x.q)}</td><td class="r">${eur(x.p,2)}</td><td class="r">${eur(x.k,2)}</td><td><div class="mbar"><span class="t"><i style="width:${x.m}%"></i></span><span>${Math.round(x.m)}%</span></div></td><td class="r"><b>${eur(x.q*(x.p/1.09-x.k))}</b></td><td style="color:var(--fg-2);white-space:normal;min-width:200px">${adv(x)}</td></tr>`}).join('')}
     </tbody></table></div><p class="ctx" style="color:var(--mute);font-size:12px;margin-top:10px">Bijdrage = aantal × (prijs excl. 9% btw − kostprijs)</p></div>
   </div>`,after(){
     const quad={id:'quad',afterDraw(c){const{ctx,chartArea:a,scales:{x,y}}=c;const X=x.getPixelForValue(aq),Y=y.getPixelForValue(am);ctx.save();ctx.strokeStyle='rgba(170,180,255,.25)';ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(X,a.top);ctx.lineTo(X,a.bottom);ctx.moveTo(a.left,Y);ctx.lineTo(a.right,Y);ctx.stroke();ctx.setLineDash([]);
@@ -579,7 +586,8 @@ function render(){
   const v=(location.hash||'#overzicht').slice(1);state.view=V[v]?v:'overzicht';killCharts();
   const h=new Date().getHours();const greet=h<12?'Goedemorgen':h<18?'Goedemiddag':'Goedenavond';
   document.getElementById('title').textContent=state.view==='overzicht'?greet+', Struisenburg':TITLES[state.view];
-  document.getElementById('subtitle').textContent=locName()+' · '+perName()+' · bijgewerkt '+String(new Date().getHours()).padStart(2,'0')+':'+String(new Date().getMinutes()).padStart(2,'0');
+  document.getElementById('period').style.visibility=state.view==='menu'?'hidden':'';
+  document.getElementById('subtitle').textContent=locName()+' · '+(state.view==='menu'?'laatste 90 dagen':perName())+' · bijgewerkt '+String(new Date().getHours()).padStart(2,'0')+':'+String(new Date().getMinutes()).padStart(2,'0');
   document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===state.view));
   document.body.classList.toggle('on-assist',state.view==='assistent');
   const out=V[state.view]();const el=document.getElementById('view');el.innerHTML=`<div class="view">${out.html}</div>`;out.after&&out.after();
