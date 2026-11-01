@@ -361,7 +361,7 @@ body.on-assist .fab{display:none}
 <script>
 /* ---------------- data (seeded demo) ---------------- */
 let REAL=false,SB=null,KLANT='Struisenburg',KLANTNORM=30;
-const REALPAGES=['loonkosten'];
+const REALPAGES=['overzicht','loonkosten'];
 const RLAB={eigenaar:'Eigenaar',bedrijfsleider:'Bedrijfsleider',chef:'Chef-kok',boekhouder:'Boekhouder',bar:'Bar manager',gastvrouw:'Gastvrouw'};
 const LCOLS=['#3987e5','#d95926','#199e70','#c98500','#9b59b6','#16a085'];
 const LOCS=[
@@ -428,7 +428,7 @@ const ico=n=>`<svg><use href="#${n}"/></svg>`;
 
 /* ---------------- views ---------------- */
 const V={};
-V.overzicht=()=>{
+V.overzichtDemo=()=>{
   const p=state.period,cur=agg(state.loc,p),prev=agg(state.loc,p,p||1);
   const h=hourly(state.loc),s14=series(state.loc,14);
   const showLocs=state.loc==='all';
@@ -791,7 +791,7 @@ const saveUsers=()=>{try{localStorage.setItem('servai-users5',JSON.stringify(USE
 try{state.uid=sessionStorage.getItem('servai-uid')||null}catch(e){state.uid=null}
 const cur=()=>USERS.find(u=>u.id===state.uid);
 const can=v=>{const u=cur();return !!u&&u.access.includes(v)};
-const firstAllowed=()=>REAL?'loonkosten':(PAGES.find(p=>can(p[0]))||['overzicht'])[0];
+const firstAllowed=()=>REAL?'overzicht':(PAGES.find(p=>can(p[0]))||['overzicht'])[0];
 const initials=n=>n.split(' ').map(x=>x[0]).slice(0,2).join('').toUpperCase();
 function flash(m){const e=document.createElement('div');e.className='flash';e.textContent=m;document.body.appendChild(e);setTimeout(()=>e.remove(),2600)}
 function applyUser(){
@@ -1029,6 +1029,96 @@ async function lkLoad(){
       {label:'Norm',data:days.map(()=>KLANTNORM),borderColor:'#FFD27A',borderDash:[6,5],pointRadius:0,fill:false}]},
       options:{scales:{y:{beginAtZero:true,ticks:{callback:v=>v+'%'}},x:{ticks:{maxTicksLimit:10}}}}});
   }
+}
+
+/* ---------------- Overzicht op echte kassadata ---------------- */
+function ovRange(p){
+  if(p===0)return{f:ymd(dayAgo(0)),t:ymd(dayAgo(0)),pf:ymd(dayAgo(7)),pt:ymd(dayAgo(7)),vs:'vs zelfde dag vorige week'};
+  if(p===1)return{f:ymd(dayAgo(1)),t:ymd(dayAgo(1)),pf:ymd(dayAgo(2)),pt:ymd(dayAgo(2)),vs:'vs de dag ervoor'};
+  if(p===YTD)return{f:ymd(dayAgo(YTD)),t:ymd(dayAgo(0)),pf:null,pt:null,vs:''};
+  return{f:ymd(dayAgo(p-1)),t:ymd(dayAgo(0)),pf:ymd(dayAgo(2*p-1)),pt:ymd(dayAgo(p)),vs:'vs vorige '+p+' dagen'};
+}
+async function ovFetch(tabel,sel,van,tot,order){
+  let all=[];
+  for(let i=0;;i+=1000){
+    let q=SB.from(tabel).select(sel).gte(tabel==='loonkosten_per_dag'?'datum':'bedrijfsdag',van).lte(tabel==='loonkosten_per_dag'?'datum':'bedrijfsdag',tot);
+    if(VIEWAS)q=q.eq('klant_id',VIEWAS);
+    if(state.loc!=='all')q=q.eq('locatie_id',state.loc);
+    for(const o of order)q=q.order(o);
+    const {data,error}=await q.range(i,i+999);
+    if(error)throw error;
+    all=all.concat(data||[]);
+    if(!data||data.length<1000)break;
+  }
+  return all;
+}
+const dl=(a,b,inv)=>{if(!b||!isFinite(b))return '<span class="delta flat">–</span>';return delta(a,b,inv)};
+V.overzicht=()=>REAL?{html:`<div class="grid"><div class="c span-12" id="ov-wrap"><p style="color:var(--mute)">Gegevens laden…</p></div></div>`,after:ovLoad}:V.overzichtDemo();
+async function ovLoad(){
+  const wrap=document.getElementById('ov-wrap');if(!wrap||!SB)return;
+  const R=ovRange(state.period);
+  const van=R.pf&&R.pf<R.f?R.pf:R.f;
+  let dag,uur,grp,art,lk;
+  try{
+    [dag,uur,grp,art,lk]=await Promise.all([
+      ovFetch('omzet_per_dag','locatie_id,bedrijfsdag,omzet,bonnen,couverts,fooi,korting,pin,contant',van,R.t,['bedrijfsdag','locatie_id']),
+      ovFetch('omzet_per_uur','locatie_id,bedrijfsdag,uur,omzet,bonnen',R.f,R.t,['bedrijfsdag','locatie_id','uur']),
+      ovFetch('verkoop_per_groep_dag','locatie_id,bedrijfsdag,groep,aantal,omzet',R.f,R.t,['bedrijfsdag','locatie_id','groep']),
+      ovFetch('verkoop_per_artikel_dag','locatie_id,bedrijfsdag,artikel,groep,aantal,omzet',R.f,R.t,['bedrijfsdag','locatie_id','artikel']),
+      ovFetch('loonkosten_per_dag','locatie_id,datum,omzet,loonkosten',R.f,R.t,['datum','locatie_id'])
+    ]);
+  }catch(e){
+    if(document.getElementById('ov-wrap')!==wrap)return;
+    wrap.innerHTML='<p style="color:#FF8A8A">De gegevens konden niet worden geladen.</p>';console.error(e.message||e);return}
+  if(document.getElementById('ov-wrap')!==wrap)return;
+  const cur=dag.filter(r=>r.bedrijfsdag>=R.f&&r.bedrijfsdag<=R.t);
+  const prv=R.pf?dag.filter(r=>r.bedrijfsdag>=R.pf&&r.bedrijfsdag<=R.pt):[];
+  if(!cur.length){wrap.innerHTML=`<h2 style="margin-bottom:8px">Nog geen gegevens</h2><p style="color:var(--fg-2);max-width:620px">Voor ${perName()} is nog geen kassadata binnengekomen. Zodra de kassa gekoppeld is of er bonnen zijn ingelezen, verschijnt hier je omzet, je drukste uren en wat er het best verkoopt.</p>`;return}
+  const sum=(a,k)=>a.reduce((t,r)=>t+(+r[k]||0),0);
+  const T=a=>({o:sum(a,'omzet'),b:sum(a,'bonnen'),c:sum(a,'couverts'),f:sum(a,'fooi'),k:sum(a,'korting')});
+  const c=T(cur),v=T(prv);
+  const perGast=c.c>0?c.o/c.c:null,perGastV=v.c>0?v.o/v.c:null;
+  const lo=sum(lk,'omzet'),ll=sum(lk,'loonkosten'),lpct=ll>0&&lo>0?ll/lo*100:null;
+  const kpi=(t,val,d,cx)=>`<div class="c kpi span-3"><small>${t}</small><b>${val}</b>${d}<span class="ctx">${cx}</span></div>`;
+  const nl1=n=>n.toFixed(1).replace('.',',');
+  const diffN=lpct==null?null:lpct-KLANTNORM;
+  const kpis=[
+    kpi('Omzet',eur(c.o),R.pf?dl(c.o,v.o):'<span class="delta flat">'+perName()+'</span>',nf(c.b)+' bonnen'+(R.vs?' · '+R.vs:'')),
+    kpi('Couverts',c.c?nf(c.c):'–',R.pf&&c.c?dl(c.c,v.c):'<span class="delta flat">–</span>','gasten bediend'),
+    kpi('Gem. besteding',perGast==null?'–':eur(perGast,2),R.pf&&perGast!=null?dl(perGast,perGastV):'<span class="delta flat">–</span>',perGast==null?'couverts ontbreken in de kassa':'per gast'),
+    lpct!=null?kpi('Loonkosten',nl1(lpct)+'%',`<span class="delta ${diffN>2?'down':diffN>0?'flat':'up'}">${nl1(Math.abs(diffN))} punt ${diffN>0?'boven':'onder'} norm</span>`,'van omzet · norm '+String(KLANTNORM).replace('.',',')+'%'):kpi('Gem. bon',c.b?eur(c.o/c.b,2):'–','<span class="delta flat">–</span>','rooster nog niet gekoppeld')
+  ].join('');
+  // per uur
+  const uurO={};uur.forEach(r=>{uurO[r.uur]=(uurO[r.uur]||0)+(+r.omzet||0)});
+  const dagenMetData=new Set(cur.map(r=>r.bedrijfsdag)).size||1;
+  const uren=Object.keys(uurO).map(Number).sort((a,b)=>a-b);
+  const u0=uren.length?Math.min(...uren):12,u1=uren.length?Math.max(...uren):22;
+  const uLab=[],uVal=[];for(let h=u0;h<=u1;h++){uLab.push(h+':00');uVal.push(Math.round((uurO[h]||0)/(state.period>1?dagenMetData:1)))}
+  // per dag
+  const perDag={};cur.forEach(r=>{perDag[r.bedrijfsdag]=(perDag[r.bedrijfsdag]||0)+(+r.omzet||0)});
+  const dagen=Object.keys(perDag).sort();
+  // groepen
+  const gO={};grp.forEach(r=>{const g=gO[r.groep]||(gO[r.groep]={o:0,n:0});g.o+=+r.omzet||0;g.n+=+r.aantal||0});
+  const gL=Object.entries(gO).sort((a,b)=>b[1].o-a[1].o);const gTot=gL.reduce((t,x)=>t+x[1].o,0)||1;
+  // artikelen
+  const aO={};art.forEach(r=>{const k=r.artikel;const a=aO[k]||(aO[k]={g:r.groep,o:0,n:0});a.o+=+r.omzet||0;a.n+=+r.aantal||0});
+  const aL=Object.entries(aO).sort((a,b)=>b[1].o-a[1].o).slice(0,8);const aMax=aL.length?aL[0][1].o||1:1;
+  // locaties
+  const lname=id=>(LOCS.find(l=>l.id===id)||{name:'Locatie',c:'#5E7BFF'});
+  const lO={};cur.forEach(r=>{const x=lO[r.locatie_id]||(lO[r.locatie_id]={o:0,b:0,c:0});x.o+=+r.omzet||0;x.b+=+r.bonnen||0;x.c+=+r.couverts||0});
+  const lP={};prv.forEach(r=>{lP[r.locatie_id]=(lP[r.locatie_id]||0)+(+r.omzet||0)});
+  const lL=Object.entries(lO).sort((a,b)=>b[1].o-a[1].o);const lMax=lL.length?lL[0][1].o||1:1;
+  const tafel=(rows,kop)=>rows.length?`<div class="tw"><table><thead><tr>${kop}</tr></thead><tbody>${rows.join('')}</tbody></table></div>`:'<p style="color:var(--mute)">Geen gegevens</p>';
+  wrap.outerHTML=kpis+
+   `<div class="c span-8"><div class="ch"><div><h2>Omzet per uur</h2><p>${locName()} · ${state.period>1?'gemiddeld per dag, ':''}${perName()}</p></div></div><div class="cv short"><canvas id="c-ovhour" role="img" aria-label="Omzet per uur"></canvas></div></div>`+
+   `<div class="c span-4"><div class="ch"><div><h2>Wat verkoopt</h2><p>Omzet per productgroep</p></div></div>${gL.length?`<div class="ins">${gL.slice(0,7).map(([g,x])=>`<div style="display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;margin-bottom:10px"><span>${esc(g)}</span><b class="num">${eur(x.o)}</b><span class="t" style="grid-column:1/3;display:block;height:6px;border-radius:3px;background:rgba(170,180,255,.1)"><i style="display:block;height:100%;width:${Math.max(2,x.o/gTot*100)}%;border-radius:3px;background:#5E7BFF"></i></span></div>`).join('')}</div>`:'<p style="color:var(--mute)">Nog geen verkoopregels. Stuur regels mee met de bonnen voor omzet per groep.</p>'}</div>`+
+   (dagen.length>1?`<div class="c span-12"><div class="ch"><div><h2>Omzet per dag</h2><p>${locName()} · ${perName()}</p></div></div><div class="cv short"><canvas id="c-ovday" role="img" aria-label="Omzet per dag"></canvas></div></div>`:'')+
+   `<div class="c span-6"><div class="ch"><div><h2>Top verkopers</h2><p>Gerechten en dranken op omzet</p></div></div>${tafel(aL.map(([n,x])=>`<tr><td>${esc(n)}<br><span style="color:var(--mute);font-size:12px">${esc(x.g||'Overig')}</span></td><td><div class="mbar"><span class="t"><i style="width:${x.o/aMax*100}%;background:#5E7BFF"></i></span><b class="num">${eur(x.o)}</b></div></td><td class="r">${nf(x.n)}×</td></tr>`),'<th>Artikel</th><th>Omzet</th><th class="r">Aantal</th>')}</div>`+
+   `<div class="c span-6"><div class="ch"><div><h2>${state.loc==='all'&&lL.length>1?'Locaties vergelijken':'Betalingen & fooi'}</h2><p>${perName()}</p></div></div>${state.loc==='all'&&lL.length>1?tafel(lL.map(([id,x])=>{const L=lname(id),pv=lP[id];return `<tr><td><span class="loc-name"><i style="background:${L.c}"></i>${esc(L.name)}</span></td><td><div class="mbar"><span class="t"><i style="width:${x.o/lMax*100}%;background:${L.c}"></i></span><b class="num">${eur(x.o)}</b></div></td><td class="r">${R.pf?dl(x.o,pv):'–'}</td><td class="r">${x.c?eur(x.o/x.c,2):'–'}</td></tr>`}),'<th>Locatie</th><th>Omzet</th><th class="r">Δ</th><th class="r">Per gast</th>'):`<div class="tw"><table><tbody><tr><td>Pin</td><td class="r num">${eur(sum(cur,'pin'))}</td></tr><tr><td>Contant</td><td class="r num">${eur(sum(cur,'contant'))}</td></tr><tr><td>Fooi</td><td class="r num">${eur(c.f)}</td></tr><tr><td>Korting gegeven</td><td class="r num">${eur(c.k)}</td></tr></tbody></table></div>`}</div>`;
+  mk('c-ovhour',{type:'bar',data:{labels:uLab,datasets:[{label:'Omzet',data:uVal,backgroundColor:'rgba(94,123,255,.75)',borderRadius:4,borderSkipped:false}]},
+    options:{scales:{y:yEur,x:xPlain},plugins:{tooltip:{...tip,callbacks:{label:x=>' '+eur(x.raw)}}}}});
+  if(dagen.length>1)mk('c-ovday',{type:'bar',data:{labels:dagen.map(dshort),datasets:[{label:'Omzet',data:dagen.map(d=>Math.round(perDag[d])),backgroundColor:dagen.map(d=>{const w=new Date(d+'T12:00:00').getDay();return w===5||w===6||w===0?'#5E7BFF':'rgba(94,123,255,.5)'}),borderRadius:4,borderSkipped:false}]},
+    options:{scales:{y:yEur,x:{...xPlain,ticks:{maxRotation:0,autoSkip:true,maxTicksLimit:10}}},plugins:{tooltip:{...tip,callbacks:{label:x=>' '+eur(x.raw)}}}}});
 }
 
 /* ---------------- koppelingen (demo, geen echte verbindingen) ---------------- */
@@ -1335,7 +1425,7 @@ async function realStart(){
   const rol=RLAB[p.rol]||'Bedrijfsleider';
   USERS=[{id:user.id,n:p.naam,e:p.email,r:rol,locs:p.locatie_id||'all',st:'Actief',last:'Nu actief',access:[...REALPAGES]}];
   if(state.loc!=='all'&&!LOCS.some(x=>x.id===state.loc))state.loc='all';
-  location.hash='#loonkosten';
+  location.hash='#overzicht';
   doLogin(user.id);
   const bb=document.querySelector('.betabar');
   if(VIEWAS&&bb){bb.hidden=false;bb.innerHTML='<b>BEHEER</b> Je bekijkt het dashboard van '+KLANT.replace(/[<>&"]/g,'')+' als SERVAI-beheerder. <a href="/beheer/#klant/'+VIEWAS+'" style="margin-left:auto;color:#fff;font-weight:600">Terug naar Beheer</a>';
