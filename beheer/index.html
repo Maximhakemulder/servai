@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>SERVAI Beheer</title>
+<link rel="icon" href="../assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{color-scheme:dark;--bg:#080A16;--panel:#10132A;--panel-2:#161A36;--line:rgba(170,180,255,.11);--line-2:rgba(170,180,255,.2);--fg:#EEF0FA;--fg-2:#B9BEDD;--mute:#7D83A8;
+--grad:linear-gradient(115deg,#1E3F9E 0%,#4A4AA0 30%,#8A4482 60%,#EC4B57 100%);--good:#22B573;--warn:#fab219;--crit:#e04848;
+--f-d:"Poppins","Instrument Sans",system-ui,sans-serif;--f-b:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;--f-m:"JetBrains Mono",ui-monospace,Menlo,monospace}
+*{box-sizing:border-box}html,body{height:100%;overflow-x:clip}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 var(--f-b);-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--f-d);margin:0;letter-spacing:-.015em}p{margin:0}a{color:inherit}
+button,input,select,textarea{font:inherit;color:inherit}:focus-visible{outline:2px solid #EC4B57;outline-offset:2px}
+[hidden]{display:none!important}
+.app{display:grid;grid-template-columns:236px minmax(0,1fr);min-height:100%}
+.side{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:6px;padding:22px 14px 18px;border-right:1px solid var(--line);background:linear-gradient(180deg,#0C0F22,#080A16)}
+.brand{display:flex;align-items:center;justify-content:space-between;padding:0 10px 18px}.brand img{height:18px;width:auto}
+.tagb{font:600 10.5px var(--f-m);letter-spacing:.08em;padding:3px 8px;border-radius:99px;background:var(--grad);color:#fff}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav a{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:12px;color:var(--fg-2);text-decoration:none;font-weight:500;white-space:nowrap}
+.nav a svg{width:19px;height:19px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nav a:hover{background:rgba(255,255,255,.04);color:var(--fg)}.nav a.on{background:var(--panel-2);color:#fff;box-shadow:inset 0 0 0 1px var(--line)}
+.nav .n{margin-left:auto;font:600 11px var(--f-m);background:#EC4B57;color:#fff;border-radius:99px;padding:1px 7px}
+.sfoot{margin-top:auto;display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:14px;background:var(--panel);border:1px solid var(--line);font-size:12.5px;color:var(--mute)}
+.sfoot b{color:var(--fg);font-size:13px;word-break:break-all}
+.main{min-width:0;padding:24px 28px 70px}
+.top{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;margin-bottom:22px}
+.top h1{font-size:26px;font-weight:600}.top .sub{color:var(--mute);font-size:13.5px;margin-top:2px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:12px;padding:10px 16px;font-weight:600;font-size:14px;cursor:pointer;background:var(--grad);color:#fff;text-decoration:none;white-space:nowrap}
+.btn:disabled{opacity:.55;cursor:default}
+.btn.ghost{background:var(--panel);border:1px solid var(--line-2);color:var(--fg)}.btn.ghost:hover{background:var(--panel-2)}
+.btn.sm{padding:6px 11px;font-size:13px;border-radius:10px}.btn.danger{background:none;border:1px solid rgba(224,72,72,.5);color:#FF8A8A}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px 20px}
+.card h2{font-size:16px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:18px}
+.kpi small{display:block;color:var(--mute);font-size:12.5px;font-weight:500}.kpi b{display:block;font:600 26px/1.15 var(--f-d);letter-spacing:-.02em;margin-top:4px;font-variant-numeric:tabular-nums}.kpi .c{color:var(--mute);font-size:12px;margin-top:2px}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.g3{display:grid;grid-template-columns:2fr 1fr;gap:16px}.stack{display:flex;flex-direction:column;gap:16px}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;color:var(--mute);font:500 12px var(--f-m);letter-spacing:.04em;text-transform:uppercase;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:middle}tr:last-child td{border-bottom:0}
+tr.cl{cursor:pointer}tr.cl:hover td{background:rgba(255,255,255,.025)}
+.r{text-align:right;font-variant-numeric:tabular-nums}.mute{color:var(--mute)}.sm{font-size:12.5px}
+.pill{display:inline-flex;align-items:center;gap:6px;font:600 11px var(--f-m);letter-spacing:.04em;text-transform:uppercase;padding:3px 9px;border-radius:99px;border:1px solid var(--line);white-space:nowrap}
+.pill i{width:7px;height:7px;border-radius:50%;background:currentColor}.pill.ok{color:#5BD6A0}.pill.err{color:#FF8A8A}.pill.off{color:var(--mute)}.pill.wait{color:#FFD27A}.pill.blue{color:#8FB6FF}
+label{display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--fg-2);font-weight:500}
+input,select,textarea{background:var(--bg);border:1px solid var(--line-2);border-radius:10px;padding:9px 12px;font-size:14px;width:100%}
+textarea{resize:vertical;min-height:70px}select{appearance:none;-webkit-appearance:none;padding-right:30px;background-image:linear-gradient(45deg,transparent 50%,var(--fg-2) 50%),linear-gradient(135deg,var(--fg-2) 50%,transparent 50%);background-position:calc(100% - 17px) 55%,calc(100% - 12px) 55%;background-size:5px 5px;background-repeat:no-repeat}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.fs{display:flex;flex-direction:column;gap:12px}
+.chk{display:flex;flex-wrap:wrap;gap:6px 14px}.chk label{flex-direction:row;align-items:center;gap:6px;font-weight:400}.chk input{width:auto}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}.bar input,.bar select{width:auto;min-width:160px}
+.list{display:flex;flex-direction:column}.li{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}.li:last-child{border-bottom:0}
+.li a{text-decoration:none}.li a:hover{text-decoration:underline}
+.empty{color:var(--mute);padding:14px 0;font-size:14px}
+.back{display:inline-block;color:var(--mute);text-decoration:none;font-size:13.5px;margin-bottom:8px}.back:hover{color:var(--fg)}
+/* modal + toast */
+.ov{position:fixed;inset:0;z-index:80;background:rgba(4,5,12,.72);display:flex;align-items:flex-start;justify-content:center;padding:5vh 16px;overflow:auto}
+.md{width:min(560px,100%);background:var(--panel);border:1px solid var(--line-2);border-radius:20px;padding:22px}.md.w{width:min(720px,100%)}
+.md h2{font-size:19px;margin-bottom:14px}.md .acts{display:flex;justify-content:flex-end;gap:10px;margin-top:16px;flex-wrap:wrap}.md .acts .l{margin-right:auto}
+.err{color:#FF8A8A;font-size:13px;margin-top:10px}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:90;display:flex;flex-direction:column;gap:8px;align-items:center}
+#toast div{background:#1c2142;border:1px solid var(--line-2);border-radius:12px;padding:10px 16px;font-size:14px;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+/* login */
+.lg{min-height:100vh;display:grid;place-items:center;padding:20px}.lg .card{width:min(400px,100%);padding:28px}.lg img{height:22px;margin-bottom:18px;display:block}
+/* kalender */
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}.cal .h{font:500 11.5px var(--f-m);color:var(--mute);text-transform:uppercase;text-align:center;padding:4px 0}
+.day{min-height:92px;border-radius:10px;background:var(--bg);border:1px solid var(--line);padding:5px;cursor:pointer;display:flex;flex-direction:column;gap:3px;overflow:hidden;text-align:left}
+.day.out{opacity:.4}.day.today{border-color:#EC4B57}.day.sel{background:var(--panel-2);border-color:var(--line-2)}.day .d{font:500 12px var(--f-m);color:var(--fg-2)}
+.chip{font-size:11.5px;line-height:1.25;padding:2px 6px;border-radius:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff;border-left:3px solid}
+.thread{display:flex;flex-direction:column;gap:10px;margin:10px 0 14px}.msg{padding:11px 14px;border-radius:14px;background:var(--panel-2);max-width:88%}.msg.s{align-self:flex-end;background:#1E2A5E}.msg small{display:block;color:var(--mute);font-size:12px;margin-bottom:2px}
+.menu{display:none}
+@media (max-width:960px){.app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto 1fr}.top .bar{width:100%}.bar input,.bar select{min-width:0;flex:1 1 140px}.side{position:static;height:auto;flex-direction:column;padding:14px 12px;border-right:0;border-bottom:1px solid var(--line)}
+.nav{flex-direction:row;overflow-x:auto;gap:4px;padding-bottom:4px}.nav a{padding:8px 11px}.sfoot{display:none}.brand{padding:0 6px 10px}.main{padding:18px 16px 70px}.g2,.g3{grid-template-columns:1fr}.f2{grid-template-columns:1fr}.day{min-height:62px}.chip{font-size:10.5px}}
+</style>
+</head>
+<body>
+
+<div class="lg" id="login" hidden>
+  <form class="card fs" id="lform">
+    <img src="../assets/servai-logo-white.png" alt="SERVAI">
+    <h2 style="font-size:20px">Beheer</h2>
+    <p class="mute sm">Alleen voor het SERVAI-team.</p>
+    <label>E-mail<input name="email" type="email" autocomplete="username" required></label>
+    <label>Wachtwoord<input name="pw" type="password" autocomplete="current-password" required></label>
+    <button class="btn" type="submit">Inloggen</button>
+    <p class="err" id="lerr" hidden></p>
+    <p class="sm"><a href="#" id="forgot" class="mute">Wachtwoord vergeten?</a></p>
+  </form>
+</div>
+
+<div class="app" id="app" hidden>
+  <aside class="side">
+    <div class="brand"><img src="../assets/servai-logo-white.png" alt="SERVAI"><span class="tagb">BEHEER</span></div>
+    <nav class="nav" id="nav">
+      <a href="#overzicht" data-p="overzicht"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Overzicht</a>
+      <a href="#klanten" data-p="klanten"><svg viewBox="0 0 24 24"><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21v-6h6v6"/></svg>Klanten</a>
+      <a href="#gebruikers" data-p="gebruikers"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.7-3.6 3.2-5.5 6.5-5.5s5.8 1.9 6.5 5.5"/><path d="M16 4.7a3.5 3.5 0 0 1 0 6.6M18 14.8c2 .6 3.1 2.4 3.5 5.2"/></svg>Gebruikers</a>
+      <a href="#abonnementen" data-p="abonnementen"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10.5h18M7 15h3"/></svg>Abonnementen</a>
+      <a href="#agenda" data-p="agenda"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Agenda</a>
+      <a href="#aanvragen" data-p="aanvragen"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z"/></svg>Aanvragen<span class="n" id="n-aanv" hidden></span></a>
+      <a href="#tickets" data-p="tickets"><svg viewBox="0 0 24 24"><path d="M3 9a2 2 0 0 0 0 6v3h18v-3a2 2 0 0 1 0-6V6H3z"/><path d="M14 6v12" stroke-dasharray="2 2.5"/></svg>Tickets<span class="n" id="n-tick" hidden></span></a>
+    </nav>
+    <div class="sfoot"><span>Ingelogd als</span><b id="me"></b><a class="btn ghost sm" href="../dashboard/">Naar dashboard</a><button class="btn ghost sm" id="out">Uitloggen</button></div>
+  </aside>
+  <main class="main" id="view"></main>
+</div>
+
+<div id="toast"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+/* ===== helpers ===== */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const eur=n=>'€ '+Number(n||0).toLocaleString('nl-NL',{maximumFractionDigits:0});
+const fd=d=>d?new Date(d).toLocaleDateString('nl-NL',{day:'numeric',month:'short',year:'numeric'}):'–';
+const ft=d=>new Date(d).toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'});
+const fdt=d=>fd(d)+' '+ft(d);
+const pad=n=>String(n).padStart(2,'0');
+const dkey=d=>{d=new Date(d);return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
+const daysTo=d=>{const t=new Date();t.setHours(0,0,0,0);return Math.round((new Date(d+'T00:00')-t)/864e5)};
+const toast=t=>{const e=document.createElement('div');e.textContent=t;$('#toast').append(e);setTimeout(()=>e.remove(),3800)};
+const q=async p=>{const {data,error}=await p;if(error)throw error;return data};
+const one=x=>Array.isArray(x)?x[0]||null:x||null;
+const PAGINAS={overzicht:'Overzicht',financien:'Financiën',menu:'Menu',dranken:'Dranken',kansen:'Kansen',personeel:'Personeel',upselling:'Upselling',reserveringen:'Reserveringen',inkoop:'Inkoop',gasten:'Gasten',assistent:'Assistent',meldingen:'Meldingen',advies:'AI-advies',koppelingen:'Koppelingen',gebruikers:'Gebruikers',support:'Support',loonkosten:'Loonkosten'};
+const ROLLEN={eigenaar:'Eigenaar',bedrijfsleider:'Bedrijfsleider',chef:'Chef',boekhouder:'Boekhouder',bar:'Bar',gastvrouw:'Gastvrouw'};
+const ASTAT={proef:['wait','Proef'],actief:['ok','Actief'],gepauzeerd:['off','Gepauzeerd'],opgezegd:['err','Opgezegd'],geen:['off','Geen abonnement']};
+const SOORT={demo:['Demo','#3987e5'],onboarding:['Onboarding','#199e70'],'check-in':['Check-in','#c98500'],support:['Support','#d95926'],advies:['Advies','#8A4482'],overig:['Overig','#6B7199']};
+const LSTAT={nieuw:['wait','Nieuw'],gebeld:['blue','Gebeld'],demo_gepland:['blue','Demo gepland'],klant:['ok','Klant'],afgewezen:['off','Afgewezen']};
+const TSTAT={open:['wait','Open'],bezig:['blue','Bezig'],wacht_op_klant:['off','Wacht op klant'],opgelost:['ok','Opgelost']};
+const URG=['Laag','Normaal','Hoog','Spoed'];
+const pill=(m,k)=>{const [c,t]=m[k]||['off',k];return `<span class="pill ${c}"><i></i>${esc(t)}</span>`};
+
+let SB=null,ME=null;const D={klanten:[],plannen:[],aanvragen:[],afspraken:[],tickets:[]};const S={cal:(()=>{const n=new Date();return{y:n.getFullYear(),m:n.getMonth()}})(),day:dkey(new Date()),kf:'',ks:'',ts:'',as:'',uf:'',uk:'',ur:''};
+
+/* ===== modal ===== */
+function modal(title,html,{wide}={}){
+  const o=document.createElement('div');o.className='ov';o.innerHTML=`<div class="md${wide?' w':''}" role="dialog" aria-modal="true"><h2>${esc(title)}</h2>${html}</div>`;
+  o.addEventListener('mousedown',e=>{if(e.target===o)o.remove()});document.body.append(o);
+  const f=o.querySelector('input,select,textarea');if(f)f.focus();o.close=()=>o.remove();return o}
+function ask(title,text,ok='Doorgaan'){return new Promise(res=>{const m=modal(title,`<p class="mute">${esc(text)}</p><div class="acts"><button class="btn ghost" data-x="0">Annuleren</button><button class="btn danger" data-x="1">${esc(ok)}</button></div>`);m.addEventListener('click',e=>{const b=e.target.closest('[data-x]');if(b){m.close();res(b.dataset.x==='1')}})})}
+function formModal(title,html,onSubmit,{wide,ok='Opslaan',extra=''}={}){
+  const m=modal(title,`<form class="fs">${html}<p class="err" hidden></p><div class="acts">${extra}<button type="button" class="btn ghost" data-close>Annuleren</button><button class="btn" type="submit">${esc(ok)}</button></div></form>`,{wide});
+  m.querySelector('[data-close]').onclick=()=>m.close();
+  const f=m.querySelector('form'),er=m.querySelector('.err');
+  f.addEventListener('submit',async e=>{e.preventDefault();const b=f.querySelector('button[type=submit]');b.disabled=true;er.hidden=true;
+    try{await onSubmit(Object.fromEntries(new FormData(f)),f,m);}catch(x){er.hidden=false;er.textContent=x.message||String(x);b.disabled=false}});
+  return m}
+async function api(actie,data){
+  const {data:{session}}=await SB.auth.getSession();
+  const r=await fetch('/api/beheer',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+(session&&session.access_token)},body:JSON.stringify({actie,...data})});
+  const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Er ging iets mis');return d}
+
+/* ===== data ===== */
+async function load(){
+  const [k,p,a,f,t]=await Promise.all([
+    q(SB.from('klanten').select('*,locaties(id,naam),profielen(id,naam,email,rol,actief,laatst_gezien,locatie_id),abonnementen(*),koppelingen(id,soort,systeem,status,laatste_succes,laatste_fout)').order('naam')),
+    q(SB.from('plannen').select('*').order('volgorde')),
+    q(SB.from('aanvragen').select('*').order('aangemaakt',{ascending:false})),
+    q(SB.from('afspraken').select('*,klanten(naam)').order('start_tijd')),
+    q(SB.from('tickets').select('*,klanten(naam)').order('aangemaakt',{ascending:false}))]);
+  k.forEach(x=>{x.ab=one(x.abonnementen);x.locaties=(x.locaties||[]).sort((a,b)=>a.naam.localeCompare(b.naam))});
+  D.klanten=k;D.plannen=p;D.aanvragen=a;D.afspraken=f;D.tickets=t;badges()}
+function badges(){
+  const na=D.aanvragen.filter(x=>x.status==='nieuw').length,nt=D.tickets.filter(x=>x.status!=='opgelost').length;
+  const a=$('#n-aanv'),t=$('#n-tick');a.hidden=!na;a.textContent=na;t.hidden=!nt;t.textContent=nt}
+const klant=id=>D.klanten.find(k=>k.id===id);
+const planNaam=id=>{const p=D.plannen.find(x=>x.id===id);return p?p.naam:'–'};
+const mrr=()=>D.klanten.reduce((s,k)=>s+(k.ab&&k.ab.status==='actief'?+k.ab.prijs_maand:0),0);
+
+/* ===== router ===== */
+function route(){
+  const [pg,id]=(location.hash.slice(1)||'overzicht').split('/');
+  document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.p===(pg==='klant'?'klanten':pg==='ticket'?'tickets':pg)));
+  const V={overzicht:vOverzicht,klanten:vKlanten,gebruikers:vGebruikers,klant:()=>vKlant(id),abonnementen:vAbo,agenda:vAgenda,aanvragen:vAanvragen,tickets:vTickets,ticket:()=>vTicket(id)}[pg]||vOverzicht;
+  Promise.resolve(V()).then(h=>{if(h!=null)$('#view').innerHTML=h;window.scrollTo(0,0);bindView()}).catch(e=>{$('#view').innerHTML=`<div class="card"><h2>Er ging iets mis</h2><p class="mute">${esc(e.message||e)}</p></div>`});
+}
+const head=(t,s,r='')=>`<div class="top"><div><h1>${esc(t)}</h1>${s?`<p class="sub">${s}</p>`:''}</div><div class="bar" style="margin:0">${r}</div></div>`;
+
+/* ===== overzicht ===== */
+function vOverzicht(){
+  const act=D.klanten.filter(k=>k.ab&&k.ab.status==='actief').length,proef=D.klanten.filter(k=>k.ab&&k.ab.status==='proef');
+  const potentieel=proef.reduce((s,k)=>s+ +k.ab.prijs_maand,0);
+  const nu=Date.now(),aandacht=[];
+  proef.forEach(k=>{if(k.ab.proef_tot){const d=daysTo(k.ab.proef_tot);if(d<=7)aandacht.push([d<0?'err':'wait',`Proef van ${k.naam} ${d<0?'is verlopen':d===0?'eindigt vandaag':`eindigt over ${d} dagen`}`,'#klant/'+k.id])}});
+  D.tickets.filter(t=>t.status!=='opgelost'&&t.urgentie>=2).forEach(t=>aandacht.push(['err',`${URG[t.urgentie]}: ${t.titel} (${t.klanten?.naam||''})`,'#ticket/'+t.id]));
+  D.klanten.forEach(k=>(k.koppelingen||[]).filter(c=>c.status==='fout').forEach(c=>aandacht.push(['err',`Koppeling ${c.systeem} van ${k.naam} geeft een fout`,'#klant/'+k.id])));
+  D.aanvragen.filter(a=>a.status==='nieuw').forEach(a=>aandacht.push([nu-new Date(a.aangemaakt)>864e5?'err':'wait',`Nieuwe aanvraag van ${a.naam}${a.bedrijf?' ('+a.bedrijf+')':''}`,'#aanvragen']));
+  D.klanten.forEach(k=>{if(k.ab&&k.ab.status==='actief'&&k.ab.volgende_factuur&&daysTo(k.ab.volgende_factuur)<=3&&daysTo(k.ab.volgende_factuur)>=0)aandacht.push(['wait',`Factuur ${k.naam} op ${fd(k.ab.volgende_factuur)}`,'#klant/'+k.id])});
+  const kom=D.afspraken.filter(a=>a.status==='gepland'&&new Date(a.start_tijd)>=new Date(nu-36e5)).slice(0,7);
+  return head('Overzicht',`Bijgewerkt ${ft(new Date())}`,`<button class="btn" data-act="nieuwKlant">+ Nieuwe klant</button>`)+
+  `<div class="kpis">
+    <div class="card kpi"><small>Maandelijks terugkerend (MRR)</small><b>${eur(mrr())}</b><span class="c">${eur(mrr()*12)} per jaar</span></div>
+    <div class="card kpi"><small>Actieve klanten</small><b>${act}</b><span class="c">${D.klanten.length} in totaal</span></div>
+    <div class="card kpi"><small>In proefperiode</small><b>${proef.length}</b><span class="c">${eur(potentieel)} per maand als ze blijven</span></div>
+    <div class="card kpi"><small>Nieuwe aanvragen</small><b>${D.aanvragen.filter(a=>a.status==='nieuw').length}</b><span class="c">${D.aanvragen.length} in totaal</span></div>
+    <div class="card kpi"><small>Open tickets</small><b>${D.tickets.filter(t=>t.status!=='opgelost').length}</b><span class="c">${D.tickets.filter(t=>t.status!=='opgelost'&&t.urgentie>=2).length} hoog of spoed</span></div></div>
+  <div class="g2">
+    <div class="card"><h2>Aandacht nodig</h2><div class="list">${aandacht.length?aandacht.map(([c,t,h])=>`<div class="li"><a href="${h}">${esc(t)}</a><span class="pill ${c}"><i></i></span></div>`).join(''):'<p class="empty">Niets dat aandacht nodig heeft. 🎉</p>'}</div></div>
+    <div class="card"><h2>Komende afspraken <a class="btn ghost sm" href="#agenda">Agenda</a></h2><div class="list">${kom.length?kom.map(a=>`<div class="li"><div><b>${esc(a.titel)}</b><div class="mute sm">${fdt(a.start_tijd)}${a.klanten?' · '+esc(a.klanten.naam):''}</div></div><span class="pill" style="color:${SOORT[a.soort][1]}"><i></i>${SOORT[a.soort][0]}</span></div>`).join(''):'<p class="empty">Geen afspraken gepland.</p>'}</div></div>
+  </div>`}
+
+/* ===== klanten ===== */
+function kRows(){
+  const f=S.kf.toLowerCase(),st=S.ks;
+  const r=D.klanten.filter(k=>(!f||k.naam.toLowerCase().includes(f))&&(!st||(k.ab?k.ab.status:'geen')===st));
+  if(!r.length)return `<tr><td colspan="9" class="empty">${D.klanten.length?'Geen klanten gevonden.':'Nog geen klanten. Klik op "Nieuwe klant".'}</td></tr>`;
+  return r.map(k=>{const c=k.koppelingen||[],ok=c.filter(x=>x.status==='ok').length,fout=c.filter(x=>x.status==='fout').length,open=D.tickets.filter(t=>t.klant_id===k.id&&t.status!=='opgelost').length;
+    return `<tr class="cl" data-href="#klant/${k.id}"><td><b>${esc(k.naam)}</b></td><td>${k.ab?esc(planNaam(k.ab.plan_id)):'–'}</td><td>${pill(ASTAT,k.ab?k.ab.status:'geen')}</td><td class="r">${k.locaties.length}</td><td class="r">${(k.profielen||[]).filter(p=>p.actief).length}</td><td class="r">${k.ab&&k.ab.status==='actief'?eur(k.ab.prijs_maand):'–'}</td><td>${c.length?`${fout?`<span class="pill err"><i></i>${fout} fout</span> `:''}<span class="mute sm">${ok}/${c.length} ok</span>`:'<span class="mute sm">geen</span>'}</td><td class="r">${open||'–'}</td><td class="r"><a class="btn ghost sm" href="${bekijk(k.id)}" target="_blank" rel="noopener">Bekijk als klant</a></td></tr>`}).join('')}
+function vKlanten(){
+  return head('Klanten',`${D.klanten.length} klanten`,`<input placeholder="Zoek klant…" id="kf" value="${esc(S.kf)}"><select id="ks"><option value="">Alle statussen</option>${Object.entries(ASTAT).map(([k,v])=>`<option value="${k}"${S.ks===k?' selected':''}>${v[1]}</option>`).join('')}</select><button class="btn" data-act="nieuwKlant">+ Nieuwe klant</button>`)+
+  `<div class="card tw"><table><thead><tr><th>Klant</th><th>Plan</th><th>Status</th><th class="r">Locaties</th><th class="r">Gebruikers</th><th class="r">Per maand</th><th>Koppelingen</th><th class="r">Tickets</th><th></th></tr></thead><tbody id="ktb">${kRows()}</tbody></table></div>`}
+
+function planOpties(sel){return `<option value="">— geen plan —</option>`+D.plannen.filter(p=>p.actief||p.id===sel).map(p=>`<option value="${p.id}"${p.id===sel?' selected':''}>${esc(p.naam)} · ${eur(p.prijs_per_locatie)} per locatie</option>`).join('')}
+function autoPrijs(f,locSel,planSel,prijsSel){
+  const p=f.querySelector(prijsSel);if(!p)return;p.addEventListener('input',()=>p.dataset.t='1');
+  const upd=()=>{if(p.dataset.t==='1')return;const pl=D.plannen.find(x=>x.id===f.querySelector(planSel).value);const n=+f.querySelector(locSel).value||0;p.value=pl?pl.prijs_per_locatie*n:''};
+  f.querySelector(planSel).addEventListener('change',upd);f.querySelector(locSel).addEventListener('input',upd)}
+
+function nieuwKlant(pre={}){
+  const standaard=D.plannen.find(p=>p.code==='groei')||D.plannen[0];
+  const m=formModal('Nieuwe klant',`
+    <div class="f2"><label>Naam klant<input name="naam" required value="${esc(pre.naam||'')}" placeholder="Bijvoorbeeld Struisenburg Horeca"></label>
+    <label>Loonnorm (% van omzet)<input name="loonnorm_pct" type="number" step="0.1" value="30"></label></div>
+    <label>Locaties (één per regel)<textarea name="locaties" required placeholder="Café De Kroon&#10;Restaurant Beau"></textarea></label>
+    <div class="f2"><label>Naam eigenaar<input name="eig_naam" required value="${esc(pre.eig_naam||'')}"></label><label>E-mail eigenaar<input name="eig_email" type="email" required value="${esc(pre.eig_email||'')}"></label></div>
+    <label>Telefoon eigenaar<input name="eig_tel" value="${esc(pre.eig_tel||'')}"></label>
+    <div class="f2"><label>Plan<select name="plan_id">${planOpties(standaard&&standaard.id)}</select></label><label>Status<select name="status"><option value="proef">Proefperiode</option><option value="actief">Actief (betalend)</option></select></label></div>
+    <div class="f2"><label>Proefdagen<input name="proef_dagen" type="number" min="0" max="90" value="14"></label><label>Prijs per maand (€)<input name="prijs_maand" type="number" step="0.01"></label></div>
+    <label>Notities<textarea name="notities">${esc(pre.notities||'')}</textarea></label>
+    <p class="mute sm">De eigenaar krijgt een e-mail om zelf een wachtwoord te kiezen.</p>`,
+    async d=>{
+      const r=await api('klant_aanmaken',{naam:d.naam,loonnorm_pct:d.loonnorm_pct,locaties:d.locaties.split('\n'),eigenaar:{naam:d.eig_naam,email:d.eig_email,tel:d.eig_tel},plan_code:(D.plannen.find(p=>p.id===d.plan_id)||{}).code,status:d.status,proef_dagen:d.proef_dagen,prijs_maand:d.prijs_maand,notities:d.notities,aanvraag_id:pre.aanvraag_id});
+      m.close();await load();toast(r.uitnodiging==='verstuurd'?`Klant aangemaakt. Uitnodiging gestuurd naar ${d.eig_email}.`:'Klant aangemaakt. Dit e-mailadres bestond al, er is geen nieuwe uitnodiging verstuurd.');location.hash='#klant/'+r.klant_id;route()},{wide:true,ok:'Klant aanmaken'});
+  const ta=m.querySelector('[name=locaties]'),pr=m.querySelector('[name=prijs_maand]'),pl=m.querySelector('[name=plan_id]');
+  pr.addEventListener('input',()=>pr.dataset.t='1');
+  const calc=()=>{if(pr.dataset.t==='1')return;const p=D.plannen.find(x=>x.id===pl.value),n=ta.value.split('\n').filter(x=>x.trim()).length;pr.value=p?p.prijs_per_locatie*n:''};
+  ta.addEventListener('input',calc);pl.addEventListener('change',calc);calc();
+  if(pre.locaties)ta.value=pre.locaties}
+
+/* ===== klant detail ===== */
+function vKlant(id){
+  const k=klant(id);if(!k)return `<a class="back" href="#klanten">← Klanten</a><div class="card"><p class="mute">Klant niet gevonden.</p></div>`;
+  const a=k.ab||{},tk=D.tickets.filter(t=>t.klant_id===id),af=D.afspraken.filter(x=>x.klant_id===id);
+  return `<a class="back" href="#klanten">← Klanten</a>`+head(k.naam,`${pill(ASTAT,a.status||'geen')} <span class="mute">· sinds ${fd(k.aangemaakt)}</span>`,`<a class="btn" href="${bekijk(k.id)}" target="_blank" rel="noopener">Bekijk als klant ↗</a>`)+
+  `<div class="g2">
+   <div class="stack">
+    <form class="card fs" data-form="klantOpslaan" data-id="${k.id}"><h2>Gegevens</h2>
+      <div class="f2"><label>Naam<input name="naam" value="${esc(k.naam)}" required></label><label>Status<select name="status">${['actief','gepauzeerd','opgezegd'].map(s=>`<option${k.status===s?' selected':''}>${s}</option>`).join('')}</select></label></div>
+      <div class="f2"><label>Contactpersoon<input name="contact_naam" value="${esc(k.contact_naam||'')}"></label><label>Loonnorm (%)<input name="loonnorm_pct" type="number" step="0.1" value="${k.loonnorm_pct}"></label></div>
+      <div class="f2"><label>E-mail<input name="contact_email" type="email" value="${esc(k.contact_email||'')}"></label><label>Telefoon<input name="contact_tel" value="${esc(k.contact_tel||'')}"></label></div>
+      <label>Notities<textarea name="notities">${esc(k.notities||'')}</textarea></label><div><button class="btn" type="submit">Opslaan</button></div></form>
+    <form class="card fs" data-form="aboOpslaan" data-id="${k.id}"><h2>Abonnement</h2>
+      <div class="f2"><label>Plan<select name="plan_id">${planOpties(a.plan_id)}</select></label><label>Status<select name="status">${Object.entries(ASTAT).filter(x=>x[0]!=='geen').map(([s,v])=>`<option value="${s}"${a.status===s?' selected':''}>${v[1]}</option>`).join('')}</select></label></div>
+      <div class="f2"><label>Aantal locaties<input name="aantal_locaties" type="number" min="1" value="${a.aantal_locaties||k.locaties.length||1}"></label><label>Prijs per maand (€)<input name="prijs_maand" type="number" step="0.01" value="${a.prijs_maand??''}" ${a.id?'data-t="1"':''}></label></div>
+      <div class="f2"><label>Factuur per<select name="interval"><option value="maand"${a.interval!=='jaar'?' selected':''}>maand</option><option value="jaar"${a.interval==='jaar'?' selected':''}>jaar</option></select></label><label>Startdatum<input name="start_datum" type="date" value="${a.start_datum||''}"></label></div>
+      <div class="f2"><label>Proef tot<input name="proef_tot" type="date" value="${a.proef_tot||''}"></label><label>Volgende factuur<input name="volgende_factuur" type="date" value="${a.volgende_factuur||''}"></label></div>
+      <label>Opzegdatum<input name="opzeg_datum" type="date" value="${a.opzeg_datum||''}"></label>
+      <label>Notities<textarea name="notities">${esc(a.notities||'')}</textarea></label><div><button class="btn" type="submit">Opslaan</button></div></form>
+   </div>
+   <div class="stack">
+    <div class="card"><h2>Locaties <button class="btn ghost sm" data-act="locNieuw" data-id="${k.id}">+ Locatie</button></h2><div class="list">${k.locaties.length?k.locaties.map(l=>`<div class="li"><span>${esc(l.naam)}</span><span><button class="btn ghost sm" data-act="locNaam" data-id="${l.id}">Naam wijzigen</button> <button class="btn danger sm" data-act="locWeg" data-id="${l.id}">Verwijderen</button></span></div>`).join(''):'<p class="empty">Geen locaties.</p>'}</div></div>
+    <div class="card"><h2>Gebruikers <button class="btn ghost sm" data-act="gebrNieuw" data-id="${k.id}">+ Uitnodigen</button></h2><div class="tw"><table><tbody>${(k.profielen||[]).length?k.profielen.map(p=>`<tr><td><b>${esc(p.naam)}</b><div class="mute sm">${esc(p.email)}</div></td><td>${esc(ROLLEN[p.rol]||p.rol)}</td><td class="mute sm">${p.laatst_gezien?fd(p.laatst_gezien):'nog niet ingelogd'}</td><td class="r"><button class="btn ghost sm" data-act="pwMail" data-id="${p.id}">Wachtwoordmail</button> <button class="btn ghost sm" data-act="actief" data-id="${p.id}" data-v="${p.actief?0:1}">${p.actief?'Uitzetten':'Aanzetten'}</button></td></tr>`).join(''):'<tr><td class="empty">Nog geen gebruikers.</td></tr>'}</tbody></table></div></div>
+    <div class="card"><h2>Koppelingen</h2><div class="list">${(k.koppelingen||[]).length?k.koppelingen.map(c=>`<div class="li"><span><b>${esc(c.systeem)}</b> <span class="mute sm">${esc(c.soort)}</span>${c.laatste_fout?`<div class="mute sm">${esc(c.laatste_fout)}</div>`:''}</span>${pill({ok:['ok','Ok'],fout:['err','Fout'],uit:['off','Uit'],niet_getest:['wait','Niet getest']},c.status)}</div>`).join(''):'<p class="empty">Nog niets gekoppeld. De klant doet dit zelf onder Koppelingen in zijn dashboard.</p>'}</div></div>
+    <div class="card"><h2>Afspraken <button class="btn ghost sm" data-act="afspraak" data-klant="${k.id}">+ Afspraak</button></h2><div class="list">${af.length?af.slice(-6).reverse().map(x=>`<div class="li"><a href="#agenda" data-act="afspraakEdit" data-id="${x.id}">${esc(x.titel)}<div class="mute sm">${fdt(x.start_tijd)}</div></a><span class="pill" style="color:${SOORT[x.soort][1]}"><i></i>${SOORT[x.soort][0]}</span></div>`).join(''):'<p class="empty">Geen afspraken.</p>'}</div></div>
+    <div class="card"><h2>Tickets</h2><div class="list">${tk.length?tk.slice(0,6).map(t=>`<div class="li"><a href="#ticket/${t.id}">${esc(t.titel)}</a>${pill(TSTAT,t.status)}</div>`).join(''):'<p class="empty">Geen tickets.</p>'}</div></div>
+   </div></div>`}
+
+/* ===== gebruikers ===== */
+const bekijk=id=>`../dashboard/?klant=${id}`;
+function uRows(){
+  const f=S.uf.toLowerCase();const rows=[];
+  D.klanten.forEach(k=>(k.profielen||[]).forEach(p=>rows.push({...p,k})));
+  const r=rows.filter(x=>(!f||(x.naam+' '+x.email).toLowerCase().includes(f))&&(!S.uk||x.k.id===S.uk)&&(!S.ur||x.rol===S.ur)).sort((a,b)=>a.k.naam.localeCompare(b.k.naam)||a.naam.localeCompare(b.naam));
+  if(!r.length)return `<tr><td colspan="8" class="empty">${rows.length?'Geen gebruikers gevonden.':'Nog geen gebruikers.'}</td></tr>`;
+  return r.map(p=>{const l=p.locatie_id?(p.k.locaties.find(x=>x.id===p.locatie_id)||{}).naam:'Alle';
+    return `<tr><td><b>${esc(p.naam)}</b><div class="mute sm">${esc(p.email)}</div></td><td><a href="#klant/${p.k.id}">${esc(p.k.naam)}</a></td><td>${esc(ROLLEN[p.rol]||p.rol)}</td><td>${esc(l||'–')}</td><td class="mute sm">${p.laatst_gezien?fdt(p.laatst_gezien):'nog niet ingelogd'}</td><td>${p.actief?'<span class="pill ok"><i></i>Actief</span>':'<span class="pill off"><i></i>Uit</span>'}</td><td class="r" style="white-space:nowrap"><a class="btn ghost sm" href="${bekijk(p.k.id)}" target="_blank" rel="noopener">Bekijk als klant</a> <button class="btn ghost sm" data-act="pwMail" data-id="${p.id}">Wachtwoordmail</button> <button class="btn ghost sm" data-act="actief" data-id="${p.id}" data-v="${p.actief?0:1}">${p.actief?'Uitzetten':'Aanzetten'}</button></td></tr>`}).join('')}
+function vGebruikers(){
+  const n=D.klanten.reduce((s,k)=>s+(k.profielen||[]).length,0);
+  return head('Gebruikers',`${n} gebruikers bij ${D.klanten.length} klanten`,`<input placeholder="Zoek op naam of e-mail…" id="uf" value="${esc(S.uf)}"><select id="uk"><option value="">Alle klanten</option>${D.klanten.map(k=>`<option value="${k.id}"${S.uk===k.id?' selected':''}>${esc(k.naam)}</option>`).join('')}</select><select id="ur"><option value="">Alle rollen</option>${Object.entries(ROLLEN).map(([v,t])=>`<option value="${v}"${S.ur===v?' selected':''}>${t}</option>`).join('')}</select>`)+
+  `<div class="card tw"><table><thead><tr><th>Gebruiker</th><th>Klant</th><th>Rol</th><th>Locatie</th><th>Laatst gezien</th><th>Status</th><th></th></tr></thead><tbody id="utb">${uRows()}</tbody></table></div><p class="mute sm" style="margin-top:12px">“Bekijk als klant” opent het dashboard van die klant met alle pagina’s en wordt vastgelegd in het logboek. Uitnodigen doe je bij de klant zelf.</p>`}
+
+/* ===== abonnementen ===== */
+function vAbo(){
+  const rows=D.klanten.filter(k=>k.ab).sort((a,b)=>({actief:0,proef:1,gepauzeerd:2,opgezegd:3}[a.ab.status]-{actief:0,proef:1,gepauzeerd:2,opgezegd:3}[b.ab.status]));
+  const proef=rows.filter(k=>k.ab.status==='proef');
+  return head('Abonnementen','Plannen, prijzen en wat er per maand binnenkomt',`<button class="btn" data-act="planNieuw">+ Plan</button>`)+
+  `<div class="kpis"><div class="card kpi"><small>MRR</small><b>${eur(mrr())}</b><span class="c">excl. btw</span></div><div class="card kpi"><small>Per jaar (ARR)</small><b>${eur(mrr()*12)}</b></div><div class="card kpi"><small>In proef</small><b>${proef.length}</b><span class="c">${eur(proef.reduce((s,k)=>s+ +k.ab.prijs_maand,0))} per maand potentieel</span></div><div class="card kpi"><small>Opgezegd</small><b>${rows.filter(k=>k.ab.status==='opgezegd').length}</b></div></div>
+  <div class="card" style="margin-bottom:16px"><h2>Plannen <span class="mute sm" style="font-weight:400">prijs per locatie per maand, excl. btw</span></h2><div class="tw"><table><thead><tr><th>Plan</th><th>Omschrijving</th><th class="r">Prijs</th><th>Klanten</th><th></th></tr></thead><tbody>${D.plannen.map(p=>`<tr><td><b>${esc(p.naam)}</b> ${p.actief?'':'<span class="pill off">Uit</span>'}</td><td class="mute">${esc(p.omschrijving||'')}</td><td class="r">${eur(p.prijs_per_locatie)}</td><td>${rows.filter(k=>k.ab.plan_id===p.id&&k.ab.status==='actief').length}</td><td class="r"><button class="btn ghost sm" data-act="planEdit" data-id="${p.id}">Wijzigen</button></td></tr>`).join('')}</tbody></table></div></div>
+  <div class="card tw"><h2>Abonnementen per klant</h2><table><thead><tr><th>Klant</th><th>Plan</th><th>Status</th><th class="r">Locaties</th><th class="r">Per maand</th><th>Start</th><th>Proef tot</th><th>Volgende factuur</th></tr></thead><tbody>${rows.length?rows.map(k=>`<tr class="cl" data-href="#klant/${k.id}"><td><b>${esc(k.naam)}</b></td><td>${esc(planNaam(k.ab.plan_id))}</td><td>${pill(ASTAT,k.ab.status)}</td><td class="r">${k.ab.aantal_locaties}</td><td class="r">${eur(k.ab.prijs_maand)}</td><td>${fd(k.ab.start_datum)}</td><td>${k.ab.proef_tot?fd(k.ab.proef_tot)+(k.ab.status==='proef'?` <span class="mute sm">(${daysTo(k.ab.proef_tot)} d)</span>`:''):'–'}</td><td>${fd(k.ab.volgende_factuur)}</td></tr>`).join(''):'<tr><td colspan="8" class="empty">Nog geen abonnementen.</td></tr>'}</tbody></table></div>`}
+
+function planForm(p={}){
+  formModal(p.id?'Plan wijzigen':'Nieuw plan',`<div class="f2"><label>Naam<input name="naam" required value="${esc(p.naam||'')}"></label><label>Prijs per locatie per maand (€)<input name="prijs" type="number" step="0.01" required value="${p.prijs_per_locatie??''}"></label></div>
+  <label>Omschrijving<textarea name="omschrijving">${esc(p.omschrijving||'')}</textarea></label>
+  <label class="chk" style="flex-direction:row;gap:8px;align-items:center"><input type="checkbox" name="actief" value="1" ${p.actief!==false?'checked':''} style="width:auto"> Beschikbaar voor nieuwe klanten</label>`,
+  async(d,f,m)=>{const row={naam:d.naam.trim(),omschrijving:d.omschrijving.trim()||null,prijs_per_locatie:+d.prijs,actief:!!d.actief};
+    if(p.id)await q(SB.from('plannen').update(row).eq('id',p.id));else await q(SB.from('plannen').insert({...row,code:row.naam.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'plan'+Date.now(),volgorde:D.plannen.length+1}));
+    m.close();await load();route();toast('Plan opgeslagen')})}
+
+/* ===== agenda ===== */
+function vAgenda(){
+  const {y,m}=S.cal,first=new Date(y,m,1),off=(first.getDay()+6)%7,start=new Date(y,m,1-off);
+  const ev={};D.afspraken.forEach(a=>{(ev[dkey(a.start_tijd)]=ev[dkey(a.start_tijd)]||[]).push(a)});
+  const today=dkey(new Date());let cells='';
+  for(let i=0;i<42;i++){const d=new Date(start.getFullYear(),start.getMonth(),start.getDate()+i),k=dkey(d),es=ev[k]||[];
+    cells+=`<div class="day${d.getMonth()!==m?' out':''}${k===today?' today':''}${k===S.day?' sel':''}" data-act="dag" data-d="${k}"><span class="d">${d.getDate()}</span>${es.slice(0,3).map(a=>`<span class="chip" style="background:${SOORT[a.soort][1]}33;border-color:${SOORT[a.soort][1]};${a.status==='geannuleerd'?'text-decoration:line-through;opacity:.6':''}">${ft(a.start_tijd)} ${esc(a.titel)}</span>`).join('')}${es.length>3?`<span class="mute sm">+${es.length-3}</span>`:''}</div>`}
+  const maand=new Date(y,m,1).toLocaleDateString('nl-NL',{month:'long',year:'numeric'});
+  const dag=(ev[S.day]||[]),dagTxt=new Date(S.day+'T12:00').toLocaleDateString('nl-NL',{weekday:'long',day:'numeric',month:'long'});
+  const kom=D.afspraken.filter(a=>a.status==='gepland'&&new Date(a.start_tijd)>=new Date()).slice(0,8);
+  const rij=a=>`<div class="li"><a href="#agenda" data-act="afspraakEdit" data-id="${a.id}"><b>${esc(a.titel)}</b><div class="mute sm">${ft(a.start_tijd)}${a.eind_tijd?'–'+ft(a.eind_tijd):''}${a.klanten?' · '+esc(a.klanten.naam):''}${a.plaats?' · '+esc(a.plaats):''}</div></a>${pill(Object.fromEntries(Object.entries(SOORT).map(([k,v])=>[k,['off',v[0]]])),a.soort)}</div>`;
+  return head('Agenda','Demo’s, onboarding en check-ins met klanten',`<button class="btn" data-act="afspraak" data-dag="${S.day}">+ Afspraak</button>`)+
+  `<div class="g3"><div class="stack"><div class="card"><h2><span style="text-transform:capitalize">${maand}</span><span><button class="btn ghost sm" data-act="calPrev" aria-label="Vorige maand">←</button> <button class="btn ghost sm" data-act="calNu">Vandaag</button> <button class="btn ghost sm" data-act="calNext" aria-label="Volgende maand">→</button></span></h2>
+   <div class="cal">${['ma','di','wo','do','vr','za','zo'].map(x=>`<div class="h">${x}</div>`).join('')}${cells}</div></div>
+   <div class="card"><h2 style="text-transform:capitalize">${dagTxt} <button class="btn ghost sm" data-act="afspraak" data-dag="${S.day}">+ Afspraak</button></h2><div class="list">${dag.length?dag.map(rij).join(''):'<p class="empty">Geen afspraken op deze dag.</p>'}</div></div></div>
+   <div class="card"><h2>Komende afspraken</h2><div class="list">${kom.length?kom.map(a=>`<div class="li"><a href="#agenda" data-act="afspraakEdit" data-id="${a.id}"><b>${esc(a.titel)}</b><div class="mute sm">${fdt(a.start_tijd)}${a.klanten?' · '+esc(a.klanten.naam):''}</div></a></div>`).join(''):'<p class="empty">Niets gepland.</p>'}</div></div></div>`}
+
+function afspraakForm(a={},pre={}){
+  const st=a.start_tijd?new Date(a.start_tijd):new Date((pre.dag||dkey(new Date()))+'T10:00');
+  const dur=a.eind_tijd?Math.round((new Date(a.eind_tijd)-st)/6e4):60;
+  const klantId=a.klant_id||pre.klant||'';
+  const m=formModal(a.id?'Afspraak wijzigen':'Nieuwe afspraak',`
+   <label>Titel<input name="titel" required value="${esc(a.titel||pre.titel||'')}"></label>
+   <div class="f2"><label>Soort<select name="soort">${Object.entries(SOORT).map(([k,v])=>`<option value="${k}"${(a.soort||pre.soort||'overig')===k?' selected':''}>${v[0]}</option>`).join('')}</select></label>
+   <label>Klant<select name="klant_id"><option value="">— geen klant —</option>${D.klanten.map(k=>`<option value="${k.id}"${k.id===klantId?' selected':''}>${esc(k.naam)}</option>`).join('')}</select></label></div>
+   <div class="f2"><label>Datum<input name="datum" type="date" required value="${dkey(st)}"></label><label>Tijd<input name="tijd" type="time" required value="${pad(st.getHours())}:${pad(st.getMinutes())}"></label></div>
+   <div class="f2"><label>Duur<select name="duur">${[15,30,45,60,90,120,180].map(x=>`<option value="${x}"${x===dur?' selected':''}>${x} min</option>`).join('')}</select></label>
+   <label>Status<select name="status">${['gepland','afgerond','geannuleerd'].map(s=>`<option${(a.status||'gepland')===s?' selected':''}>${s}</option>`).join('')}</select></label></div>
+   <label>Plaats of videolink<input name="plaats" value="${esc(a.plaats||pre.plaats||'')}"></label>
+   <label>Notities<textarea name="notities">${esc(a.notities||pre.notities||'')}</textarea></label>`,
+  async(d,f,m)=>{const s=new Date(d.datum+'T'+d.tijd);if(isNaN(s))throw new Error('Kies een geldige datum en tijd');
+    const row={titel:d.titel.trim(),soort:d.soort,klant_id:d.klant_id||null,start_tijd:s.toISOString(),eind_tijd:new Date(s.getTime()+ +d.duur*6e4).toISOString(),plaats:d.plaats.trim()||null,notities:d.notities.trim()||null,status:d.status};
+    if(a.id)await q(SB.from('afspraken').update(row).eq('id',a.id));
+    else{await q(SB.from('afspraken').insert({...row,aanvraag_id:pre.aanvraag_id||null,gemaakt_door:ME.id}));
+      if(pre.aanvraag_id)await q(SB.from('aanvragen').update({status:'demo_gepland'}).eq('id',pre.aanvraag_id).eq('status','nieuw'))}
+    S.day=dkey(s);S.cal={y:s.getFullYear(),m:s.getMonth()};m.close();await load();route();toast('Afspraak opgeslagen')},
+  {extra:a.id?'<button type="button" class="btn danger l" data-del>Verwijderen</button>':''});
+  const del=m.querySelector('[data-del]');if(del)del.onclick=async()=>{if(await ask('Afspraak verwijderen','Weet je het zeker?','Verwijderen')){await q(SB.from('afspraken').delete().eq('id',a.id));m.close();await load();route();toast('Afspraak verwijderd')}}}
+
+/* ===== aanvragen ===== */
+function vAanvragen(){
+  const r=D.aanvragen.filter(a=>!S.as||a.status===S.as);
+  return head('Aanvragen',`${D.aanvragen.length} aanvragen via de homepage`,`<select id="as"><option value="">Alle statussen</option>${Object.entries(LSTAT).map(([k,v])=>`<option value="${k}"${S.as===k?' selected':''}>${v[1]}</option>`).join('')}</select>`)+
+  `<div class="stack">${r.length?r.map(a=>`<div class="card"><div class="top" style="margin-bottom:8px"><div><b style="font-size:16px">${esc(a.naam)}</b>${a.bedrijf?` <span class="mute">· ${esc(a.bedrijf)}</span>`:''}<div class="mute sm">${fdt(a.aangemaakt)} · ${esc(a.interesse||'')} · ${esc(a.aantal_locaties||'')}</div></div>${pill(LSTAT,a.status)}</div>
+   <p class="sm"><a href="mailto:${esc(a.email)}">${esc(a.email)}</a>${a.telefoon?` · <a href="tel:${esc(a.telefoon)}">${esc(a.telefoon)}</a>`:''}</p>${a.bericht?`<p class="sm mute" style="margin-top:6px">${esc(a.bericht)}</p>`:''}${a.notities?`<p class="sm" style="margin-top:6px">📝 ${esc(a.notities)}</p>`:''}
+   <div class="bar" style="margin:12px 0 0"><select data-act="aStatus" data-id="${a.id}" style="min-width:150px">${Object.entries(LSTAT).map(([k,v])=>`<option value="${k}"${a.status===k?' selected':''}>${v[1]}</option>`).join('')}</select>
+   <button class="btn ghost sm" data-act="aNotitie" data-id="${a.id}">Notitie</button><button class="btn ghost sm" data-act="aDemo" data-id="${a.id}">Demo plannen</button>${a.klant_id?`<a class="btn ghost sm" href="#klant/${a.klant_id}">Naar klant</a>`:`<button class="btn sm" data-act="aKlant" data-id="${a.id}">Klant aanmaken</button>`}</div></div>`).join(''):'<div class="card"><p class="empty">Geen aanvragen. Nieuwe aanvragen van het formulier op de homepage verschijnen hier.</p></div>'}</div>`}
+
+/* ===== tickets ===== */
+function vTickets(){
+  const r=D.tickets.filter(t=>!S.ts||(S.ts==='actief'?t.status!=='opgelost':t.status===S.ts));
+  return head('Tickets',`${D.tickets.filter(t=>t.status!=='opgelost').length} open`,`<select id="ts"><option value="">Alle</option><option value="actief"${S.ts==='actief'?' selected':''}>Niet opgelost</option>${Object.entries(TSTAT).map(([k,v])=>`<option value="${k}"${S.ts===k?' selected':''}>${v[1]}</option>`).join('')}</select>`)+
+  `<div class="card tw"><table><thead><tr><th>#</th><th>Onderwerp</th><th>Klant</th><th>Urgentie</th><th>Status</th><th>Gemeld</th></tr></thead><tbody>${r.length?r.map(t=>`<tr class="cl" data-href="#ticket/${t.id}"><td class="mute">${t.id}</td><td><b>${esc(t.titel)}</b><div class="mute sm">${esc(t.soort)}${t.pagina?' · '+esc(t.pagina):''}</div></td><td>${esc(t.klanten?.naam||'')}</td><td>${t.urgentie>=2?`<span class="pill err"><i></i>${URG[t.urgentie]}</span>`:`<span class="mute">${URG[t.urgentie]}</span>`}</td><td>${pill(TSTAT,t.status)}</td><td class="mute sm">${fd(t.aangemaakt)}</td></tr>`).join(''):'<tr><td colspan="6" class="empty">Geen tickets.</td></tr>'}</tbody></table></div>`}
+async function vTicket(id){
+  const t=D.tickets.find(x=>String(x.id)===id);if(!t)return `<a class="back" href="#tickets">← Tickets</a><div class="card"><p class="mute">Ticket niet gevonden.</p></div>`;
+  const b=await q(SB.from('ticket_berichten').select('*,profielen(naam)').eq('ticket_id',t.id).order('aangemaakt'));
+  return `<a class="back" href="#tickets">← Tickets</a>`+head(`#${t.id} ${t.titel}`,`${esc(t.klanten?.naam||'')} · ${fdt(t.aangemaakt)} · ${esc(t.soort)}${t.pagina?' · '+esc(t.pagina):''}`,`<select data-act="tStatus" data-id="${t.id}">${Object.entries(TSTAT).map(([k,v])=>`<option value="${k}"${t.status===k?' selected':''}>${v[1]}</option>`).join('')}</select>`)+
+  `<div class="card"><p>${esc(t.omschrijving).replace(/\n/g,'<br>')}</p>${t.verwacht?`<p class="mute sm" style="margin-top:8px">Verwacht: ${esc(t.verwacht)}</p>`:''}
+   <div class="thread">${b.map(x=>`<div class="msg${x.van_support?' s':''}"><small>${x.van_support?'SERVAI support':esc(x.profielen?.naam||'Klant')} · ${fdt(x.aangemaakt)}</small>${esc(x.tekst).replace(/\n/g,'<br>')}</div>`).join('')}</div>
+   <form class="fs" data-form="tReactie" data-id="${t.id}"><label>Reactie aan de klant<textarea name="tekst" required></textarea></label><div><button class="btn" type="submit">Versturen</button></div></form></div>`}
+
+/* ===== acties ===== */
+const ACT={
+  nieuwKlant:()=>nieuwKlant(),
+  async dag(d,el){S.day=d.d;const [y,m]=d.d.split('-');if(+m-1!==S.cal.m){S.cal={y:+y,m:+m-1}}route()},
+  calPrev(){S.cal=S.cal.m===0?{y:S.cal.y-1,m:11}:{y:S.cal.y,m:S.cal.m-1};route()},
+  calNext(){S.cal=S.cal.m===11?{y:S.cal.y+1,m:0}:{y:S.cal.y,m:S.cal.m+1};route()},
+  calNu(){const n=new Date();S.cal={y:n.getFullYear(),m:n.getMonth()};S.day=dkey(n);route()},
+  afspraak(d){afspraakForm({},{dag:d.dag,klant:d.klant})},
+  afspraakEdit(d){const a=D.afspraken.find(x=>String(x.id)===d.id);if(a)afspraakForm(a)},
+  planNieuw:()=>planForm(),planEdit(d){planForm(D.plannen.find(p=>p.id===d.id))},
+  locNieuw(d){formModal('Nieuwe locatie',`<label>Naam<input name="naam" required></label>`,async(v,f,m)=>{await q(SB.from('locaties').insert({klant_id:d.id,naam:v.naam.trim()}));m.close();await load();route()})},
+  locNaam(d){const k=D.klanten.find(k=>k.locaties.some(l=>l.id===d.id)),l=k.locaties.find(l=>l.id===d.id);formModal('Naam wijzigen',`<label>Naam<input name="naam" required value="${esc(l.naam)}"></label>`,async(v,f,m)=>{await q(SB.from('locaties').update({naam:v.naam.trim()}).eq('id',d.id));m.close();await load();route()})},
+  async locWeg(d){if(await ask('Locatie verwijderen','Alle omzet, uren en andere gegevens van deze locatie worden ook verwijderd. Dit kan niet ongedaan worden gemaakt.','Verwijderen')){await q(SB.from('locaties').delete().eq('id',d.id));await load();route();toast('Locatie verwijderd')}},
+  gebrNieuw(d){const k=klant(d.id);const m=formModal('Gebruiker uitnodigen',`<div class="f2"><label>Naam<input name="naam" required></label><label>E-mail<input name="email" type="email" required></label></div>
+    <div class="f2"><label>Rol<select name="rol">${Object.entries(ROLLEN).map(([v,t])=>`<option value="${v}"${v==='bedrijfsleider'?' selected':''}>${t}</option>`).join('')}</select></label><label>Locatie<select name="locatie_id"><option value="">Alle locaties</option>${k.locaties.map(l=>`<option value="${l.id}">${esc(l.naam)}</option>`).join('')}</select></label></div>
+    <label>Pagina’s<div class="chk">${Object.entries(PAGINAS).map(([v,t])=>`<label><input type="checkbox" name="t_${v}" ${['overzicht','loonkosten'].includes(v)?'checked':''}>${t}</label>`).join('')}</div></label>`,
+    async(v,f,mm)=>{const toegang=Object.keys(PAGINAS).filter(p=>v['t_'+p]);const r=await api('gebruiker_uitnodigen',{klant_id:d.id,naam:v.naam,email:v.email,rol:v.rol,locatie_id:v.locatie_id||null,toegang});mm.close();await load();route();toast(r.uitnodiging==='verstuurd'?'Uitnodiging verstuurd':'Gebruiker bestond al en is gekoppeld')},{wide:true,ok:'Uitnodiging sturen'})},
+  async pwMail(d){try{await api('wachtwoordmail',{profiel_id:d.id});toast('Mail met link om een wachtwoord te kiezen is verstuurd')}catch(e){toast(e.message)}},
+  async actief(d){await q(SB.from('profielen').update({actief:d.v==='1'}).eq('id',d.id));await load();route()},
+  async aStatus(d,el){await q(SB.from('aanvragen').update({status:el.value}).eq('id',+d.id));await load();route()},
+  aNotitie(d){const a=D.aanvragen.find(x=>String(x.id)===d.id);formModal('Notitie',`<label>Notitie<textarea name="n">${esc(a.notities||'')}</textarea></label>`,async(v,f,m)=>{await q(SB.from('aanvragen').update({notities:v.n.trim()||null}).eq('id',a.id));m.close();await load();route()})},
+  aDemo(d){const a=D.aanvragen.find(x=>String(x.id)===d.id);afspraakForm({},{titel:'Demo – '+(a.bedrijf||a.naam),soort:'demo',aanvraag_id:a.id,notities:`${a.naam}\n${a.email}${a.telefoon?'\n'+a.telefoon:''}`})},
+  aKlant(d){const a=D.aanvragen.find(x=>String(x.id)===d.id);nieuwKlant({naam:a.bedrijf||'',eig_naam:a.naam,eig_email:a.email,eig_tel:a.telefoon||'',notities:a.bericht||'',aanvraag_id:a.id})},
+  async tStatus(d,el){await q(SB.from('tickets').update({status:el.value}).eq('id',+d.id));await load();toast('Status bijgewerkt');route()},
+};
+const FORM={
+  async klantOpslaan(d,f){const v=Object.fromEntries(new FormData(f));await q(SB.from('klanten').update({naam:v.naam.trim(),status:v.status,contact_naam:v.contact_naam.trim()||null,contact_email:v.contact_email.trim()||null,contact_tel:v.contact_tel.trim()||null,loonnorm_pct:+v.loonnorm_pct||30,notities:v.notities.trim()||null}).eq('id',d.id));await load();route();toast('Opgeslagen')},
+  async aboOpslaan(d,f){const v=Object.fromEntries(new FormData(f));const dt=x=>x||null;
+    await q(SB.from('abonnementen').upsert({klant_id:d.id,plan_id:v.plan_id||null,status:v.status,aantal_locaties:+v.aantal_locaties||1,prijs_maand:+v.prijs_maand||0,interval:v.interval,start_datum:dt(v.start_datum)||dkey(new Date()),proef_tot:dt(v.proef_tot),volgende_factuur:dt(v.volgende_factuur),opzeg_datum:dt(v.opzeg_datum),notities:v.notities.trim()||null,bijgewerkt:new Date().toISOString()},{onConflict:'klant_id'}));await load();route();toast('Abonnement opgeslagen')},
+  async tReactie(d,f){const t=f.tekst.value.trim();if(!t)return;await q(SB.from('ticket_berichten').insert({ticket_id:+d.id,van_support:true,auteur:null,tekst:t}));
+    const tk=D.tickets.find(x=>String(x.id)===d.id);if(tk&&tk.status==='open')await q(SB.from('tickets').update({status:'wacht_op_klant'}).eq('id',tk.id));await load();route();toast('Reactie verstuurd')},
+};
+document.addEventListener('click',async e=>{
+  const a=e.target.closest('[data-act]');
+  if(a&&!(a.tagName==='SELECT')){if(a.tagName==='A'&&a.getAttribute('href')==='#agenda'&&location.hash==='#agenda')e.preventDefault();try{await ACT[a.dataset.act](a.dataset,a)}catch(x){toast(x.message||String(x))}return}
+  const r=e.target.closest('tr[data-href]');if(r&&!e.target.closest('a,button'))location.hash=r.dataset.href});
+document.addEventListener('change',async e=>{const a=e.target.closest('select[data-act]');if(a)try{await ACT[a.dataset.act](a.dataset,a)}catch(x){toast(x.message||String(x))}
+  if(e.target.id==='ks'){S.ks=e.target.value;$('#ktb').innerHTML=kRows()}if(e.target.id==='uk'){S.uk=e.target.value;$('#utb').innerHTML=uRows()}if(e.target.id==='ur'){S.ur=e.target.value;$('#utb').innerHTML=uRows()}if(e.target.id==='ts'){S.ts=e.target.value;route()}if(e.target.id==='as'){S.as=e.target.value;route()}});
+document.addEventListener('input',e=>{if(e.target.id==='kf'){S.kf=e.target.value;$('#ktb').innerHTML=kRows()}if(e.target.id==='uf'){S.uf=e.target.value;$('#utb').innerHTML=uRows()}});
+document.addEventListener('submit',async e=>{const f=e.target.closest('form[data-form]');if(!f)return;e.preventDefault();const b=f.querySelector('button[type=submit]');if(b)b.disabled=true;try{await FORM[f.dataset.form](f.dataset,f)}catch(x){toast(x.message||String(x));if(b)b.disabled=false}});
+function bindView(){const f=$('#view form[data-form=aboOpslaan]');if(f){const pr=f.querySelector('[name=prijs_maand]');autoPrijs(f,'[name=aantal_locaties]','[name=plan_id]','[name=prijs_maand]');if(pr&&pr.dataset.t!=='1')pr.dataset.t=pr.value?'1':''}}
+
+/* ===== start ===== */
+function show(w){$('#login').hidden=w!=='login';$('#app').hidden=w!=='app'}
+async function enter(){
+  const {data:{user}}=await SB.auth.getUser();if(!user)return show('login');
+  const {data:ok,error}=await SB.rpc('is_beheerder');
+  if(error||!ok){await SB.auth.signOut();show('login');const e=$('#lerr');e.hidden=false;e.textContent='Dit account heeft geen toegang tot Beheer.';return}
+  ME=user;$('#me').textContent=user.email;show('app');
+  try{await load()}catch(e){$('#view').innerHTML=`<div class="card"><h2>Laden mislukt</h2><p class="mute">${esc(e.message)}. Is migratie 0002 uitgevoerd in Supabase?</p></div>`;return}
+  route()}
+(async()=>{
+  try{const r=await fetch('/api/config',{cache:'no-store'});const c=await r.json();if(!r.ok||!c.url)throw 0;SB=window.supabase.createClient(c.url,c.key,{auth:{persistSession:true,autoRefreshToken:true}})}
+  catch(e){show('login');const x=$('#lerr');x.hidden=false;x.textContent='Beheer is nog niet ingesteld (SUPABASE_URL en SUPABASE_ANON_KEY).';return}
+  $('#lform').addEventListener('submit',async e=>{e.preventDefault();const f=e.target,er=$('#lerr');er.hidden=true;
+    const {error}=await SB.auth.signInWithPassword({email:f.email.value.trim(),password:f.pw.value});
+    if(error){er.hidden=false;er.textContent='Inloggen is niet gelukt. Controleer je e-mail en wachtwoord.';return}enter()});
+  $('#forgot').addEventListener('click',async e=>{e.preventDefault();const em=$('#lform [name=email]').value.trim(),er=$('#lerr');er.hidden=false;
+    if(!em){er.textContent='Vul eerst je e-mailadres in.';return}await SB.auth.resetPasswordForEmail(em,{redirectTo:location.origin+'/dashboard/'});er.textContent='Als dit adres bekend is, is er een mail verstuurd.'});
+  $('#out').addEventListener('click',async()=>{await SB.auth.signOut();location.hash='';show('login')});
+  addEventListener('hashchange',()=>{if(!$('#app').hidden)route()});
+  enter();
+})();
+</script>
+</body>
+</html>

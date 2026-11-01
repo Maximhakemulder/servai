@@ -895,6 +895,7 @@ footer img{height:30px;width:auto;opacity:.9}
           </ul>
         </div>
         <form id="form" novalidate>
+          <input name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;opacity:0;height:0;width:0">
           <div class="f2">
             <label for="f-name">Naam<input id="f-name" name="name" autocomplete="name" required placeholder="Je naam"></label>
             <label for="f-biz">Zaak<input id="f-biz" name="biz" autocomplete="organization" required placeholder="Naam van je zaak"></label>
@@ -1054,9 +1055,13 @@ if(RM){on.forEach(i=>ch[i].classList.add('on'));return}
 let k=0;setInterval(()=>{if(k<on.length){ch[on[k]].classList.add('on');k++}else{ch.forEach(c=>c.classList.remove('on'));k=0}},700);})();
 
 /* form */
-document.getElementById('form').addEventListener('submit',e=>{e.preventDefault();const f=e.target,err=document.getElementById('f-err');
+document.getElementById('form').addEventListener('submit',async e=>{e.preventDefault();const f=e.target,err=document.getElementById('f-err');
 const name=f.name.value.trim(),biz=f.biz.value.trim(),mail=f.mail.value.trim();
 if(!name||!biz||!/^\S+@\S+\.\S+$/.test(mail)){err.hidden=false;err.textContent='Vul je naam, zaak en een geldig e-mailadres in.';return}
+const btn=f.querySelector('button[type=submit]');if(btn)btn.disabled=true;
+try{const r=await fetch('/api/aanvraag',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({naam:name,bedrijf:biz,email:mail,telefoon:f.tel.value.trim(),interesse:f.interest?f.interest.value:'',locaties:f.loc?f.loc.value:'',website:f.website?f.website.value:''})});
+if(!r.ok){const d=await r.json().catch(()=>({}));throw new Error(d.error||'x')}}
+catch(x){if(btn)btn.disabled=false;err.hidden=false;err.textContent=(x.message&&x.message!=='x'&&x.message!=='Failed to fetch')?x.message:'Versturen is niet gelukt. Probeer het zo opnieuw of mail ons.';return}
 f.innerHTML=`<div class="done"><div class="ring"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></div><h3>Top, ${name.replace(/[<>&]/g,'')}!</h3><p>We nemen binnen 24 uur contact op over ${f.interest?f.interest.value.toLowerCase():'je demo'} voor ${biz.replace(/[<>&]/g,'')}.</p></div>`});
 document.querySelectorAll('[data-interest]').forEach(a=>a.addEventListener('click',()=>{const s=document.getElementById('f-int');if(s)s.value=a.dataset.interest}));
 </script>
