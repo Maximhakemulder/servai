@@ -284,6 +284,25 @@ body.on-assist .fab{display:none}
 .daychips button:hover{color:var(--fg);background:rgba(255,255,255,.05)}.daychips button.on{color:#fff;background:var(--panel-2);border-color:transparent;box-shadow:0 0 0 1px rgba(34,181,115,.6)}
 .medal{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:50%;font:700 17px var(--f-d);color:#10132A;flex:none}.medal.sm{width:20px;height:20px;font-size:11px;vertical-align:middle;margin-right:4px}
 #period{max-width:100%;overflow-x:auto;scrollbar-width:none}#period::-webkit-scrollbar{display:none}#period button{flex:none;white-space:nowrap}
+#ov-x{display:contents}
+#ov-x>.c{min-width:0}
+.wd .st,.tr .st{display:inline-block;padding:3px 8px;border-radius:7px;font:600 10.5px var(--f-m);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+.wk7{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px}
+@media (max-width:900px){.wk7{grid-template-columns:repeat(7,minmax(118px,1fr));overflow-x:auto;padding-bottom:6px}}
+.wd{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;border:1px solid var(--line);border-radius:12px;padding:12px 8px;background:rgba(255,255,255,.02)}
+.wd.now{border-color:rgba(94,123,255,.55);background:rgba(94,123,255,.07)}
+.wd small{font:600 11px var(--f-m);letter-spacing:.05em;text-transform:uppercase;color:var(--fg-2)}.wd .dt{font-size:12px;color:var(--mute)}
+.wd .ic{font-size:26px;line-height:1.2}.wd b{font:600 19px var(--f-d)}.wd b em{font-style:normal;font-weight:500;font-size:13px;color:var(--mute);margin-left:5px}
+.wd .rn{font-size:11.5px;color:var(--fg-2)}.wd .st{margin-top:2px}
+.xts{display:flex;flex-direction:column;gap:4px;margin-top:4px;width:100%}
+.xt{font-size:11px;line-height:1.3;padding:3px 6px;border-radius:6px;background:rgba(170,180,255,.08);color:var(--fg-2)}
+.xt.f{background:rgba(217,89,38,.16);color:#FFB08A}.xt.v{background:rgba(57,135,229,.16);color:#A9C6FF}.xt.e{background:rgba(155,89,182,.18);color:#D9B3F0}.xt.t{background:rgba(34,181,115,.14);color:#7FE0AE}
+.xtips{margin-top:14px;display:grid;gap:6px}.xtips p{font-size:13.5px;color:var(--fg-2)}
+.tlist{display:grid;gap:2px}.tr{display:grid;grid-template-columns:minmax(0,1fr) 70px 64px auto;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}.tr:last-child{border-bottom:0}
+.tr b{font-weight:600}.tr small{display:block;color:var(--mute);font-size:12px;margin-top:2px}.tr .spk{width:70px;height:26px}.tr .tv{font:600 17px var(--f-d);text-align:right}.tr .tv.bad{color:#FF8A8A}
+.xalarm{background:rgba(224,72,72,.14);color:#FF9A9A;border-radius:10px;padding:9px 12px;font-size:13.5px;font-weight:600;margin-bottom:8px}
+.gk{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:12px;margin-bottom:12px}.gk small{display:block;color:var(--mute);font-size:12px}.gk b{display:block;font:600 20px var(--f-d);margin:2px 0}
+@media (max-width:560px){.tr{grid-template-columns:minmax(0,1fr) 56px auto}.tr .spk{display:none}}
 </style>
 </head>
 <body>
@@ -365,7 +384,7 @@ const REALPAGES=['overzicht','loonkosten'];
 const RLAB={eigenaar:'Eigenaar',bedrijfsleider:'Bedrijfsleider',chef:'Chef-kok',boekhouder:'Boekhouder',bar:'Bar manager',gastvrouw:'Gastvrouw'};
 const LCOLS=['#3987e5','#d95926','#199e70','#c98500','#9b59b6','#16a085'];
 const LOCS=[
-  {id:'cornelis',name:'Cornelis',c:'#3987e5',f:1.25,seed:11},
+  {id:'cornelis',name:'Cornelis',c:'#3987e5',f:1.25,seed:11,plaats:'Rotterdam',regio:'midden'},
   {id:'fust',name:'Fust',c:'#d95926',f:0.9,seed:23},
   {id:'beau',name:'Beau',c:'#199e70',f:1.05,seed:37},
   {id:'coconuts',name:'Coconuts',c:'#c98500',f:1.4,seed:53}
@@ -458,8 +477,10 @@ V.overzichtDemo=()=>{
       <thead><tr><th>Locatie</th><th>Omzet</th><th class="r">Δ</th><th class="r">Couverts</th><th class="r">Gem. besteding</th><th class="r">Loonkosten</th><th class="r">Marge</th></tr></thead><tbody>
       ${locRows.map(x=>`<tr><td><span class="loc-name"><i style="background:${x.L.c}"></i>${x.L.name}</span></td><td><div class="mbar"><span class="t"><i style="width:${x.a.rev/maxRev*100}%;background:${x.L.c}"></i></span><b class="num">${eur(x.a.rev)}</b></div></td><td class="r">${delta(x.a.rev,x.b.rev)}</td><td class="r">${nf(x.a.cov)}</td><td class="r">${eur(x.a.avg,2)}</td><td class="r">${x.a.labp>31?`<span style="color:#FF9A9A">▲ ${pct(x.a.labp)}</span>`:pct(x.a.labp)}</td><td class="r">${pct(x.a.margin)}</td></tr>`).join('')}
       </tbody></table></div></div>`:''}
+    <div id="ov-x"></div>
   </div>`,
   after(){
+    xLoad();
     mk('c-hour',{type:'line',data:{labels:h.H.map(x=>x+':00'),datasets:[{label:'Gisteren',data:h.y,borderColor:'#3987e5',backgroundColor:ctx=>{const g=ctx.chart.ctx.createLinearGradient(0,0,0,260);g.addColorStop(0,'rgba(57,135,229,.28)');g.addColorStop(1,'rgba(57,135,229,0)');return g},fill:true,tension:.35,borderWidth:2,pointRadius:0,pointHoverRadius:5},{label:'Vorige week',data:h.p,borderColor:'#6B7199',borderDash:[5,4],borderWidth:2,tension:.35,pointRadius:0,pointHoverRadius:4}]},
       options:{scales:{y:yEur,x:xPlain},plugins:{tooltip:{...tip,callbacks:{label:c=>' '+c.dataset.label+': '+eur(c.raw)}}}}});
     mk('c-14',{type:'bar',data:{labels:s14.map(x=>DAYS[dayIdx(x.d)]+' '+x.d.getDate()),datasets:[{label:'Omzet',data:s14.map(x=>x.rev),backgroundColor:s14.map(x=>[4,5].includes(dayIdx(x.d))?'#3987e5':'rgba(57,135,229,.55)'),borderRadius:4,borderSkipped:'start',maxBarThickness:28}]},
@@ -861,6 +882,7 @@ const NCATS=[
  ['Menu & dranken','i-chef',[
   ['m-marge','Marge van een gerecht onder norm','Als een gerecht door prijsstijgingen te weinig oplevert',['Direct','Wekelijks'],1,1,1,['Norm',68,'%']],
   ['m-hard','Hardloper of sluiper','Gerechten die opvallend goed of slecht lopen',['Wekelijks'],0,0,1],
+  ['m-koel','Koelcel of vriezer te warm','HACCP: direct bericht bij een afwijking, ook \'s nachts',['Direct'],0,1,1,['Boven',7,'°C']],
   ['m-tank','Biertank bijna leeg','Per tank, zodat je op tijd een nieuwe bestelt',['Direct'],0,1,0,['Onder',15,'%']],
   ['m-kans','Markt en kansen','Nieuwe trends en gerechten die bij je zaak passen',['Maandelijks'],0,0,1]]],
  ['Reserveringen & gasten','i-cal',[
@@ -881,6 +903,7 @@ function nSave(d){try{localStorage.setItem(nkey(),JSON.stringify(d))}catch(e){}}
 function nPreview(d){const R=d.rows,on=id=>R[id].wa;const first=(cur()||{n:'Eva'}).n.split(' ')[0];
   let l=['Goedemorgen '+first+'. Gisteren in het kort:','Omzet €16.526 (+3,1%)','Loonkosten 30,5% van omzet (norm 30%)'];
   if(on('p-uren'))l.push('Uren: 212 gewerkt, 205 gepland');
+  if(on('m-koel'))l.push('Barkoeling 9,1° sinds 21:40, deur dicht?');
   if(on('m-tank'))l.push('Tank Coconuts nr. 2: 12%, bestel vandaag');
   if(on('i-prijs'))l.push('Zalm +9% duurder, marge zalmschotel −6%');
   l.push('Vandaag: 2 groepen, 142 couverts verwacht');
@@ -1031,6 +1054,124 @@ async function lkLoad(){
   }
 }
 
+/* ---------------- weer & evenementen, koelcellen, Google-profiel (demo én echt) ---------------- */
+const SCHOOL=[
+ ['Herfstvakantie',{noord:['2026-10-10','2026-10-18'],midden:['2026-10-17','2026-10-25'],zuid:['2026-10-17','2026-10-25']}],
+ ['Kerstvakantie',{noord:['2026-12-19','2027-01-03'],midden:['2026-12-19','2027-01-03'],zuid:['2026-12-19','2027-01-03']}],
+ ['Voorjaarsvakantie',{noord:['2027-02-20','2027-02-28'],midden:['2027-02-20','2027-02-28'],zuid:['2027-02-13','2027-02-21']}],
+ ['Meivakantie',{noord:['2027-04-24','2027-05-02'],midden:['2027-04-24','2027-05-02'],zuid:['2027-04-24','2027-05-02']}],
+ ['Zomervakantie',{noord:['2027-07-10','2027-08-22'],midden:['2027-07-17','2027-08-29'],zuid:['2027-07-24','2027-09-05']}]];
+function vakantie(iso,regio){const r=regio||'midden';const v=SCHOOL.find(x=>{const p=x[1][r];return p&&iso>=p[0]&&iso<=p[1]});return v?v[0]:''}
+function pasen(y){const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),da=((h+l-7*m+114)%31)+1;return new Date(y,mo-1,da)}
+const FDC={};
+function feestdagen(y){if(FDC[y])return FDC[y];const o={},P=pasen(y),add=(d,n)=>o[ymd(d)]=n,off=n=>{const d=new Date(P);d.setDate(d.getDate()+n);return d};
+  const nzon=(m,n)=>{const d=new Date(y,m,1);while(d.getDay()!==0)d.setDate(d.getDate()+1);d.setDate(d.getDate()+7*(n-1));return d};
+  add(new Date(y,0,1),'Nieuwjaarsdag');add(new Date(y,1,14),'Valentijnsdag');add(off(-2),'Goede Vrijdag');add(P,'1e Paasdag');add(off(1),'2e Paasdag');
+  const kd=new Date(y,3,27);if(kd.getDay()===0)kd.setDate(26);add(kd,'Koningsdag');add(new Date(y,4,5),'Bevrijdingsdag');add(nzon(4,2),'Moederdag');
+  add(off(39),'Hemelvaartsdag');add(off(49),'1e Pinksterdag');add(off(50),'2e Pinksterdag');add(nzon(5,3),'Vaderdag');
+  add(new Date(y,11,5),'Pakjesavond');add(new Date(y,11,24),'Kerstavond');add(new Date(y,11,25),'1e Kerstdag');add(new Date(y,11,26),'2e Kerstdag');add(new Date(y,11,31),'Oudejaarsavond');
+  return FDC[y]=o}
+const feestdag=iso=>feestdagen(+iso.slice(0,4))[iso]||'';
+const WMO=c=>c===0?['Zonnig','☀️']:c<=2?['Half bewolkt','🌤️']:c===3?['Bewolkt','☁️']:c<=48?['Mist','🌫️']:c<=57?['Motregen','🌦️']:c<=67?['Regen','🌧️']:c<=77?['Sneeuw','🌨️']:c<=82?['Buien','🌦️']:c<=86?['Sneeuwbuien','🌨️']:['Onweer','⛈️'];
+const WCACHE={};
+async function coords(L){
+  if(L&&L.lat!=null&&L.lon!=null)return{lat:+L.lat,lon:+L.lon,naam:L.plaats||L.name};
+  if(!L||!L.plaats)return null;const k='servai-geo-'+L.plaats.toLowerCase();
+  try{const c=JSON.parse(localStorage.getItem(k)||'null');if(c)return c}catch(e){}
+  const r=await fetch('https://geocoding-api.open-meteo.com/v1/search?count=1&language=nl&countryCode=NL&name='+encodeURIComponent(L.plaats));
+  const j=await r.json();const x=j&&j.results&&j.results[0];if(!x)return null;
+  const c={lat:x.latitude,lon:x.longitude,naam:x.name};try{localStorage.setItem(k,JSON.stringify(c))}catch(e){}return c}
+async function weer(L){
+  const c=await coords(L);if(!c)return null;const k=c.lat.toFixed(2)+','+c.lon.toFixed(2);
+  if(WCACHE[k]&&Date.now()-WCACHE[k].t<18e5)return WCACHE[k].v;
+  const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lon}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max&timezone=Europe%2FAmsterdam&forecast_days=7`);
+  if(!r.ok)throw new Error('weer');const j=await r.json(),D=j.daily;
+  const v={plaats:c.naam,dagen:D.time.map((t,i)=>({iso:t,code:D.weather_code[i],max:D.temperature_2m_max[i],min:D.temperature_2m_min[i],regen:D.precipitation_probability_max[i]||0,wind:D.wind_speed_10m_max[i]||0}))};
+  WCACHE[k]={t:Date.now(),v};return v}
+function weerNep(){const r=rng(TODAY.getDate()*31+TODAY.getMonth()*7);return{plaats:'Rotterdam',nep:true,dagen:[0,1,2,3,4,5,6].map(i=>{const d=new Date(TODAY);d.setDate(d.getDate()+i);const m=d.getMonth(),base=[6,7,10,14,18,21,23,23,19,14,10,7][m];
+  const code=[0,2,3,61,80,2,1][Math.floor(r()*7)];return{iso:ymd(d),code,max:Math.round(base+r()*5-2),min:Math.round(base-6+r()*3),regen:code>=60?55+Math.round(r()*35):Math.round(r()*30),wind:10+Math.round(r()*25)}})}}
+const plusDag=n=>{const d=new Date(TODAY);d.setDate(d.getDate()+n);return ymd(d)};
+function demoEvents(){return[{datum:plusDag(2),naam:'Koopavond binnenstad',drukte:'normaal'},{datum:plusDag(5),naam:'Thuiswedstrijd voetbal, stadion 1,5 km',drukte:'zeer_druk'},{datum:plusDag(6),naam:'Beurs in de stad (3 dagen)',tot:plusDag(8),drukte:'druk'}]}
+async function xEvents(L){
+  if(!REAL)return demoEvents();
+  let q=SB.from('evenementen').select('datum,tot,naam,drukte,locatie_id').gte('datum',ymd(dayAgo(14))).lte('datum',plusDag(6)).order('datum');
+  if(VIEWAS)q=q.eq('klant_id',VIEWAS);if(state.loc!=='all')q=q.or('locatie_id.is.null,locatie_id.eq.'+state.loc);
+  const {data,error}=await q;if(error)return[];return(data||[]).filter(e=>(e.tot||e.datum)>=ymd(TODAY))}
+const DRUK={rustig:-.15,normaal:0,druk:.2,zeer_druk:.35};
+function weekCard(L,W,EV){
+  const regio=(L&&L.regio)||'midden',plaats=W?W.plaats:(L&&L.plaats)||'';
+  if(!W)return `<div class="c span-12"><div class="ch"><div><h2>Komende 7 dagen</h2><p>Weer, feestdagen, vakanties en evenementen</p></div></div><p style="color:var(--fg-2)">${L&&(L.plaats||L.lat)?'Het weer kon even niet worden opgehaald.':'Vul bij deze locatie een plaats in (SERVAI Beheer), dan zie je hier het weer voor de komende week.'}</p>${evList(EV)}</div>`;
+  const tips=[];
+  const cols=W.dagen.map((d,i)=>{const dt=new Date(d.iso+'T12:00:00'),wi=dayIdx(dt),[wt,ic]=WMO(d.code),fd=feestdag(d.iso),vk=vakantie(d.iso,regio),ev=(EV||[]).filter(e=>d.iso>=e.datum&&d.iso<=(e.tot||e.datum));
+    const terras=d.max>=17&&d.regen<35,nat=d.regen>=60;
+    let sc=WK[wi]+(terras?.12:0)-(nat?.08:0)+(fd?.15:0)+(vk?.05:0)+ev.reduce((a,e)=>a+(DRUK[e.drukte]||0),0);
+    const lvl=sc>=1.35?['Zeer druk','crit']:sc>=1.05?['Druk','warn']:sc>=.75?['Normaal','info']:['Rustig','good'];
+    const nm=i===0?'Vandaag':i===1?'Morgen':WDN[wi][0].toUpperCase()+WDN[wi].slice(1);
+    if(terras&&wi>=4)tips.push(`${nm}: terrasweer (${Math.round(d.max)}°). Extra bediening en terrasvoorraad.`);
+    ev.filter(e=>e.drukte==='zeer_druk'||e.drukte==='druk').forEach(e=>{if(e.datum===d.iso)tips.push(`${nm}: ${e.naam}. Rooster en inkoop erop afstemmen.`)});
+    if(fd&&!['Valentijnsdag','Moederdag','Vaderdag','Pakjesavond'].includes(fd))tips.push(`${nm}: ${fd}. Check openingstijden en bezetting.`);else if(fd)tips.push(`${nm}: ${fd}. Goede dag voor een actie of speciaal menu.`);
+    if(nat&&wi>=4)tips.push(`${nm}: ${d.regen}% kans op regen. Terras dicht, minder walk-ins.`);
+    const tags=[fd&&`<span class="xt f">${fd}</span>`,vk&&i===0||vk&&!vakantie(plusDag(i-1),regio)?`<span class="xt v">${vk}</span>`:'',...ev.map(e=>`<span class="xt e">${esc(e.naam)}</span>`),terras?'<span class="xt t">Terrasweer</span>':''].filter(Boolean).join('');
+    return `<div class="wd${i===0?' now':''}"><small>${nm}</small><span class="dt">${dateLbl(dt)}</span><span class="ic" title="${wt}">${ic}</span><b>${Math.round(d.max)}°<em>${Math.round(d.min)}°</em></b><span class="rn">💧 ${d.regen}% · 💨 ${Math.round(d.wind)} km/u</span><span class="st ${lvl[1]}">${lvl[0]}</span>${tags?`<div class="xts">${tags}</div>`:''}</div>`}).join('');
+  return `<div class="c span-12"><div class="ch"><div><h2>Komende 7 dagen</h2><p>${esc(plaats)} · weer, feestdagen, schoolvakanties (regio ${regio}) en evenementen · drukte is een indicatie</p></div>${W.nep?'':'<span class="chip"><i style="background:var(--good)"></i>live weer</span>'}</div>
+    <div class="wk7">${cols}</div>${tips.length?`<div class="xtips">${tips.slice(0,4).map(t=>`<p>△ ${t}</p>`).join('')}</div>`:''}</div>`}
+function evList(EV){return EV&&EV.length?`<div class="xtips">${EV.map(e=>`<p>${dateLbl(new Date(e.datum+'T12:00:00'))}: ${esc(e.naam)}</p>`).join('')}</div>`:''}
+
+/* koelcellen */
+function demoTemps(){const r=rng(99+TODAY.getDate()),now=new Date();
+  const S=[['Koelcel vlees & vis','koeling',2.6],['Koelcel groente & zuivel','koeling',3.8],['Koelwerkbank keuken','koeling',4.9],['Barkoeling','koeling',5.2],['Wijnklimaatkast','overig',11,8,14],['Vriezer keuken','vriezer',-19.6],['Vriezer ijs & dessert','vriezer',-21.2]];
+  return S.map(([n,soort,b,mn,mx],si)=>{const h=[];for(let i=23;i>=0;i--){let v=b+(r()-.5)*.8+(i%6===0?.6:0);if(n==='Barkoeling'&&i<3)v=b+(3-i)*1.6+.4;h.push(+v.toFixed(1))}
+    return{n,soort,min:mn??null,max:mx??null,temp:h[23],hist:h,last:new Date(now-(2+si)*6e4)}})}
+async function xTemps(){
+  if(!REAL)return demoTemps();
+  let q=SB.from('temperatuur_metingen').select('locatie_id,sensor,soort,gemeten,temp,min_temp,max_temp').gte('gemeten',new Date(Date.now()-864e5).toISOString()).order('gemeten',{ascending:false}).limit(5000);
+  if(VIEWAS)q=q.eq('klant_id',VIEWAS);if(state.loc!=='all')q=q.eq('locatie_id',state.loc);
+  const {data,error}=await q;if(error)return null;const by={};
+  (data||[]).forEach(m=>{const k=m.locatie_id+'|'+m.sensor;const s=by[k]||(by[k]={n:m.sensor+(state.loc==='all'&&LOCS.length>1?' · '+((LOCS.find(l=>l.id===m.locatie_id)||{}).name||''):''),soort:m.soort,min:m.min_temp,max:m.max_temp,temp:+m.temp,last:new Date(m.gemeten),hist:[]});s.hist.unshift(+m.temp)});
+  return Object.values(by)}
+function grens(s){const mn=s.min!=null?+s.min:s.soort==='vriezer'?-40:s.soort==='koeling'?0:-50,mx=s.max!=null?+s.max:s.soort==='vriezer'?-18:s.soort==='koeling'?7:100;return[mn,mx]}
+function tempCard(T){
+  const head=`<div class="ch"><div><h2>Koelcellen &amp; vriezers</h2><p>HACCP · laatste meting en 24 uur</p></div>${T&&T.length?'<span class="chip"><i style="background:var(--good)"></i>live via sensoren</span>':''}</div>`;
+  if(!T||!T.length)return `<div class="c span-6">${head}<p style="color:var(--fg-2)">Nog geen temperatuursensoren gekoppeld. Met draadloze sensoren in je koelcellen en vriezers krijg je direct een WhatsApp als iets te warm wordt, en heb je je HACCP-registratie automatisch rond.</p></div>`;
+  const rows=T.map(s=>{const[mn,mx]=grens(s),out=s.temp>mx||s.temp<mn,oud=Date.now()-s.last>2*36e5,hi=Math.max(...s.hist),lo=Math.min(...s.hist),bijna=!out&&(s.temp>mx-1&&s.soort!=='overig');
+    const st=oud?['Geen signaal','warn']:out?['Te warm','crit']:bijna?['Let op','warn']:['Goed','good'];if(out&&s.temp<mn)st[0]='Te koud';
+    const pts=s.hist.map((v,i)=>`${(i/(Math.max(1,s.hist.length-1))*100).toFixed(1)},${(26-((v-lo)/((hi-lo)||1))*22).toFixed(1)}`).join(' ');
+    return{out,oud,bijna,html:`<div class="tr"><div><b>${esc(s.n)}</b><small>${s.soort==='vriezer'?'max '+mx+'°':s.soort==='koeling'?mn+' tot '+mx+'°':mn+' tot '+mx+'°'} · 24u ${lo.toLocaleString('nl-NL')}° tot ${hi.toLocaleString('nl-NL')}°</small></div><svg viewBox="0 0 100 30" preserveAspectRatio="none" class="spk"><polyline points="${pts}" fill="none" stroke="${out?'#FF8A8A':'#5E7BFF'}" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg><b class="tv${out?' bad':''}">${s.temp.toLocaleString('nl-NL',{minimumFractionDigits:1,maximumFractionDigits:1})}°</b><span class="st ${st[1]}">${st[0]}</span></div>`}});
+  const bad=rows.filter(r=>r.out);
+  return `<div class="c span-6">${head}${bad.length?`<div class="xalarm">! ${bad.length===1?'1 koeling buiten de grens':bad.length+' koelingen buiten de grens'}. Melding is via WhatsApp verstuurd.</div>`:''}<div class="tlist">${rows.sort((a,b)=>b.out-a.out||b.bijna-a.bijna).map(r=>r.html).join('')}</div></div>`}
+
+/* Google Bedrijfsprofiel */
+function demoGoogle(){const r=rng(4242),o=[];for(let i=56;i>=1;i--){const d=new Date(TODAY);d.setDate(d.getDate()-i);const w=WK[dayIdx(d)]*(1+(56-i)*.002);
+  o.push({datum:ymd(d),zoeken:Math.round(330*w*(.85+r()*.3)),maps:Math.round(470*w*(.85+r()*.3)),routes:Math.round(38*w*(.8+r()*.4)),bellen:Math.round(16*w*(.7+r()*.6)),website:Math.round(52*w*(.8+r()*.4)),reserveren:Math.round(24*w*(.8+r()*.4))})}return o}
+async function xGoogle(){
+  if(!REAL)return demoGoogle();
+  let q=SB.from('google_profiel_dag').select('datum,locatie_id,zoeken,maps,routes,bellen,website,reserveren').gte('datum',ymd(dayAgo(57))).order('datum');
+  if(VIEWAS)q=q.eq('klant_id',VIEWAS);if(state.loc!=='all')q=q.eq('locatie_id',state.loc);
+  const {data,error}=await q;if(error)return null;const by={};(data||[]).forEach(x=>{const d=by[x.datum]||(by[x.datum]={datum:x.datum,zoeken:0,maps:0,routes:0,bellen:0,website:0,reserveren:0});['zoeken','maps','routes','bellen','website','reserveren'].forEach(k=>d[k]+=+x[k]||0)});
+  return Object.values(by).sort((a,b)=>a.datum<b.datum?-1:1)}
+let GCH=null;
+function googleCard(G){
+  const head=`<div class="ch"><div><h2>Google Bedrijfsprofiel</h2><p>Laatste 4 weken · vs 4 weken ervoor</p></div></div>`;
+  if(!G||!G.length){GCH=null;return `<div class="c span-6">${head}<p style="color:var(--fg-2)">Nog niet gekoppeld. Hier zie je straks hoe vaak je zaak in Google Zoeken en Maps wordt bekeken, hoeveel mensen een route vragen, bellen of op reserveren klikken.</p></div>`}
+  const grens=ymd(dayAgo(28)),a=G.filter(x=>x.datum>grens),b=G.filter(x=>x.datum<=grens),S=(l,k)=>l.reduce((t,x)=>t+x[k],0);
+  const v=l=>S(l,'zoeken')+S(l,'maps');
+  const k=[['Weergaven',v(a),v(b)],['Routes',S(a,'routes'),S(b,'routes')],['Gebeld',S(a,'bellen'),S(b,'bellen')],['Website',S(a,'website'),S(b,'website')],['Reserveren',S(a,'reserveren'),S(b,'reserveren')]].filter(x=>x[0]!=='Reserveren'||x[1]>0);
+  GCH=a;
+  return `<div class="c span-6">${head}<div class="gk">${k.map(x=>`<div><small>${x[0]}</small><b>${nf(x[1])}</b>${b.length?dl(x[1],x[2]):''}</div>`).join('')}</div><div class="cv short" style="height:150px"><canvas id="c-gprof" role="img" aria-label="Weergaven Google-profiel per dag"></canvas></div>
+    <p style="color:var(--fg-2);font-size:13px;margin-top:8px">${S(a,'routes')+S(a,'bellen')+S(a,'reserveren')>0?`${nf(S(a,'routes')+S(a,'bellen')+S(a,'reserveren'))} mensen vroegen een route, belden of klikten op reserveren. Dat zijn gasten die op het punt staan te komen.`:''}</p></div>`}
+function googleChart(){if(!GCH||!document.getElementById('c-gprof'))return;
+  mk('c-gprof',{type:'line',data:{labels:GCH.map(x=>dshort(x.datum)),datasets:[{label:'Weergaven',data:GCH.map(x=>x.zoeken+x.maps),borderColor:'#5E7BFF',backgroundColor:'rgba(94,123,255,.14)',fill:true,tension:.35,pointRadius:0}]},
+    options:{scales:{y:{grid:{color:'rgba(170,180,255,.07)'},border:{display:false}},x:{...xPlain,ticks:{maxTicksLimit:6,maxRotation:0}}},plugins:{tooltip:tip}}})}
+
+async function xLoad(){
+  const box=document.getElementById('ov-x');if(!box)return;
+  const L=state.loc==='all'?(LOCS.find(l=>l.plaats||l.lat!=null)||LOCS[0]):LOCS.find(l=>l.id===state.loc);
+  const [W,EV,T,G]=await Promise.all([weer(L).catch(()=>null),xEvents(L).catch(()=>[]),xTemps().catch(()=>null),xGoogle().catch(()=>null)]);
+  if(document.getElementById('ov-x')!==box)return;
+  box.innerHTML=weekCard(L,W||(!REAL?weerNep():null),EV)+tempCard(T)+googleCard(G);
+  googleChart();buildJump();
+}
+
 /* ---------------- Overzicht op echte kassadata ---------------- */
 function ovRange(p){
   if(p===0)return{f:ymd(dayAgo(0)),t:ymd(dayAgo(0)),pf:ymd(dayAgo(7)),pt:ymd(dayAgo(7)),vs:'vs zelfde dag vorige week'};
@@ -1053,7 +1194,7 @@ async function ovFetch(tabel,sel,van,tot,order){
   return all;
 }
 const dl=(a,b,inv)=>{if(!b||!isFinite(b))return '<span class="delta flat">–</span>';return delta(a,b,inv)};
-V.overzicht=()=>REAL?{html:`<div class="grid"><div class="c span-12" id="ov-wrap"><p style="color:var(--mute)">Gegevens laden…</p></div></div>`,after:ovLoad}:V.overzichtDemo();
+V.overzicht=()=>REAL?{html:`<div class="grid"><div class="c span-12" id="ov-wrap"><p style="color:var(--mute)">Gegevens laden…</p></div><div id="ov-x"></div></div>`,after(){ovLoad();xLoad()}}:V.overzichtDemo();
 async function ovLoad(){
   const wrap=document.getElementById('ov-wrap');if(!wrap||!SB)return;
   const R=ovRange(state.period);
@@ -1129,7 +1270,10 @@ const CKINDS=[
  ['res','Reserveringen','i-cal','Reserveringen, bezetting en no-shows','Reserveringssysteem A,Reserveringssysteem B'],
  ['tank','Biertanken','i-drink','Vulniveau per tank','Tanksensor-API'],
  ['inkoop','Leveranciers','i-box','Bestellingen, prijzen en leveringen','Groothandel A,Groothandel B'],
- ['rev','Reviews','i-star','Beoordelingen en reacties van gasten','Reviewplatform A,Reviewplatform B']
+ ['rev','Reviews','i-star','Beoordelingen en reacties van gasten','Reviewplatform A,Reviewplatform B'],
+ ['weer','Weer & evenementen','i-cal','Weersverwachting, feestdagen, schoolvakanties en evenementen in de buurt','Open-Meteo (standaard aan)'],
+ ['temp','Koelcellen (HACCP)','i-bell','Temperatuur van koelcellen en vriezers, met alarm','Temperatuursensor A,Temperatuursensor B'],
+ ['gprof','Google Bedrijfsprofiel','i-chart','Weergaven, routes, telefoontjes en klikken op reserveren','Google Business Profile']
 ];
 const CDEF=[
  {id:'c1',k:'kassa',sys:'Kassasysteem A',st:'ok',last:'vandaag 08:05',locs:'Alle 4 locaties',sync:'elk uur'},
@@ -1138,7 +1282,10 @@ const CDEF=[
  {id:'c4',k:'tank',sys:'Tanksensor-API',st:'ok',last:'5 min geleden',locs:'Coconuts, Fust',sync:'elke 5 min'},
  {id:'c5',k:'res',sys:'',st:'off',last:'',locs:'',sync:''},
  {id:'c6',k:'inkoop',sys:'',st:'off',last:'',locs:'',sync:''},
- {id:'c7',k:'rev',sys:'',st:'off',last:'',locs:'',sync:''}
+ {id:'c7',k:'rev',sys:'',st:'off',last:'',locs:'',sync:''},
+ {id:'c8',k:'weer',sys:'Open-Meteo (standaard aan)',st:'ok',last:'10 min geleden',locs:'Alle locaties',sync:'elk half uur'},
+ {id:'c9',k:'temp',sys:'Temperatuursensor A',st:'ok',last:'2 min geleden',locs:'7 sensoren',sync:'elke 5 min'},
+ {id:'c10',k:'gprof',sys:'Google Business Profile',st:'ok',last:'vandaag 06:00',locs:'Alle locaties',sync:'dagelijks'}
 ];
 let CONN=CDEF.map(x=>({...x}));
 try{const s=JSON.parse(localStorage.getItem('servai-conn')||'null');if(Array.isArray(s)&&s.length)CONN=s}catch(e){}
@@ -1359,7 +1506,7 @@ vw.addEventListener('click',e=>{
   const nw=e.target.closest('[data-nw]');if(nw){const [id,k]=nw.dataset.nw.split(':');nEdit(d=>{d.rows[id][k]=!d.rows[id][k]});return}
   const nq=e.target.closest('[data-nq]');if(nq){nEdit(d=>{d.quiet[nq.dataset.nq]=!d.quiet[nq.dataset.nq]});return}
   const nc=e.target.closest('[data-ncat]');if(nc){const on=nc.dataset.on==='1';const c=NCATS.find(x=>x[0]===nc.dataset.ncat);nEdit(d=>{c[2].forEach(x=>{d.rows[x[0]].wa=on;d.rows[x[0]].mail=on})});flash(on?'Alles aan voor '+c[0]:'Alles uit voor '+c[0]);return}
-  const np=e.target.closest('[data-npre]');if(np){const m=np.dataset.npre,imp=['rap-och','p-loon','f-kas','i-prijs','m-tank','s-kop','f-liq'];nEdit(d=>{NALL.forEach(x=>{const r=d.rows[x[0]];if(m==='alles'){r.wa=true;r.mail=true}else if(m==='uit'){r.wa=false;r.mail=false}else if(m==='mail'){r.wa=false;r.mail=true}else{r.wa=imp.includes(x[0]);r.mail=imp.includes(x[0])&&x[0]!=='p-loon'&&x[0]!=='m-tank'}})});flash('Instelling toegepast');return}
+  const np=e.target.closest('[data-npre]');if(np){const m=np.dataset.npre,imp=['rap-och','p-loon','f-kas','i-prijs','m-tank','m-koel','s-kop','f-liq'];nEdit(d=>{NALL.forEach(x=>{const r=d.rows[x[0]];if(m==='alles'){r.wa=true;r.mail=true}else if(m==='uit'){r.wa=false;r.mail=false}else if(m==='mail'){r.wa=false;r.mail=true}else{r.wa=imp.includes(x[0]);r.mail=imp.includes(x[0])&&x[0]!=='p-loon'&&x[0]!=='m-tank'}})});flash('Instelling toegepast');return}
   const na=e.target.closest('[data-nac]');if(na){const a=na.dataset.nac;
     if(a==='wa'){const v=document.getElementById('n-num').value.trim();if(v.replace(/\D/g,'').length<9){flash('Vul een geldig telefoonnummer in');return}nEdit(d=>{d.wa.num=v;d.wa.ok=true});flash('WhatsApp gekoppeld (demo)')}
     if(a==='mail'){const v=document.getElementById('n-mail').value.trim();if(!/^\S+@\S+\.\S+$/.test(v)){flash('Vul een geldig e-mailadres in');return}nEdit(d=>{d.mail.addr=v});flash('E-mailadres opgeslagen')}
@@ -1418,10 +1565,10 @@ async function realStart(){
     const r=await SB.from('profielen').select('*').eq('id',user.id).maybeSingle();p=r.data;
     if(!p||!p.actief){if(ad){location.replace('/beheer/');return true}return false}
     klantId=p.klant_id}
-  const [k,l]=await Promise.all([SB.from('klanten').select('naam,loonnorm_pct').eq('id',klantId).maybeSingle(),SB.from('locaties').select('id,naam').eq('klant_id',klantId).order('naam')]);
+  const [k,l]=await Promise.all([SB.from('klanten').select('naam,loonnorm_pct').eq('id',klantId).maybeSingle(),SB.from('locaties').select('id,naam,plaats,lat,lon,regio').eq('klant_id',klantId).order('naam').then(r=>r.error?SB.from('locaties').select('id,naam').eq('klant_id',klantId).order('naam'):r)]);
   if(VIEWAS&&!k.data){VIEWAS='';location.replace('/beheer/');return true}
   KLANT=(k.data&&k.data.naam)||'';KLANTNORM=k.data&&k.data.loonnorm_pct!=null?+k.data.loonnorm_pct:30;
-  LOCS.length=0;(l.data||[]).forEach((x,i)=>LOCS.push({id:x.id,name:x.naam,c:LCOLS[i%LCOLS.length],f:1,seed:i}));
+  LOCS.length=0;(l.data||[]).forEach((x,i)=>LOCS.push({id:x.id,name:x.naam,c:LCOLS[i%LCOLS.length],f:1,seed:i,plaats:x.plaats||null,lat:x.lat,lon:x.lon,regio:x.regio||null}));
   const rol=RLAB[p.rol]||'Bedrijfsleider';
   USERS=[{id:user.id,n:p.naam,e:p.email,r:rol,locs:p.locatie_id||'all',st:'Actief',last:'Nu actief',access:[...REALPAGES]}];
   if(state.loc!=='all'&&!LOCS.some(x=>x.id===state.loc))state.loc='all';

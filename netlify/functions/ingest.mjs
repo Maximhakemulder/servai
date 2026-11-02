@@ -25,7 +25,7 @@ export default async (req) => {
 
   const d = normaliseer(b, ctx);
   if (d.fouten.length && !b.deels) return json({ ok: false, geschreven: false, fouten: d.fouten.slice(0, 50), aantal_fouten: d.fouten.length }, 422);
-  if (b.dry_run) return json({ ok: true, geschreven: false, bonnen: d.bonnen.length, regels: d.regels.length, uren: d.uren.length, aantal_fouten: d.fouten.length, fouten: d.fouten.slice(0, 50) });
+  if (b.dry_run) return json({ ok: true, geschreven: false, bonnen: d.bonnen.length, regels: d.regels.length, uren: d.uren.length, temperaturen: (d.temperaturen || []).length, google_profiel: (d.google_profiel || []).length, evenementen: (d.evenementen || []).length, aantal_fouten: d.fouten.length, fouten: d.fouten.slice(0, 50) });
   try {
     const n = await schrijf(rest, ctx, d);
     await rest("logboek", { method: "POST", body: JSON.stringify({ klant_id: ctx.klant_id, user_id: u.id, actie: "ingest", details: { ...n, fouten: d.fouten.length } }) });

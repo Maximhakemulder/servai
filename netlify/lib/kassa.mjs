@@ -106,7 +106,39 @@ export function normaliseer(pakket, ctx) {
       gepland_uren: g || 0, gewerkt_uren: w || 0, kosten: r2(k || 0), bron_ref: tekst(u.ref, 80),
     });
   });
+  extra(pakket, ctx, uit, fout);
   return uit;
+}
+
+// ---------------------------------------------------------------- koelcellen, Google-profiel en evenementen
+const DAG = /^\d{4}-\d{2}-\d{2}$/;
+const lijst = (p, k) => (Array.isArray(p && p[k]) ? p[k] : []);
+function extra(pakket, ctx, uit, fout) {
+  uit.temperaturen = []; uit.google_profiel = []; uit.evenementen = [];
+  lijst(pakket, "temperaturen").slice(0, 20000).forEach((m, i) => {
+    const naam = `temperatuur #${i + 1}`;
+    const sensor = tekst(m && m.sensor, 80), t = new Date(m && m.tijd), temp = num(m && m.temp);
+    if (!sensor) return fout(`${naam}: sensor ontbreekt`);
+    if (!m.tijd || isNaN(t)) return fout(`${naam}: tijd ontbreekt of is ongeldig`);
+    if (!isNum(temp) || temp < -60 || temp > 80) return fout(`${naam}: temp ontbreekt of is onmogelijk`);
+    const soort = ["koeling", "vriezer", "overig"].includes(m.soort) ? m.soort : "koeling";
+    const mn = num(m.min), mx = num(m.max);
+    uit.temperaturen.push({ klant_id: ctx.klant_id, locatie_id: ctx.locatie_id, sensor, soort, gemeten: t.toISOString(), temp: r2(temp),
+      min_temp: isNum(mn) ? mn : null, max_temp: isNum(mx) ? mx : null });
+  });
+  lijst(pakket, "google_profiel").slice(0, 2000).forEach((g, i) => {
+    if (!g || !DAG.test(g.datum)) return fout(`google_profiel #${i + 1}: datum ontbreekt (gebruik 2026-11-01)`);
+    const n = (k) => { const v = Math.round(num(g[k]) || 0); return Number.isFinite(v) && v >= 0 ? v : 0; };
+    uit.google_profiel.push({ klant_id: ctx.klant_id, locatie_id: ctx.locatie_id, datum: g.datum,
+      zoeken: n("zoeken"), maps: n("maps"), routes: n("routes"), bellen: n("bellen"), website: n("website"), reserveren: n("reserveren") });
+  });
+  lijst(pakket, "evenementen").slice(0, 2000).forEach((e, i) => {
+    const naam = tekst(e && e.naam, 160);
+    if (!e || !DAG.test(e.datum)) return fout(`evenement #${i + 1}: datum ontbreekt`);
+    if (!naam) return fout(`evenement #${i + 1}: naam ontbreekt`);
+    uit.evenementen.push({ klant_id: ctx.klant_id, locatie_id: e.alle_locaties ? null : ctx.locatie_id, datum: e.datum,
+      tot: DAG.test(e.tot || "") ? e.tot : null, naam, drukte: ["rustig", "normaal", "druk", "zeer_druk"].includes(e.drukte) ? e.drukte : "druk" });
+  });
 }
 
 const chunks = (a, n) => { const o = []; for (let i = 0; i < a.length; i += n) o.push(a.slice(i, i + n)); return o; };
@@ -133,5 +165,9 @@ export async function schrijf(rest, ctx, d) {
     await up("verkoop", d.regels, "locatie_id,bron_ref");
   }
   if (d.uren.length) await up("uren", d.uren, "locatie_id,datum,medewerker");
-  return { bonnen: d.bonnen.length, regels: d.regels.length, uren: d.uren.length };
+  const t = d.temperaturen || [], g = d.google_profiel || [], e = d.evenementen || [];
+  if (t.length) await up("temperatuur_metingen", t, "locatie_id,sensor,gemeten");
+  if (g.length) await up("google_profiel_dag", g, "locatie_id,datum");
+  if (e.length) await up("evenementen", e, "klant_id,datum,naam");
+  return { bonnen: d.bonnen.length, regels: d.regels.length, uren: d.uren.length, temperaturen: t.length, google_profiel: g.length, evenementen: e.length };
 }
