@@ -239,6 +239,8 @@ body.on-assist .fab{display:none}
 @media (prefers-reduced-motion:reduce){.tank .rise,.tank .wave{animation:none}}
 .jump{position:sticky;top:var(--stk,0px);z-index:20;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -28px 18px;padding:10px 28px;background:rgba(8,10,22,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
 .jump::-webkit-scrollbar{display:none}
+.plogo{flex:none;width:26px;height:26px;border-radius:8px;display:inline-grid;place-items:center;font:700 11px var(--f-b);letter-spacing:.02em;color:#fff;background:linear-gradient(135deg,#2b3270,#8a4482);border:1px solid var(--line-2);vertical-align:middle;margin-right:8px}
+.plist{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 2px}.plist span{display:inline-flex;align-items:center;font:500 13px var(--f-b);color:var(--fg-2);background:var(--panel-2);border:1px solid var(--line-2);border-radius:99px;padding:4px 12px 4px 5px}.plist .plogo{margin-right:7px;width:22px;height:22px;font-size:10px}
 .jump button{flex:none;cursor:pointer;font:500 13px var(--f-b);color:var(--fg-2);background:transparent;border:1px solid var(--line-2);border-radius:99px;padding:6px 13px;white-space:nowrap;transition:background .2s,color .2s,border-color .2s}
 .jump button:hover{color:var(--fg);background:rgba(255,255,255,.05)}
 .jump button.on{color:#fff;background:var(--panel-2);border-color:transparent;box-shadow:0 0 0 1px rgba(138,68,130,.7),0 0 18px rgba(138,68,130,.25)}
@@ -1264,10 +1266,10 @@ async function ovLoad(){
 
 /* ---------------- koppelingen (demo, geen echte verbindingen) ---------------- */
 const CKINDS=[
- ['kassa','Kassa','i-euro','Omzet, bonnen en verkoop per gerecht','Kassasysteem A,Kassasysteem B,Kassasysteem C'],
- ['rooster','Rooster & uren','i-staff','Ingeplande en gewerkte uren per medewerker','Roostersysteem A,Roostersysteem B'],
+ ['kassa','Kassa','i-euro','Omzet, bonnen en verkoop per gerecht','unTill,Kassasysteem A,Kassasysteem B,Kassasysteem C'],
+ ['rooster','Rooster & uren','i-staff','Ingeplande en gewerkte uren per medewerker','Nostradamus,Roostersysteem A,Roostersysteem B'],
  ['boek','Boekhouding','i-euro','Kosten, facturen en btw','Boekhoudpakket A,Boekhoudpakket B,Boekhoudpakket C'],
- ['res','Reserveringen','i-cal','Reserveringen, bezetting en no-shows','Reserveringssysteem A,Reserveringssysteem B'],
+ ['res','Reserveringen','i-cal','Reserveringen, bezetting en no-shows','Zenchef,Reserveringssysteem A,Reserveringssysteem B'],
  ['tank','Biertanken','i-drink','Vulniveau per tank','Tanksensor-API'],
  ['inkoop','Leveranciers','i-box','Bestellingen, prijzen en leveringen','Groothandel A,Groothandel B'],
  ['rev','Reviews','i-star','Beoordelingen en reacties van gasten','Reviewplatform A,Reviewplatform B'],
@@ -1290,6 +1292,8 @@ const CDEF=[
 let CONN=CDEF.map(x=>({...x}));
 try{const s=JSON.parse(localStorage.getItem('servai-conn')||'null');if(Array.isArray(s)&&s.length)CONN=s}catch(e){}
 const saveConn=()=>{try{localStorage.setItem('servai-conn',JSON.stringify(CONN))}catch(e){}};
+const PARTNERS={'unTill':'uT','Zenchef':'Z','Nostradamus':'N','Google Business Profile':'G'};
+const plogo=n=>PARTNERS[n]?`<span class="plogo" aria-hidden="true">${PARTNERS[n]}</span>`:'';
 const PILL={ok:['ok','Verbonden'],err:['err','Actie nodig'],off:['off','Niet verbonden'],wait:['wait','Verbinding testen…']};
 let connOpen=null;
 V.koppelingen=()=>{
@@ -1297,7 +1301,7 @@ V.koppelingen=()=>{
   const kind=k=>CKINDS.find(x=>x[0]===k);
   const card=c=>{const K=kind(c.k),P=PILL[c.st];
     return `<div class="cc"><h3>${ico(K[2])}${K[1]} <span class="pill ${P[0]}" style="margin-left:auto"><i></i>${P[1]}</span></h3>
-      ${c.st==='off'?`<div class="rd">${K[3]}. Nog niet gekoppeld.</div>`:`<div class="sys"><b>${c.sys}</b></div><div class="rd">${K[3]}<br>${c.locs} · ${c.sync}<br>Laatst ingelezen: ${c.last}</div>`}
+      ${c.st==='off'?`<div class="rd">${K[3]}. Nog niet gekoppeld.</div>${K[4].split(',').some(x=>PARTNERS[x])?`<div class="plist">${K[4].split(',').filter(x=>PARTNERS[x]).map(x=>`<span>${plogo(x)}${x}</span>`).join('')}</div>`:''}`:`<div class="sys"><b>${plogo(c.sys)}${c.sys}</b></div><div class="rd">${K[3]}<br>${c.locs} · ${c.sync}<br>Laatst ingelezen: ${c.last}</div>`}
       ${c.st==='err'?`<div class="rd" style="color:#FF8A8A">${c.msg}</div>`:''}
       <div class="row">${c.st==='off'?`<button class="act" data-cn="open" data-c="${c.id}">Koppelen</button>`:`<button class="act ghost" data-cn="test" data-c="${c.id}">Test verbinding</button><button class="act ghost" data-cn="open" data-c="${c.id}">${c.st==='err'?'Nieuwe sleutel':'Wijzig'}</button><button class="act ghost" data-cn="off" data-c="${c.id}">Ontkoppel</button>`}</div></div>`};
   const oc=connOpen&&CONN.find(c=>c.id===connOpen);
@@ -1441,7 +1445,7 @@ V.upselling=()=>{
 /* sprongmenu per pagina */
 let jumpT=[],jumpNav=null;
 function buildJump(){
-  jumpT=[];jumpNav=null;const v=document.querySelector('#view .view');if(!v)return;
+  jumpT=[];jumpNav=null;const v=document.querySelector('#view .view');if(!v)return;v.querySelectorAll('nav.jump').forEach(n=>n.remove());
   let t=[...v.querySelectorAll('.sec')].map(e=>({e,l:e.querySelector('h2').textContent.trim()}));
   if(t.length<2)t=[...v.querySelectorAll('.c > .ch h2')].map(h=>({e:h.closest('.c'),l:h.textContent.trim()}));
   const seen=new Set();t=t.filter(x=>x.l&&!seen.has(x.l)&&seen.add(x.l));if(t.length<3)return;
