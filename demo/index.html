@@ -240,6 +240,8 @@ body.on-assist .fab{display:none}
 .jump{position:sticky;top:var(--stk,0px);z-index:20;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -28px 18px;padding:10px 28px;background:rgba(8,10,22,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
 .jump::-webkit-scrollbar{display:none}
 .plogo{flex:none;width:26px;height:26px;border-radius:8px;display:inline-grid;place-items:center;font:700 11px var(--f-b);letter-spacing:.02em;color:#fff;background:linear-gradient(135deg,#2b3270,#8a4482);border:1px solid var(--line-2);vertical-align:middle;margin-right:8px}
+.ctabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 4px}.ctabs button{cursor:pointer;font:500 13px var(--f-b);color:var(--fg-2);background:transparent;border:1px solid var(--line-2);border-radius:99px;padding:7px 14px;display:inline-flex;align-items:center;gap:7px;transition:background .2s,color .2s}.ctabs button:hover{color:var(--fg);background:rgba(255,255,255,.05)}.ctabs button.on{color:#fff;background:var(--panel-2);border-color:transparent;box-shadow:0 0 0 1px rgba(138,68,130,.7)}.ctabs i{width:7px;height:7px;border-radius:50%;background:var(--good);display:inline-block}.ctabs i.off{background:var(--line-2)}
+.stiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}.stile{display:flex;align-items:center;gap:12px;background:var(--panel-2);border:1px solid var(--line-2);border-radius:14px;padding:14px}.stile .plogo{width:40px;height:40px;font-size:14px;margin:0;border-radius:11px}.stile .plogo.gen{background:var(--panel);color:var(--fg-2)}.stile b{display:block;font:600 14px var(--f-b)}.stile small{color:var(--mute);font-size:12px}.stile .act{margin-left:auto}
 .plist{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 2px}.plist span{display:inline-flex;align-items:center;font:500 13px var(--f-b);color:var(--fg-2);background:var(--panel-2);border:1px solid var(--line-2);border-radius:99px;padding:4px 12px 4px 5px}.plist .plogo{margin-right:7px;width:22px;height:22px;font-size:10px}
 .jump button{flex:none;cursor:pointer;font:500 13px var(--f-b);color:var(--fg-2);background:transparent;border:1px solid var(--line-2);border-radius:99px;padding:6px 13px;white-space:nowrap;transition:background .2s,color .2s,border-color .2s}
 .jump button:hover{color:var(--fg);background:rgba(255,255,255,.05)}
@@ -1292,7 +1294,7 @@ const saveConn=()=>{try{localStorage.setItem('servai-demo-conn',JSON.stringify(C
 const PARTNERS={'unTill':'uT','Zenchef':'Z','Nostradamus':'N','Google Business Profile':'G'};
 const plogo=n=>PARTNERS[n]?`<span class="plogo" aria-hidden="true">${PARTNERS[n]}</span>`:'';
 const PILL={ok:['ok','Verbonden'],err:['err','Actie nodig'],off:['off','Niet verbonden'],wait:['wait','Verbinding testen…']};
-let connOpen=null;
+let connOpen=null,connTab='alle',connSys=null;
 V.koppelingen=()=>{
   const ok=CONN.filter(c=>c.st==='ok').length,er=CONN.filter(c=>c.st==='err').length,off=CONN.filter(c=>c.st==='off').length;
   const kind=k=>CKINDS.find(x=>x[0]===k);
@@ -1305,9 +1307,11 @@ V.koppelingen=()=>{
   return{html:`<div class="grid">
     ${[['Verbonden',String(ok),`<span class="delta up">actief</span>`,'leveren automatisch data'],['Actie nodig',String(er),er?`<span class="delta down">controleer sleutel</span>`:`<span class="delta up">✓</span>`,'verlopen of foutmelding'],['Nog te koppelen',String(off),`<span class="delta flat">optioneel</span>`,'meer koppelingen = meer inzicht'],['Laatste inleesronde','08:05',`<span class="delta up">gelukt</span>`,'kassa, tanks en rooster']].map(k=>`<div class="c kpi span-3"><small>${k[0]}</small><b>${k[1]}</b>${k[2]}<span class="ctx">${k[3]}</span></div>`).join('')}
     <div class="sec" id="cn-list"><h2>Koppelingen</h2><small>Hier verbind je de systemen waar SERVAI de cijfers uit haalt</small></div>
-    <div class="c span-12"><div class="cn">${CONN.map(card).join('')}</div></div>
+    <div class="c span-12"><div class="ctabs" role="tablist" aria-label="Soort koppeling"><button type="button" data-ct="alle" class="${connTab==='alle'?'on':''}">Alle</button>${CKINDS.map(K=>`<button type="button" data-ct="${K[0]}" class="${connTab===K[0]?'on':''}"><i class="${CONN.some(c=>c.k===K[0]&&c.st==='ok')?'':'off'}"></i>${K[1]}</button>`).join('')}</div></div>
+    <div class="c span-12"><div class="cn">${CONN.filter(c=>connTab==='alle'||c.k===connTab).map(card).join('')}</div></div>
+    ${connTab!=='alle'?(()=>{const K=kind(connTab),base=CONN.find(c=>c.k===connTab);const list=K[4].split(',').sort((a,b)=>(PARTNERS[b]?1:0)-(PARTNERS[a]?1:0));return `<div class="sec"><h2>Beschikbare systemen</h2><small>Kies het systeem dat je gebruikt</small></div><div class="c span-12"><div class="stiles">${list.map(nm=>{const on=base&&base.st==='ok'&&base.sys===nm;return `<div class="stile">${PARTNERS[nm]?`<span class="plogo" aria-hidden="true">${PARTNERS[nm]}</span>`:`<span class="plogo gen" aria-hidden="true">${nm[0]}</span>`}<div><b>${nm}</b><small>${on?'Verbonden':'Niet verbonden'}</small></div>${on?'':`<button class="act" data-cn="open" data-c="${base?base.id:''}" data-sys="${nm}">Koppelen</button>`}</div>`}).join('')}</div></div>`})():''}
     ${oc?`<div class="sec"><h2>${oc.st==='off'?'Koppeling toevoegen':'Koppeling wijzigen'}: ${kind(oc.k)[1]}</h2><small>Je sleutel wordt versleuteld opgeslagen en is daarna niet meer zichtbaar</small></div>
-    <div class="c span-12"><form class="cform" id="cnf"><div><label for="cn-s">Systeem</label><select class="fld" id="cn-s">${kind(oc.k)[4].split(',').map(x=>`<option${x===oc.sys?' selected':''}>${x}</option>`).join('')}</select></div>
+    <div class="c span-12"><form class="cform" id="cnf"><div><label for="cn-s">Systeem</label><select class="fld" id="cn-s">${kind(oc.k)[4].split(',').map(x=>`<option${x===(connSys||oc.sys)?' selected':''}>${x}</option>`).join('')}</select></div>
       <div><label for="cn-l">Locatie</label><select class="fld" id="cn-l"><option>Alle locaties</option>${LOCS.map(l=>`<option>${l.name}</option>`).join('')}</select></div>
       <div><label for="cn-k">API-sleutel</label><input class="fld" id="cn-k" type="password" autocomplete="off" required placeholder="Plak hier de sleutel"></div>
       <div><label for="cn-f">Ophalen</label><select class="fld" id="cn-f"><option>elk uur</option><option>dagelijks</option><option>elke 5 min</option></select></div>
@@ -1496,10 +1500,11 @@ vw.addEventListener('change',e=>{const m=e.target.closest('[data-locs]');if(m){U
 vw.addEventListener('submit',e=>{if(e.target.id!=='invf')return;e.preventDefault();const r=document.getElementById('in-r').value;USERS.push({id:'u'+(USERS.length+1)+Date.now()%1000,n:document.getElementById('in-n').value.trim(),e:document.getElementById('in-e').value.trim(),r,locs:'diggels',st:'Uitgenodigd',last:'',access:[...PRESET[r]]});saveUsers();render();flash('Uitnodiging verstuurd (demo)')});
 
 vw.addEventListener('click',e=>{const b=e.target.closest('[data-cn]');if(!b)return;const c=CONN.find(x=>x.id===b.dataset.c);if(!c)return;const a=b.dataset.cn;
-  if(a==='open'){connOpen=c.id;render();setTimeout(()=>document.getElementById('cnf')&&document.getElementById('cnf').scrollIntoView({behavior:'smooth',block:'center'}),30)}
+  if(a==='open'){connOpen=c.id;connSys=b.dataset.sys||null;render();setTimeout(()=>document.getElementById('cnf')&&document.getElementById('cnf').scrollIntoView({behavior:'smooth',block:'center'}),30)}
   if(a==='off'){c.st='off';c.sys='';c.last='';c.locs='';c.sync='';delete c.msg;saveConn();const y=scrollY;render();scrollTo(0,y);flash('Koppeling verbroken')}
   if(a==='test'){const old=c.st;c.st='wait';const y=scrollY;render();scrollTo(0,y);setTimeout(()=>{c.st=c.msg?'err':'ok';if(c.st==='ok')c.last='zojuist';saveConn();const y2=scrollY;render();scrollTo(0,y2);flash(c.st==='ok'?'Verbinding werkt':'Verbinding mislukt: nieuwe sleutel nodig')},900)}
 });
+vw.addEventListener('click',e=>{const t=e.target.closest('[data-ct]');if(!t)return;connTab=t.dataset.ct;connOpen=null;connSys=null;render()});
 vw.addEventListener('submit',e=>{if(e.target.id!=='cnf')return;e.preventDefault();const c=CONN.find(x=>x.id===connOpen);if(!c)return;
   c.sys=document.getElementById('cn-s').value;c.locs=document.getElementById('cn-l').value;c.sync=document.getElementById('cn-f').value;c.st='ok';c.last='zojuist';delete c.msg;connOpen=null;saveConn();render();flash('Koppeling opgeslagen en getest (demo)');scrollTo({top:0})});
 
