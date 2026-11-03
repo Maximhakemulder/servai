@@ -384,7 +384,7 @@ body.on-assist .fab{display:none}
 <script>
 /* ---------------- data (seeded demo) ---------------- */
 let REAL=false,SB=null,KLANT='Struisenburg',KLANTNORM=30;
-const REALPAGES=['overzicht','loonkosten'];
+const REALPAGES=['overzicht','financien','menu','dranken','kansen','personeel','upselling','reserveringen','inkoop','gasten','assistent','meldingen','advies','koppelingen','gebruikers','support','loonkosten'];
 const RLAB={eigenaar:'Eigenaar',bedrijfsleider:'Bedrijfsleider',chef:'Chef-kok',boekhouder:'Boekhouder',bar:'Bar manager',gastvrouw:'Gastvrouw'};
 const LCOLS=['#3987e5','#d95926','#199e70','#c98500','#9b59b6','#16a085'];
 const LOCS=[
@@ -1265,6 +1265,137 @@ async function ovLoad(){
   if(dagen.length>1)mk('c-ovday',{type:'bar',data:{labels:dagen.map(dshort),datasets:[{label:'Omzet',data:dagen.map(d=>Math.round(perDag[d])),backgroundColor:dagen.map(d=>{const w=new Date(d+'T12:00:00').getDay();return w===5||w===6||w===0?'#5E7BFF':'rgba(94,123,255,.5)'}),borderRadius:4,borderSkipped:false}]},
     options:{scales:{y:yEur,x:{...xPlain,ticks:{maxRotation:0,autoSkip:true,maxTicksLimit:10}}},plugins:{tooltip:{...tip,callbacks:{label:x=>' '+eur(x.raw)}}}}});
 }
+
+/* ---------------- echte pagina's: groeien mee met de koppelingen ---------------- */
+const rpSum=(a,k)=>a.reduce((t,r)=>t+(+r[k]||0),0);
+const rpKpi=(t,val,d,cx)=>`<div class="c kpi span-3"><small>${t}</small><b>${val}</b>${d}<span class="ctx">${cx}</span></div>`;
+const rpTab=(rows,kop)=>rows.length?`<div class="tw"><table><thead><tr>${kop}</tr></thead><tbody>${rows.join('')}</tbody></table></div>`:'<p style="color:var(--mute)">Geen gegevens</p>';
+const rpBar=(v,max,col)=>`<div class="mbar"><span class="t"><i style="width:${Math.max(2,v/(max||1)*100)}%;background:${col||'#5E7BFF'}"></i></span><b class="num">${eur(v)}</b></div>`;
+const rpLeeg=()=>`<h2 style="margin-bottom:8px">Nog geen gegevens</h2><p style="color:var(--fg-2);max-width:620px">Voor ${perName()} is geen kassadata gevonden. Kies een langere periode, of wacht tot de kassa data heeft aangeleverd.</p>`;
+const rpPage=loader=>({html:`<div class="grid"><div class="c span-12" id="rp-wrap"><p style="color:var(--mute)">Gegevens laden…</p></div></div>`,after(){const w=document.getElementById('rp-wrap');if(w)loader(w).catch(e=>{if(document.getElementById('rp-wrap')===w)w.innerHTML='<p style="color:#FF8A8A">De gegevens konden niet worden geladen.</p>';console.error(e.message||e)})}});
+const rpWacht=(titel,sys,wat)=>({html:`<div class="grid"><div class="c span-12"><h2 style="margin-bottom:8px">${titel}: nog niet gekoppeld</h2><p style="color:var(--fg-2);max-width:620px">Hier verschijnt ${wat} zodra <b>${sys}</b> gekoppeld is. SERVAI regelt de koppeling voor je; neem contact op om dit te activeren. Elke nieuwe koppeling vult dit dashboard verder aan.</p></div></div>`});
+async function rpHaal(){
+  const R=ovRange(state.period),van=R.pf&&R.pf<R.f?R.pf:R.f;
+  const [dag,uur,art]=await Promise.all([
+    ovFetch('omzet_per_dag','locatie_id,bedrijfsdag,omzet,bonnen,couverts,fooi,korting,pin,contant',van,R.t,['bedrijfsdag','locatie_id']),
+    ovFetch('omzet_per_uur','locatie_id,bedrijfsdag,uur,omzet,bonnen',R.f,R.t,['bedrijfsdag','locatie_id','uur']),
+    ovFetch('verkoop_per_artikel_dag','locatie_id,bedrijfsdag,artikel,groep,aantal,omzet',van,R.t,['bedrijfsdag','locatie_id','artikel'])]);
+  return {R,dag,uur,art,cur:dag.filter(r=>r.bedrijfsdag>=R.f&&r.bedrijfsdag<=R.t),prv:R.pf?dag.filter(r=>r.bedrijfsdag>=R.pf&&r.bedrijfsdag<=R.pt):[],
+    artCur:art.filter(r=>r.bedrijfsdag>=R.f&&r.bedrijfsdag<=R.t),artPrv:R.pf?art.filter(r=>r.bedrijfsdag>=R.pf&&r.bedrijfsdag<=R.pt):[]};
+}
+const rpDagChart=(id,dagen,perDag,titel)=>mk(id,{type:'bar',data:{labels:dagen.map(dshort),datasets:[{label:titel,data:dagen.map(d=>Math.round(perDag[d])),backgroundColor:dagen.map(d=>{const w=new Date(d+'T12:00:00').getDay();return w===5||w===6||w===0?'#5E7BFF':'rgba(94,123,255,.5)'}),borderRadius:4,borderSkipped:false}]},options:{scales:{y:yEur,x:{...xPlain,ticks:{maxRotation:0,autoSkip:true,maxTicksLimit:10}}},plugins:{tooltip:{...tip,callbacks:{label:x=>' '+eur(x.raw)}}}}});
+const WD=['zo','ma','di','wo','do','vr','za'];
+const nl1=n=>n.toFixed(1).replace('.',',');
+
+async function finLoad(wrap){
+  const D=await rpHaal();if(document.getElementById('rp-wrap')!==wrap)return;
+  if(!D.cur.length){wrap.innerHTML=rpLeeg();return}
+  const {R,cur,prv,artCur}=D;
+  const o=rpSum(cur,'omzet'),b=rpSum(cur,'bonnen'),ov=rpSum(prv,'omzet'),bv=rpSum(prv,'bonnen');
+  const pin=rpSum(cur,'pin'),con=rpSum(cur,'contant'),fooi=rpSum(cur,'fooi'),kor=rpSum(cur,'korting');
+  const perDag={};cur.forEach(r=>{perDag[r.bedrijfsdag]=(perDag[r.bedrijfsdag]||0)+(+r.omzet||0)});
+  const dagen=Object.keys(perDag).sort();
+  const perWd=[0,0,0,0,0,0,0],nWd=[0,0,0,0,0,0,0];dagen.forEach(d=>{const w=new Date(d+'T12:00:00').getDay();perWd[w]+=perDag[d];nWd[w]++});
+  const wdOrde=[1,2,3,4,5,6,0].filter(w=>nWd[w]);
+  const beste=dagen.length?dagen.reduce((a,d)=>perDag[d]>perDag[a]?d:a,dagen[0]):null;
+  const gO={};artCur.forEach(r=>{const g=gO[r.groep]||(gO[r.groep]={o:0,n:0});g.o+=+r.omzet||0;g.n+=+r.aantal||0});
+  const gL=Object.entries(gO).sort((a,b)=>b[1].o-a[1].o);const gTot=gL.reduce((t,x)=>t+x[1].o,0)||1;
+  const betT=pin+con||1;
+  const lname=id=>(LOCS.find(l=>l.id===id)||{name:'Locatie',c:'#5E7BFF'});
+  const lO={};cur.forEach(r=>{const x=lO[r.locatie_id]||(lO[r.locatie_id]={o:0,b:0});x.o+=+r.omzet||0;x.b+=+r.bonnen||0});
+  const lL=Object.entries(lO).sort((a,b)=>b[1].o-a[1].o);
+  wrap.outerHTML=
+   rpKpi('Omzet',eur(o),R.pf?dl(o,ov):'<span class="delta flat">'+perName()+'</span>',nf(b)+' bonnen'+(R.vs?' · '+R.vs:''))+
+   rpKpi('Gem. bon',b?eur(o/b,2):'–',R.pf&&b&&bv?dl(o/b,ov/bv):'<span class="delta flat">–</span>','per bon')+
+   rpKpi('Fooi',eur(fooi),'<span class="delta flat">'+(o?nl1(fooi/o*100)+'% van omzet':'–')+'</span>','ontvangen via de kassa')+
+   rpKpi('Korting',eur(kor),'<span class="delta flat">'+(o?nl1(kor/(o+kor)*100)+'% van bruto':'–')+'</span>','weggegeven')+
+   (dagen.length>1?`<div class="c span-12"><div class="ch"><div><h2>Omzet per dag</h2><p>${locName()} · ${perName()}${beste?' · beste dag '+dshort(beste)+' ('+eur(perDag[beste])+')':''}</p></div></div><div class="cv short"><canvas id="c-fdag" role="img" aria-label="Omzet per dag"></canvas></div></div>`:'')+
+   `<div class="c span-6"><div class="ch"><div><h2>Betalingen</h2><p>Hoe gasten afrekenen</p></div></div>${rpTab([['Pin',pin,'#5E7BFF'],['Contant',con,'#4ADE80']].map(([n,v,c])=>`<tr><td>${n}</td><td>${rpBar(v,betT,c)}</td><td class="r">${nl1(v/betT*100)}%</td></tr>`),'<th>Betaalwijze</th><th>Bedrag</th><th class="r">Aandeel</th>')}</div>`+
+   `<div class="c span-6"><div class="ch"><div><h2>Omzet per productgroep</h2><p>Wat levert het op</p></div></div>${rpTab(gL.map(([g,x])=>`<tr><td>${esc(g)}</td><td>${rpBar(x.o,gL[0][1].o)}</td><td class="r">${nl1(x.o/gTot*100)}%</td></tr>`),'<th>Groep</th><th>Omzet</th><th class="r">Aandeel</th>')}</div>`+
+   (wdOrde.length>1?`<div class="c span-6"><div class="ch"><div><h2>Gemiddeld per weekdag</h2><p>Welke dagen zijn sterk</p></div></div>${rpTab(wdOrde.map(w=>{const m=perWd[w]/nWd[w];return `<tr><td>${['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'][w]}</td><td>${rpBar(m,Math.max(...wdOrde.map(x=>perWd[x]/nWd[x])))}</td><td class="r">${nWd[w]}×</td></tr>`}),'<th>Dag</th><th>Gem. omzet</th><th class="r">Dagen</th>')}</div>`:'')+
+   (state.loc==='all'&&lL.length>1?`<div class="c span-6"><div class="ch"><div><h2>Locaties vergelijken</h2><p>${perName()}</p></div></div>${rpTab(lL.map(([id,x])=>`<tr><td><span class="loc-name"><i style="background:${lname(id).c}"></i>${esc(lname(id).name)}</span></td><td>${rpBar(x.o,lL[0][1].o)}</td><td class="r">${nf(x.b)} bonnen</td></tr>`),'<th>Locatie</th><th>Omzet</th><th class="r">Bonnen</th>')}</div>`:'');
+  if(dagen.length>1)rpDagChart('c-fdag',dagen,perDag,'Omzet');
+}
+
+const RGX={food:/food|eten|keuken|gerecht|voor|hoofd|na|lunch|diner|ontbijt|snack|bijgerecht|dessert|pizza|burger/i,drink:/drink|drank|bier|wijn|koffie|thee|fris|cocktail|spirit|water|sap|borrel/i};
+async function prodLoad(wrap,soort,titel){
+  const D=await rpHaal();if(document.getElementById('rp-wrap')!==wrap)return;
+  const f=r=>RGX[soort].test(r.groep||'');
+  const A=D.artCur.filter(f),Av=D.artPrv.filter(f);
+  if(!A.length){wrap.innerHTML=rpLeeg();return}
+  const {R}=D;
+  const o=rpSum(A,'omzet'),n=rpSum(A,'aantal'),ov=rpSum(Av,'omzet');
+  const totO=rpSum(D.artCur,'omzet')||1;
+  const aO={};A.forEach(r=>{const a=aO[r.artikel]||(aO[r.artikel]={g:r.groep,o:0,n:0});a.o+=+r.omzet||0;a.n+=+r.aantal||0});
+  const aL=Object.entries(aO).sort((a,b)=>b[1].o-a[1].o);
+  const top=aL.slice(0,10),laag=aL.length>10?aL.slice(-5).reverse():[];
+  const perDag={};A.forEach(r=>{perDag[r.bedrijfsdag]=(perDag[r.bedrijfsdag]||0)+(+r.omzet||0)});
+  const dagen=Object.keys(perDag).sort();
+  const gO={};A.forEach(r=>{const g=gO[r.groep]||(gO[r.groep]={o:0,n:0});g.o+=+r.omzet||0;g.n+=+r.aantal||0});
+  const gL=Object.entries(gO).sort((a,b)=>b[1].o-a[1].o);
+  const rij=([nm,x])=>`<tr><td>${esc(nm)}<br><span style="color:var(--mute);font-size:12px">${esc(x.g||'Overig')}</span></td><td>${rpBar(x.o,aL[0][1].o)}</td><td class="r">${nf(x.n)}×</td><td class="r">${x.n?eur(x.o/x.n,2):'–'}</td></tr>`;
+  const kop='<th>Artikel</th><th>Omzet</th><th class="r">Verkocht</th><th class="r">Gem. prijs</th>';
+  wrap.outerHTML=
+   rpKpi('Omzet '+titel.toLowerCase(),eur(o),R.pf&&ov?dl(o,ov):'<span class="delta flat">'+perName()+'</span>',nl1(o/totO*100)+'% van totale omzet')+
+   rpKpi('Verkocht',nf(n),R.pf&&rpSum(Av,'aantal')?dl(n,rpSum(Av,'aantal')):'<span class="delta flat">–</span>','stuks')+
+   rpKpi('Gem. prijs',n?eur(o/n,2):'–','<span class="delta flat">–</span>','per stuk')+
+   rpKpi('Verschillende artikelen',nf(aL.length),'<span class="delta flat">'+(aL[0]?'nr. 1: '+esc(aL[0][0]):'–')+'</span>','verkocht in deze periode')+
+   (dagen.length>1?`<div class="c span-12"><div class="ch"><div><h2>${titel} per dag</h2><p>${locName()} · ${perName()}</p></div></div><div class="cv short"><canvas id="c-pdag" role="img" aria-label="${titel} per dag"></canvas></div></div>`:'')+
+   `<div class="c span-${laag.length?7:12}"><div class="ch"><div><h2>Bestsellers</h2><p>Top ${top.length} op omzet</p></div></div>${rpTab(top.map(rij),kop)}</div>`+
+   (laag.length?`<div class="c span-5"><div class="ch"><div><h2>Weinig verkocht</h2><p>Onderaan de lijst: kandidaat om te schrappen of te promoten</p></div></div>${rpTab(laag.map(rij),kop)}</div>`:'')+
+   (gL.length>1?`<div class="c span-12"><div class="ch"><div><h2>Per categorie</h2><p>${perName()}</p></div></div>${rpTab(gL.map(([g,x])=>`<tr><td>${esc(g)}</td><td>${rpBar(x.o,gL[0][1].o)}</td><td class="r">${nf(x.n)}×</td></tr>`),'<th>Categorie</th><th>Omzet</th><th class="r">Verkocht</th>')}</div>`:'');
+  if(dagen.length>1)rpDagChart('c-pdag',dagen,perDag,titel);
+}
+
+async function persLoad(wrap){
+  const R=ovRange(state.period);
+  const mw=await ovFetch('omzet_per_medewerker_dag','locatie_id,bedrijfsdag,medewerker,omzet,bonnen,couverts',R.f,R.t,['bedrijfsdag','medewerker']);
+  if(document.getElementById('rp-wrap')!==wrap)return;
+  if(!mw.length){wrap.innerHTML=rpLeeg();return}
+  const m={};mw.forEach(r=>{const x=m[r.medewerker]||(m[r.medewerker]={o:0,b:0,c:0,d:new Set()});x.o+=+r.omzet||0;x.b+=+r.bonnen||0;x.c+=+r.couverts||0;x.d.add(r.bedrijfsdag)});
+  const L=Object.entries(m).sort((a,b)=>b[1].o-a[1].o);const max=L[0][1].o||1;
+  const tot=L.reduce((t,x)=>t+x[1].o,0),bon=L.reduce((t,x)=>t+x[1].b,0);
+  wrap.outerHTML=
+   rpKpi('Medewerkers aan de kassa',nf(L.length),'<span class="delta flat">'+perName()+'</span>','met omzet geboekt')+
+   rpKpi('Omzet geboekt',eur(tot),'<span class="delta flat">–</span>',nf(bon)+' bonnen')+
+   rpKpi('Beste verkoper',esc(L[0][0]),'<span class="delta flat">'+eur(L[0][1].o)+'</span>','op omzet')+
+   rpKpi('Gem. bon',bon?eur(tot/bon,2):'–','<span class="delta flat">–</span>','over alle medewerkers')+
+   `<div class="c span-12"><div class="ch"><div><h2>Omzet per medewerker</h2><p>${locName()} · ${perName()}. Uren en loonkosten verschijnen zodra het rooster of de uren gekoppeld zijn.</p></div></div>${rpTab(L.map(([n,x])=>`<tr><td>${esc(n)}</td><td>${rpBar(x.o,max)}</td><td class="r">${nf(x.b)}</td><td class="r">${x.b?eur(x.o/x.b,2):'–'}</td><td class="r">${x.d.size}</td></tr>`),'<th>Medewerker</th><th>Omzet</th><th class="r">Bonnen</th><th class="r">Gem. bon</th><th class="r">Dagen</th>')}</div>`;
+}
+
+(()=>{const d={financien:V.financien,menu:V.menu,dranken:V.dranken,personeel:V.personeel,reserveringen:V.reserveringen,inkoop:V.inkoop,gasten:V.gasten};
+  V.financien=()=>REAL?rpPage(finLoad):d.financien();
+  V.menu=()=>REAL?rpPage(w=>prodLoad(w,'food','Gerechten')):d.menu();
+  V.dranken=()=>REAL?rpPage(w=>prodLoad(w,'drink','Dranken')):d.dranken();
+  V.personeel=()=>REAL?rpPage(persLoad):d.personeel();
+  V.reserveringen=()=>REAL?rpWacht('Reserveringen','Zenchef','je reserveringen, bezetting en no-shows'):d.reserveringen();
+  V.inkoop=()=>REAL?rpWacht('Inkoop','een inkoop- of boekhoudkoppeling','je inkoop, leveranciersprijzen en marges'):d.inkoop();
+  V.gasten=()=>REAL?rpWacht('Gasten','Zenchef en Google Business Profile','gastgegevens, reviews en terugkerende gasten'):d.gasten();
+})();
+
+const rpNog=(t,wat)=>({html:`<div class="grid"><div class="c span-12"><h2 style="margin-bottom:8px">${t}: nog geen data</h2><p style="color:var(--fg-2);max-width:620px">${wat} Zodra er meer koppelingen actief zijn, vult deze pagina zich vanzelf.</p></div></div>`});
+async function kopLoad(wrap){
+  let q=SB.from('koppelingen').select('systeem,soort,status,laatste_succes,laatste_fout,locatie_id');
+  if(VIEWAS)q=q.eq('klant_id',VIEWAS);
+  const {data,error}=await q;if(document.getElementById('rp-wrap')!==wrap)return;
+  if(error)throw error;
+  const act=(data||[]).filter(k=>k.status!=='uit');
+  const st={ok:'Verbonden',niet_getest:'Wordt getest',fout:'Actie nodig'};
+  const f=t=>t?new Date(t).toLocaleString('nl-NL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'–';
+  const verb=new Set(act.map(k=>k.systeem));
+  const alle=[['unTill','Kassa'],['Nostradamus','Rooster & uren'],['Zenchef','Reserveringen'],['Google Business Profile','Reviews & zichtbaarheid']];
+  wrap.outerHTML=`<div class="c span-12"><div class="ch"><div><h2>Verbonden systemen</h2><p>SERVAI regelt de koppelingen voor je</p></div></div>${rpTab(alle.map(([n,soort])=>{const k=act.find(x=>(x.systeem||'').toLowerCase().replace(/\s/g,'')===n.toLowerCase().replace(/\s/g,''));return `<tr><td>${plogo(n)} <b>${n}</b><br><span style="color:var(--mute);font-size:12px">${soort}</span></td><td>${k?(st[k.status]||k.status):'Niet verbonden'}</td><td>${k?f(k.laatste_succes):'–'}</td><td>${k&&k.laatste_fout?esc(k.laatste_fout):''}</td></tr>`}),'<th>Systeem</th><th>Status</th><th>Laatst gelukt</th><th>Melding</th>')}</div>`;
+}
+(()=>{const d={kansen:V.kansen,upselling:V.upselling,assistent:V.assistent,meldingen:V.meldingen,advies:V.advies,koppelingen:V.koppelingen,gebruikers:V.gebruikers,support:V.support};
+  V.kansen=()=>REAL?rpNog('Markt & kansen','Kansen worden berekend uit je kassadata in combinatie met weer, evenementen en reserveringen.'):d.kansen();
+  V.upselling=()=>REAL?rpNog('Upselling','Upselling-inzichten komen uit bonregels per medewerker, binnenkort op basis van je kassadata.'):d.upselling();
+  V.assistent=()=>REAL?rpNog('Assistent','De assistent beantwoordt vragen over je cijfers zodra er genoeg data is.'):d.assistent();
+  V.meldingen=()=>REAL?rpNog('Meldingen','Hier stel je straks per persoon WhatsApp- en mailmeldingen in.'):d.meldingen();
+  V.advies=()=>REAL?rpNog('AI-advies','Het AI-advies wordt opgebouwd uit je kassa-, rooster- en reserveringsdata.'):d.advies();
+  V.gebruikers=()=>REAL?rpNog('Gebruikers','Gebruikers en rollen beheert SERVAI voor je. Wil je iemand toevoegen? Mail naar hallo@servai.nl.'):d.gebruikers();
+  V.koppelingen=()=>REAL?rpPage(kopLoad):d.koppelingen();
+  V.support=()=>REAL?{html:`<div class="grid"><div class="c span-12"><h2 style="margin-bottom:8px">Support</h2><p style="color:var(--fg-2);max-width:620px">Vraag, probleem of storing? Mail naar <b>support@servai.nl</b> en noem de pagina, locatie en periode. We reageren zo snel mogelijk.</p></div></div>`}:d.support();
+})();
 
 /* ---------------- koppelingen (demo, geen echte verbindingen) ---------------- */
 const CKINDS=[
