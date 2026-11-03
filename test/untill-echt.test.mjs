@@ -14,8 +14,8 @@ const echt = [{ id: 75006725327, closeDateTime: "2026-10-01T04:00:04Z", tableNum
     ] },
   ],
   bills: [{ id: 1, dateTime: "2026-10-01T04:00:04Z", realDateTime: "2026-10-01T04:00:04Z", tip: 0, payments: [{ paymentId: 5000000031, amount: 26.95 }] }] }];
-const sd = { artikel: new Map([[5000000607, { name: "Cola" }], [5000000734, { name: "Burger", groupId: 1 }], [5000000619, { name: "Extra kaas" }]]),
-  groep: new Map([[1, "Keuken"]]), betaling: new Map([[5000000031, "PIN"]]), gebruiker: new Map() };
+const sd = { artikel: new Map([[5000000607, { name: "Cola", departmentId: 7 }], [5000000734, { name: "Burger", groupId: 1 }], [5000000619, { name: "Extra kaas" }]]),
+  groep: new Map([[1, "Keuken"]]), afdeling: new Map([[7, "Dranken"]]), betaling: new Map([[5000000031, "PIN"]]), gebruiker: new Map() };
 
 test("echte unTill-data: UTC-tijd, regeltotaal incl. btw, opties", () => {
   const bonnen = transactiesNaarBonnen(echt, sd);
@@ -25,6 +25,7 @@ test("echte unTill-data: UTC-tijd, regeltotaal incl. btw, opties", () => {
   assert.equal(d.bonnen[0].totaal, 26.95);
   assert.equal(d.regels.length, 3); // gratis optie valt weg
   assert.equal(d.bonnen[0].betaalwijze, "pin");
+  assert.equal(d.regels[0].groep, "Dranken");
 });
 
 test("datum van een UTC-tijd is de Amsterdamse dag", () => {

@@ -77,14 +77,15 @@ export function maakClient(cfg) {
 /** Haalt de stamdata op die nodig is om id's om te zetten naar namen. Ontbrekende rechten breken de sync niet. */
 export async function haalStamdata(client) {
   const veilig = async (pad, v) => { try { const x = await client.get(pad, {}, v); return Array.isArray(x) ? x : []; } catch { return []; } };
-  const [artikelen, groepen, betalingen, opties, gebruikers] = await Promise.all([
-    veilig("article"), veilig("group", "v2"), veilig("payment-info"), veilig("option-info"),
+  const [artikelen, groepen, afdelingen, betalingen, opties, gebruikers] = await Promise.all([
+    veilig("article"), veilig("group", "v2"), veilig("department-info"), veilig("payment-info"), veilig("option-info"),
     (async () => { const a = await veilig("user", "v2"); return a.length ? a : veilig("user-info"); })(),
   ]);
   const naamVan = (u) => u.name || [u.firstName, u.lastName].filter(Boolean).join(" ") || null;
   return {
     artikel: new Map([...opties.map((o) => [o.id, { id: o.id, name: o.name }]), ...artikelen.map((a) => [a.id, a])]),
     groep: new Map(groepen.map((g) => [g.id, g.name])),
+    afdeling: new Map(afdelingen.map((d) => [d.id, d.name])),
     betaling: new Map(betalingen.map((b) => [b.id, b.name])),
     gebruiker: new Map(gebruikers.map((u) => [u.id, naamVan(u)])),
   };
@@ -107,7 +108,7 @@ export function transactiesNaarBonnen(transacties, sd) {
         if (it.kind !== 1 && bruto === 0) continue; // gratis optie/toevoeging: geen omzet
         regels.push({
           artikel: naam,
-          groep: sd.groep.get(art?.groupId) || null,
+          groep: sd.groep.get(art?.groupId) || sd.afdeling?.get(art?.departmentId) || null, // unTill-artikelen hebben een afdeling
           aantal: it.decimalQuantity !== undefined && it.decimalQuantity !== null ? getal(it.decimalQuantity) : getal(it.quantity || 1),
           bedrag: r2(bruto), netto: r2(bruto - btw), btw_pct: it.vatPercent === undefined ? undefined : getal(it.vatPercent),
           korting: r2(Math.abs(getal(it.discount))),
