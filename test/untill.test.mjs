@@ -92,3 +92,15 @@ test("sync draait end-to-end met nep-Supabase en nep-unTill", async () => {
   assert.equal(opgeslagen.status.status, "ok");
   assert.equal(opgeslagen.status.sync_tot, nu.toISOString());
 });
+
+test("sync stopt netjes als de tijd op is en gaat later verder", async () => {
+  const st = {};
+  const rest = async (path, o = {}) => { if (path.startsWith("koppelingen")) Object.assign(st, JSON.parse(o.body)); return { ok: true, text: async () => "", json: async () => [] }; };
+  const fetchImpl = async () => ({ ok: true, text: async () => "", json: async () => [] });
+  const nu = new Date("2026-11-03T10:00:00Z");
+  const res = await syncKoppeling(rest, { id: "k", klant_id: "k", locatie_id: "l", sync_tot: null },
+    { host: "https://x.nl/api", dbname: "D", user: "u", password: "p", appToken: "t" }, { nu, fetchImpl, budgetMs: -1 });
+  assert.equal(res.ok, true);
+  assert.equal(res.compleet, false);
+  assert.equal(st.status, "ok");
+});

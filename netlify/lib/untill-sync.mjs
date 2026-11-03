@@ -12,7 +12,8 @@ export const MAX_DAGEN = 31, START_DAGEN = 14;
  * @param {{id: string, klant_id: string, locatie_id: string, sync_tot?: string|null}} kop
  * @param {{host: string, dbname: string, user: string, password: string, appToken: string, appNaam?: string}} geheim
  */
-export async function syncKoppeling(rest, kop, geheim, { nu = new Date(), fetchImpl } = {}) {
+export async function syncKoppeling(rest, kop, geheim, { nu = new Date(), fetchImpl, budgetMs = 20000 } = {}) {
+  const deadline = Date.now() + budgetMs;
   const ctx = { klant_id: kop.klant_id, locatie_id: kop.locatie_id };
   const status = async (velden) => { await rest(`koppelingen?id=eq.${kop.id}`, { method: "PATCH", headers: { prefer: "return=minimal" }, body: JSON.stringify(velden) }); };
   try {
@@ -22,16 +23,19 @@ export async function syncKoppeling(rest, kop, geheim, { nu = new Date(), fetchI
     const start = kop.sync_tot ? new Date(kop.sync_tot).getTime() - DAG : einde - START_DAGEN * DAG;
     const stop = Math.min(einde, start + MAX_DAGEN * DAG);
     const totaal = { bonnen: 0, regels: 0, uren: 0, fouten: 0 };
+    let klaar = start;
     for (let t = start; t < stop; t += DAG) {
+      if (Date.now() > deadline) break; // netlify breekt lange aanvragen af: de volgende ronde gaat verder
       const tot = Math.min(t + DAG, stop);
       const pakket = await haalPakket(client, sd, naarUtc(new Date(t)), naarUtc(new Date(tot)));
       const d = normaliseer(pakket, ctx);
       const n = await schrijf(rest, ctx, d);
       totaal.bonnen += n.bonnen; totaal.regels += n.regels; totaal.uren += n.uren; totaal.fouten += d.fouten.length;
+      klaar = tot;
       if (d.fouten.length) console.warn(`untill ${kop.id}: ${d.fouten.length} fouten, eerste: ${d.fouten[0]}`);
     }
-    await status({ status: "ok", laatste_succes: nu.toISOString(), laatste_fout: totaal.fouten ? `${totaal.fouten} regels overgeslagen, zie logboek` : null, sync_tot: new Date(stop).toISOString() });
-    return { ok: true, ...totaal };
+    await status({ status: "ok", laatste_succes: nu.toISOString(), laatste_fout: totaal.fouten ? `${totaal.fouten} regels overgeslagen, zie logboek` : null, sync_tot: new Date(klaar).toISOString() });
+    return { ok: true, ...totaal, compleet: klaar >= stop };
   } catch (e) {
     const m = String(e.message || e).slice(0, 300);
     await status({ status: "fout", laatste_fout: m });
