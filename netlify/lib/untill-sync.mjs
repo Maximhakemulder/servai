@@ -2,7 +2,7 @@
 // Opnieuw ophalen van dezelfde periode is veilig (schrijf() werkt bestaande bonnen bij), daarom halen we
 // bij elke run één dag extra op en gaan we nooit meer dan MAX_DAGEN per run terug of vooruit.
 import { normaliseer, schrijf } from "./kassa.mjs";
-import { maakClient, haalStamdata, haalPakket, naarLokaal } from "./untill.mjs";
+import { maakClient, haalStamdata, haalPakket, naarUtc } from "./untill.mjs";
 
 const DAG = 24 * 3600 * 1000;
 export const MAX_DAGEN = 31, START_DAGEN = 14;
@@ -24,7 +24,7 @@ export async function syncKoppeling(rest, kop, geheim, { nu = new Date(), fetchI
     const totaal = { bonnen: 0, regels: 0, uren: 0, fouten: 0 };
     for (let t = start; t < stop; t += DAG) {
       const tot = Math.min(t + DAG, stop);
-      const pakket = await haalPakket(client, sd, naarLokaal(new Date(t)), naarLokaal(new Date(tot)));
+      const pakket = await haalPakket(client, sd, naarUtc(new Date(t)), naarUtc(new Date(tot)));
       const d = normaliseer(pakket, ctx);
       const n = await schrijf(rest, ctx, d);
       totaal.bonnen += n.bonnen; totaal.regels += n.regels; totaal.uren += n.uren; totaal.fouten += d.fouten.length;

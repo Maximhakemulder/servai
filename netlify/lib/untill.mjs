@@ -23,8 +23,15 @@ export function lokaalNaarIso(s, tz = TZ) {
   return new Date(t).toISOString();
 }
 
-/** Lokale datum (YYYY-MM-DD) van een unTill-tijd. */
-export const lokaleDatum = (s) => { const m = /^(\d{4}-\d{2}-\d{2})/.exec(String(s || "")); return m ? m[1] : null; };
+/** Datum (YYYY-MM-DD) van een unTill-tijd in Amsterdamse tijd. unTill levert UTC met "Z"; zonder Z nemen we de datum zoals die er staat. */
+export const lokaleDatum = (s) => {
+  const t = String(s || "");
+  if (/[zZ]$|[+-]\d{2}:?\d{2}$/.test(t)) { const d = new Date(t); return isNaN(d) ? null : naarLokaal(d).slice(0, 10); }
+  const m = /^(\d{4}-\d{2}-\d{2})/.exec(t); return m ? m[1] : null;
+};
+
+/** Tijdvenster voor de API: unTill rekent in UTC. */
+export const naarUtc = (date) => date.toISOString().replace(/\.\d{3}Z$/, "Z");
 
 /** Formatteert een Date als lokale tijd zonder tijdzone, zoals unTill die teruggeeft. */
 export function naarLokaal(date, tz = TZ) {
@@ -68,13 +75,13 @@ export function maakClient(cfg) {
 /** Haalt de stamdata op die nodig is om id's om te zetten naar namen. Ontbrekende rechten breken de sync niet. */
 export async function haalStamdata(client) {
   const veilig = async (pad, v) => { try { const x = await client.get(pad, {}, v); return Array.isArray(x) ? x : []; } catch { return []; } };
-  const [artikelen, groepen, betalingen, gebruikers] = await Promise.all([
-    veilig("article"), veilig("group", "v2"), veilig("payment-info"),
+  const [artikelen, groepen, betalingen, opties, gebruikers] = await Promise.all([
+    veilig("article"), veilig("group", "v2"), veilig("payment-info"), veilig("option-info"),
     (async () => { const a = await veilig("user", "v2"); return a.length ? a : veilig("user-info"); })(),
   ]);
   const naamVan = (u) => u.name || [u.firstName, u.lastName].filter(Boolean).join(" ") || null;
   return {
-    artikel: new Map(artikelen.map((a) => [a.id, a])),
+    artikel: new Map([...opties.map((o) => [o.id, { id: o.id, name: o.name }]), ...artikelen.map((a) => [a.id, a])]),
     groep: new Map(groepen.map((g) => [g.id, g.name])),
     betaling: new Map(betalingen.map((b) => [b.id, b.name])),
     gebruiker: new Map(gebruikers.map((u) => [u.id, naamVan(u)])),
@@ -95,6 +102,7 @@ export function transactiesNaarBonnen(transacties, sd) {
         const naam = art?.name || it.text || (it.articleId ? `Artikel ${it.articleId}` : null);
         if (!naam) continue;
         const bruto = getal(it.price), btw = getal(it.vat);
+        if (it.kind !== 1 && bruto === 0) continue; // gratis optie/toevoeging: geen omzet
         regels.push({
           artikel: naam,
           groep: sd.groep.get(art?.groupId) || null,
@@ -139,11 +147,11 @@ export function urenNaarPakket(records, sd) {
   return [...per.values()].map((x) => ({ datum: x.datum, medewerker: x.medewerker, gewerkt: r2(x.gewerkt), kosten: r2(x.kosten) }));
 }
 
-/** Haalt één tijdvenster op (lokale tijd) en geeft een pakket in het standaardformaat. */
-export async function haalPakket(client, sd, vanLokaal, totLokaal) {
+/** Haalt één tijdvenster op (UTC, zoals de API verwacht) en geeft een pakket in het standaardformaat. */
+export async function haalPakket(client, sd, van, tot) {
   const [transacties, uren] = await Promise.all([
-    client.get("turnover-transaction", { from: vanLokaal, till: totLokaal, paidOnly: true }),
-    client.get("time-attendance-record", { from: vanLokaal, till: totLokaal }).catch(() => []), // uren zijn optioneel
+    client.get("turnover-transaction", { from: van, till: tot, paidOnly: true }),
+    client.get("time-attendance-record", { from: van, till: tot }).catch(() => []), // uren zijn optioneel
   ]);
   return { bonnen: transactiesNaarBonnen(transacties, sd), uren: urenNaarPakket(uren, sd) };
 }
