@@ -1,0 +1,36 @@
+/* Stijl voor de juridische pagina's (privacy, cookies, voorwaarden). Gebruikt geen externe lettertypen of scripts. */
+:root{--ink:#080A16;--ink-2:#0F1226;--ink-3:#171B36;--line:rgba(170,180,255,.14);--fg:#EEF0FA;--mute:#9AA0C3;--lav:#8E95D0;--coral:#EC4B57;color-scheme:dark}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--ink);color:var(--fg);font:17px/1.65 "Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--lav)}
+a:hover{color:#fff}
+a:focus-visible{outline:2px solid var(--coral);outline-offset:3px;border-radius:4px}
+.wrap{max-width:820px;margin:0 auto;padding:0 20px}
+.top{border-bottom:1px solid var(--line);background:rgba(8,10,22,.92);position:sticky;top:0;z-index:5;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.top .wrap{max-width:1180px;display:flex;align-items:center;justify-content:space-between;height:68px;gap:16px}
+.logo img{height:22px;width:auto;display:block}
+.back{font-size:15px;text-decoration:none;color:var(--mute)}
+.back:hover{color:#fff}
+.doc{padding:56px 20px 80px}
+.eyebrow{font:500 12px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--lav)}
+h1,h2{font-family:"Poppins","Instrument Sans",system-ui,sans-serif;letter-spacing:-.02em;text-wrap:balance}
+h1{font-weight:700;font-size:clamp(32px,6vw,48px);line-height:1.08;margin:14px 0 8px}
+h2{font-weight:600;font-size:22px;line-height:1.25;margin:42px 0 10px}
+.meta{color:var(--mute);font-size:15px;margin:0 0 28px}
+p{margin:0 0 14px}
+ul,ol{margin:0 0 14px;padding-left:22px}
+li{margin-bottom:6px}
+.tbl{overflow-x:auto;margin:0 0 18px;border:1px solid var(--line);border-radius:14px}
+table{border-collapse:collapse;width:100%;font-size:15px;min-width:560px}
+th,td{text-align:left;vertical-align:top;padding:12px 14px;border-bottom:1px solid var(--line)}
+th{background:var(--ink-2);color:var(--lav);font-weight:600;font-size:13px;letter-spacing:.04em}
+tr:last-child td{border-bottom:0}
+.box{background:var(--ink-2);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:0 0 18px}
+.box p:last-child{margin-bottom:0}
+.bot{border-top:1px solid var(--line);padding:28px 0 40px;color:var(--mute);font-size:14px}
+.bot .wrap{max-width:1180px;display:flex;flex-wrap:wrap;gap:10px 28px;justify-content:space-between}
+.bot nav{display:flex;flex-wrap:wrap;gap:6px 20px}
+.bot a{color:var(--mute)}
+.bot a:hover{color:#fff}
+@media (max-width:600px){body{font-size:16px}.doc{padding-top:40px}}
