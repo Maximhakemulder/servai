@@ -85,11 +85,18 @@ export async function haalStamdata(client) {
   return {
     artikel: new Map([...opties.map((o) => [o.id, { id: o.id, name: o.name }]), ...artikelen.map((a) => [a.id, a])]),
     groep: new Map(groepen.map((g) => [g.id, g.name])),
-    afdeling: new Map(afdelingen.map((d) => [d.id, d.name])),
+    afdeling: new Map(afdelingen.map((d) => [d.id, d])),
     betaling: new Map(betalingen.map((b) => [b.id, b.name])),
     gebruiker: new Map(gebruikers.map((u) => [u.id, naamVan(u)])),
   };
 }
+
+/** Groep van een artikel: artikel → afdeling → groep (bijvoorbeeld Food of Drinks). Valt terug op de afdelingsnaam. */
+const groepVan = (art, sd) => {
+  if (!art) return null;
+  const dep = sd.afdeling?.get(art.departmentId);
+  return sd.groep.get(art.groupId) || sd.groep.get(dep?.groupId) || dep?.name || null;
+};
 
 /** Zet unTill-transacties om naar bonnen in het standaardformaat. Eén bon per afgeronde transactie. */
 export function transactiesNaarBonnen(transacties, sd) {
@@ -108,7 +115,7 @@ export function transactiesNaarBonnen(transacties, sd) {
         if (it.kind !== 1 && bruto === 0) continue; // gratis optie/toevoeging: geen omzet
         regels.push({
           artikel: naam,
-          groep: sd.groep.get(art?.groupId) || sd.afdeling?.get(art?.departmentId) || null, // unTill-artikelen hebben een afdeling
+          groep: groepVan(art, sd),
           aantal: it.decimalQuantity !== undefined && it.decimalQuantity !== null ? getal(it.decimalQuantity) : getal(it.quantity || 1),
           bedrag: r2(bruto), netto: r2(bruto - btw), btw_pct: it.vatPercent === undefined ? undefined : getal(it.vatPercent),
           korting: r2(Math.abs(getal(it.discount))),
