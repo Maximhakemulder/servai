@@ -383,7 +383,7 @@ const ACT={
     async(v,f,m)=>{const {data:{session}}=await SB.auth.getSession();
       const r=await fetch('/api/koppel-untill',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+(session&&session.access_token)},body:JSON.stringify({locatie_id:v.locatie_id,host:v.host.trim(),dbname:v.dbname.trim(),user:v.user,password:v.password})});
       const x=await r.json().catch(()=>({}));
-      if(!r.ok||x.ok===false)throw new Error(x.error||x.fout||'Koppelen mislukt');
+      if(!r.ok||x.ok===false)throw new Error(x.error||x.fout||('Koppelen mislukt (fout '+r.status+(r.status===504?': de server was te lang bezig':'')+')'));
       m.close();await load();route();toast(`Gekoppeld: ${x.bonnen||0} bonnen en ${x.regels||0} regels ingelezen`)},{ok:'Testen & koppelen'})},
   locNaam(d){const k=D.klanten.find(k=>k.locaties.some(l=>l.id===d.id)),l=k.locaties.find(l=>l.id===d.id);formModal('Naam wijzigen',`<label>Naam<input name="naam" required value="${esc(l.naam)}"></label>`,async(v,f,m)=>{await q(SB.from('locaties').update({naam:v.naam.trim()}).eq('id',d.id));m.close();await load();route()})},
   async locWeg(d){if(await ask('Locatie verwijderen','Alle omzet, uren en andere gegevens van deze locatie worden ook verwijderd. Dit kan niet ongedaan worden gemaakt.','Verwijderen')){await q(SB.from('locaties').delete().eq('id',d.id));await load();route();toast('Locatie verwijderd')}},

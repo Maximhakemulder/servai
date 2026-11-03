@@ -65,7 +65,9 @@ export function maakClient(cfg) {
     async get(pad, query = {}, v = "v1") {
       const q = Object.entries(query).filter(([, x]) => x !== undefined && x !== null).map(([k, x]) => `${k}=${encodeURIComponent(x)}`).join("&");
       const url = `${base}/${v}/${encodeURIComponent(cfg.dbname)}/${pad}${q ? "?" + q : ""}`;
-      const r = await f(url, { headers: { authorization: auth, apptoken: token, accept: "application/json" } });
+      let r;
+      try { r = await f(url, { headers: { authorization: auth, apptoken: token, accept: "application/json" }, signal: AbortSignal.timeout(cfg.timeoutMs || 8000) }); }
+      catch (e) { throw new Error(`unTill ${pad}: ${e.name === "TimeoutError" ? "geen antwoord binnen " + (cfg.timeoutMs || 8000) / 1000 + " seconden" : "geen verbinding (" + (e.cause?.code || e.message) + ")"}`); }
       if (!r.ok) throw new Error(`unTill ${pad}: HTTP ${r.status} ${(await r.text()).slice(0, 160)}`);
       return r.json();
     },

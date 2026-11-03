@@ -10,6 +10,9 @@ const json = (o, s = 200) => new Response(JSON.stringify(o), { status: s, header
 const rest = (path, opt = {}) => fetch(`${URL_}/rest/v1/${path}`, { ...opt, headers: { apikey: SVC, authorization: `Bearer ${SVC}`, "content-type": "application/json", ...(opt.headers || {}) } });
 
 export default async (req) => {
+  try { return await verwerk(req); } catch (e) { return json({ error: "Onverwachte fout: " + String(e.message || e) }, 500); }
+};
+async function verwerk(req) {
   if (req.method !== "POST") return json({ error: "alleen POST" }, 405);
   if (!URL_ || !ANON || !SVC) return json({ error: "Server niet ingesteld" }, 503);
   const t = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
@@ -42,5 +45,5 @@ export default async (req) => {
   const res = await syncKoppeling(rest, { id: kop.id, klant_id: loc.klant_id, locatie_id: loc.id, sync_tot: kop.sync_tot }, geheim);
   await rest("logboek", { method: "POST", body: JSON.stringify({ klant_id: loc.klant_id, user_id: u.id, actie: "koppel_untill", details: { koppeling_id: kop.id, ...res } }) });
   return json({ koppeling_id: kop.id, ...res }, res.ok ? 200 : 502);
-};
+}
 export const config = { path: "/api/koppel-untill" };
