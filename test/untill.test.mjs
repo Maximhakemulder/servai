@@ -68,6 +68,8 @@ test("client stuurt Basic + AppToken en leest tegen nep-server", async () => {
   assert.match(calls[0].url, /^https:\/\/testapi\.untill\.com\/shield\/api\/v1\/DEMO\//);
   assert.equal(calls[0].h.apptoken, "tok:SERVAI");
   assert.equal(calls[0].h.authorization, "Basic " + Buffer.from("u:p").toString("base64"));
+  process.env.UNTILL_APP_TOKEN = "envtok";
+  assert.equal(typeof maakClient({ host: "https://x.nl", dbname: "d", user: "u", password: "p" }).get, "function");
   assert.throws(() => maakClient({ host: "http://x", dbname: "d", user: "u", password: "p", appToken: "t" }));
 });
 

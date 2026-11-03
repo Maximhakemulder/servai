@@ -43,7 +43,7 @@ const betaalSoort = (naam) => {
 
 /**
  * Eenvoudige client voor de REST API.
- * @param {{host: string, dbname: string, user: string, password: string, appToken: string, appNaam?: string, fetchImpl?: typeof fetch}} cfg
+ * @param {{host: string, dbname: string, user: string, password: string, appToken?: string, appNaam?: string, fetchImpl?: typeof fetch}} cfg
  * host = basis van de API, bijvoorbeeld https://testapi.untill.com/shield/api (zonder /v1/...)
  */
 export function maakClient(cfg) {
@@ -51,7 +51,9 @@ export function maakClient(cfg) {
   const base = String(cfg.host || "").replace(/\/+$/, "");
   if (!/^https:\/\//i.test(base)) throw new Error("host moet met https:// beginnen");
   const auth = "Basic " + Buffer.from(`${cfg.user}:${cfg.password}`).toString("base64");
-  const token = cfg.appNaam ? `${cfg.appToken}:${cfg.appNaam}` : cfg.appToken;
+  const appToken = cfg.appToken || process.env.UNTILL_APP_TOKEN, appNaam = cfg.appNaam || process.env.UNTILL_APP_NAAM;
+  if (!appToken) throw new Error("AppToken ontbreekt (zet UNTILL_APP_TOKEN in Netlify)");
+  const token = appNaam ? `${appToken}:${appNaam}` : appToken;
   return {
     async get(pad, query = {}, v = "v1") {
       const q = Object.entries(query).filter(([, x]) => x !== undefined && x !== null).map(([k, x]) => `${k}=${encodeURIComponent(x)}`).join("&");

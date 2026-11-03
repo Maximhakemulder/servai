@@ -1,6 +1,6 @@
 // Alleen voor SERVAI-beheerders: legt een unTill-koppeling vast voor een locatie.
 // Test eerst de verbinding, slaat dan de inloggegevens versleuteld op en draait direct een eerste synchronisatie.
-// Body: { locatie_id, host, dbname, user, password, appToken, appNaam? }
+// Body: { locatie_id, host, dbname, user, password }. De AppToken van SERVAI staat in Netlify (UNTILL_APP_TOKEN).
 import { versleutel } from "../lib/versleutel.mjs";
 import { syncKoppeling } from "../lib/untill-sync.mjs";
 import { maakClient } from "../lib/untill.mjs";
@@ -20,12 +20,12 @@ export default async (req) => {
   if (!Array.isArray(ad) || !ad.length) return json({ error: "Geen toegang" }, 403);
 
   let b; try { b = await req.json(); } catch { return json({ error: "Ongeldige invoer" }, 400); }
-  for (const k of ["locatie_id", "host", "dbname", "user", "password", "appToken"]) if (!b[k] || typeof b[k] !== "string") return json({ error: `${k} ontbreekt` }, 400);
+  for (const k of ["locatie_id", "host", "dbname", "user", "password"]) if (!b[k] || typeof b[k] !== "string") return json({ error: `${k} ontbreekt` }, 400);
   const lr = await rest(`locaties?id=eq.${encodeURIComponent(b.locatie_id)}&select=id,klant_id`);
   const loc = lr.ok ? (await lr.json())[0] : null;
   if (!loc) return json({ error: "Locatie niet gevonden" }, 404);
 
-  const geheim = { host: b.host.trim(), dbname: b.dbname.trim(), user: b.user, password: b.password, appToken: b.appToken.trim(), ...(b.appNaam ? { appNaam: String(b.appNaam).trim() } : {}) };
+  const geheim = { host: b.host.trim(), dbname: b.dbname.trim(), user: b.user, password: b.password };
   try { await maakClient(geheim).get("sales-area-info"); }
   catch (e) { return json({ error: "Verbinding met unTill mislukt: " + String(e.message || e) }, 422); }
 
