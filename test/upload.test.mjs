@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { detecteer, parseDatum, parseGetal, parseUren, bouwRijen } from "../beheer/kolommen.mjs";
+import { detecteer, parseDatum, parseGetal, parseUren, bouwRijen } from "../assets/upload-kolommen.mjs";
 import { normaliseerInkoop } from "../netlify/lib/inkoop.mjs";
 import { normaliseer } from "../netlify/lib/kassa.mjs";
 

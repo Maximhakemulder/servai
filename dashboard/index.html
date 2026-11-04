@@ -1287,6 +1287,68 @@ const rpDagChart=(id,dagen,perDag,titel)=>mk(id,{type:'bar',data:{labels:dagen.m
 const WD=['zo','ma','di','wo','do','vr','za'];
 const nl1=n=>n.toFixed(1).replace('.',',');
 
+/* ---------------- uploaden door de klant zelf (uren, rooster, inkoop) ---------------- */
+const kanUpload=()=>{const u=cur();return REAL&&!!u&&['Eigenaar','Bedrijfsleider','Boekhouder'].includes(u.r)};
+const upKnoppen=soorten=>kanUpload()?`<div class="c span-12" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">${soorten.filter(s=>cur().r!=='Boekhouder'||s==='inkoop').map(s=>`<button class="act" data-up="${s}">${{gewerkt:'Uren uploaden',gepland:'Rooster uploaden',inkoop:'Inkoop uploaden'}[s]}</button>`).join('')}<small style="color:var(--mute)">Excel of CSV, de kolommen worden automatisch herkend</small></div>`:'';
+async function upModal(preset){
+  const K=await import('/assets/upload-kolommen.mjs');
+  const SO={gewerkt:'uren',gepland:'uren',inkoop:'inkoop'};
+  const locs=state.loc!=='all'?LOCS.filter(l=>l.id===state.loc):LOCS;
+  const soorten=cur().r==='Boekhouder'?['inkoop']:['gewerkt','gepland','inkoop'];
+  const NM={gewerkt:'Gewerkte uren (loonkosten)',gepland:'Geplande uren (rooster)',inkoop:'Inkoop (facturen / leveranciers)'};
+  const o=document.createElement('div');
+  o.style.cssText='position:fixed;inset:0;z-index:300;background:rgba(4,5,12,.72);display:flex;align-items:flex-start;justify-content:center;padding:5vh 16px;overflow:auto';
+  o.innerHTML=`<form class="aform c" style="max-width:640px;width:100%;margin:0"><h2 style="margin-bottom:6px">${preset?NM[preset].split(' (')[0]+' uploaden':'Gegevens uploaden'}</h2>
+   <p style="color:var(--mute);font-size:13.5px;margin-bottom:14px">Kies een Excel- of CSV-bestand. We herkennen de kolommen zelf en je ziet eerst een voorbeeld. Hetzelfde bestand nogmaals uploaden is veilig.</p>
+   <div class="two">${preset?`<input type="hidden" name="soort" value="${preset}">`:`<div><label>Wat bevat het bestand?</label><select class="fld" name="soort">${soorten.map(s=>`<option value="${s}">${NM[s]}</option>`).join('')}</select></div>`}
+   ${locs.length>1?`<div><label>Locatie</label><select class="fld" name="locatie_id">${locs.map(l=>`<option value="${l.id}">${esc(l.name)}</option>`).join('')}</select></div>`:`<input type="hidden" name="locatie_id" value="${locs[0]?locs[0].id:''}">`}</div>
+   <div><label>Bestand</label><input class="fld" type="file" name="bestand" accept=".xlsx,.xls,.csv,.txt"></div>
+   <div id="up-map" style="margin-top:10px"></div><p id="up-info" style="color:var(--fg-2);font-size:13.5px;margin:10px 0"></p><p id="up-err" style="color:#FF8A8A;font-size:13.5px" hidden></p>
+   <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px"><button type="button" class="act ghost" data-x>Annuleren</button><button type="submit" class="act">Inlezen</button></div></form>`;
+  document.body.append(o);
+  const f=o.querySelector('form'),info=o.querySelector('#up-info'),box=o.querySelector('#up-map'),er=o.querySelector('#up-err');
+  const sluit=()=>o.remove();o.addEventListener('mousedown',e=>{if(e.target===o)sluit()});o.querySelector('[data-x]').onclick=sluit;
+  let P=null;
+  const mapping=()=>{const kol={};K.VELDEN[SO[f.soort.value]].forEach(x=>{const e=f.elements['kol_'+x.id];kol[x.id]=e?+e.value:-1});return kol};
+  const bouw=()=>K.bouwRijen(P.rijen,mapping(),f.soort.value,{uurloon:parseFloat(((f.elements.uurloon&&f.elements.uurloon.value)||'').replace(',','.'))||0});
+  const voorbeeld=()=>{if(!P)return;const {rijen,fouten,gelezen}=bouw();info.innerHTML=`<b>${rijen.length}</b> regels herkend van ${gelezen} rijen`+(fouten.length?`, ${fouten.length} overgeslagen. Voorbeeld: ${esc(fouten[0])}`:'')+(rijen[0]?`<br><small style="color:var(--mute)">Eerste regel: ${esc(JSON.stringify(rijen[0]))}</small>`:'')};
+  const teken=()=>{
+    const soort=SO[f.soort.value],det=K.detecteer(P.kop,soort);
+    box.innerHTML='<div class="two" style="gap:10px">'+K.VELDEN[soort].filter(x=>!(f.soort.value==='gepland'&&['uurloon','kosten'].includes(x.id))).map(x=>`<div><label>${esc(x.naam)}${x.verplicht?' *':''}</label><select class="fld" name="kol_${x.id}"><option value="-1">— geen —</option>${P.kop.map((h,i)=>`<option value="${i}"${det[x.id]===i?' selected':''}>${esc(h||'(kolom '+(i+1)+')')}</option>`).join('')}</select></div>`).join('')+(f.soort.value==='gewerkt'?'<div><label>Uurloon (als er geen loonkolom is) €</label><input class="fld" name="uurloon" inputmode="decimal" placeholder="bijv. 16,50"></div>':'')+'</div>';
+    voorbeeld()};
+  f.addEventListener('change',async e=>{
+    if(e.target.name==='bestand'){
+      const fl=e.target.files[0];if(!fl)return;info.textContent='Bestand lezen…';er.hidden=true;
+      try{
+        if(!window.XLSX)await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';s.onload=res;s.onerror=()=>rej(new Error('Excel-lezer kon niet laden'));document.head.append(s)});
+        const csv=/\.(csv|txt)$/i.test(fl.name);
+        const wb=csv?XLSX.read(await fl.text(),{type:'string'}):XLSX.read(await fl.arrayBuffer(),{type:'array'});
+        const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:false,defval:'',blankrows:false,dateNF:'yyyy-mm-dd'});
+        if(rows.length<2)throw new Error('Het bestand bevat geen gegevens');
+        P={kop:rows[0].map(x=>String(x).trim()),rijen:rows.slice(1)};teken();
+      }catch(x){P=null;box.innerHTML='';info.textContent=x.message||String(x)}
+    }else if(e.target.name==='soort'){if(P)teken()}
+    else if(P)voorbeeld()});
+  f.addEventListener('input',e=>{if(P&&e.target.name==='uurloon')voorbeeld()});
+  f.addEventListener('submit',async e=>{
+    e.preventDefault();er.hidden=true;const b=f.querySelector('button[type=submit]');
+    const fail=m=>{er.hidden=false;er.textContent=m;b.disabled=false};
+    if(!P)return fail('Kies eerst een bestand');
+    const {rijen,fouten}=bouw();
+    if(!rijen.length)return fail(fouten[0]||'Geen bruikbare rijen gevonden');
+    if(fouten.length&&!confirm(fouten.length+' rij(en) worden overgeslagen. Toch doorgaan met '+rijen.length+' rijen?'))return;
+    b.disabled=true;b.textContent='Bezig…';
+    try{
+      const {data:{session}}=await SB.auth.getSession();
+      const r=await fetch('/api/upload',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+(session&&session.access_token)},body:JSON.stringify({locatie_id:f.locatie_id.value,soort:f.soort.value,rijen})});
+      const x=await r.json().catch(()=>({}));
+      if(!r.ok||!x.ok)throw new Error(x.error||('Uploaden mislukt (fout '+r.status+')'));
+      sluit();flash(x.ingelezen+' regels ingelezen');render();
+    }catch(x){fail(x.message||String(x));b.textContent='Inlezen'}
+  });
+}
+document.getElementById('view').addEventListener('click',e=>{const b=e.target.closest('[data-up]');if(b&&REAL)upModal(b.dataset.up).catch(x=>flash(x.message||'Uploaden niet beschikbaar'))});
+
 async function finLoad(wrap){
   const D=await rpHaal();if(document.getElementById('rp-wrap')!==wrap)return;
   if(!D.cur.length){wrap.innerHTML=rpLeeg();return}
@@ -1353,7 +1415,7 @@ async function persLoad(wrap){
     ovFetch('omzet_per_medewerker_dag','locatie_id,bedrijfsdag,medewerker,omzet,bonnen,couverts',R.f,R.t,['bedrijfsdag','medewerker']),
     ovFetch('uren','locatie_id,datum,medewerker,gepland_uren,gewerkt_uren,kosten',R.f,R.t,['datum','medewerker']).catch(()=>[])]);
   if(document.getElementById('rp-wrap')!==wrap)return;
-  if(!mw.length&&!ur.length){wrap.innerHTML=rpLeeg();return}
+  if(!mw.length&&!ur.length){wrap.outerHTML=`<div class="c span-12">${rpLeeg()}</div>`+upKnoppen(['gewerkt','gepland']);return}
   const m={};mw.forEach(r=>{const x=m[r.medewerker]||(m[r.medewerker]={o:0,b:0,c:0,d:new Set()});x.o+=+r.omzet||0;x.b+=+r.bonnen||0;x.c+=+r.couverts||0;x.d.add(r.bedrijfsdag)});
   const L=Object.entries(m).sort((a,b)=>b[1].o-a[1].o);const max=L.length?L[0][1].o||1:1;
   const tot=L.reduce((t,x)=>t+x[1].o,0),bon=L.reduce((t,x)=>t+x[1].b,0);
@@ -1361,13 +1423,13 @@ async function persLoad(wrap){
   const UL=Object.entries(u).sort((a,b)=>(b[1].w||b[1].g)-(a[1].w||a[1].g));
   const uG=UL.reduce((t,x)=>t+x[1].g,0),uW=UL.reduce((t,x)=>t+x[1].w,0),uK=UL.reduce((t,x)=>t+x[1].k,0);
   const uh=n=>nl1(n)+' u';
-  wrap.outerHTML=
+  wrap.outerHTML=upKnoppen(['gewerkt','gepland'])+
    (L.length?rpKpi('Medewerkers aan de kassa',nf(L.length),'<span class="delta flat">'+perName()+'</span>','met omzet geboekt')+
    rpKpi('Omzet geboekt',eur(tot),'<span class="delta flat">–</span>',nf(bon)+' bonnen')+
    rpKpi('Beste verkoper',esc(L[0][0]),'<span class="delta flat">'+eur(L[0][1].o)+'</span>','op omzet'):'')+
    (UL.length?rpKpi('Gewerkte uren',uh(uW),'<span class="delta flat">'+(uG?uh(uG)+' gepland':'rooster niet gekoppeld')+'</span>',uK?eur(uK)+' loonkosten':'uren uit rooster of upload'):rpKpi('Gem. bon',bon?eur(tot/bon,2):'–','<span class="delta flat">–</span>','over alle medewerkers'))+
    (L.length?`<div class="c span-12"><div class="ch"><div><h2>Omzet per medewerker</h2><p>${locName()} · ${perName()}</p></div></div>${rpTab(L.map(([n,x])=>`<tr><td>${esc(n)}</td><td>${rpBar(x.o,max)}</td><td class="r">${nf(x.b)}</td><td class="r">${x.b?eur(x.o/x.b,2):'–'}</td><td class="r">${x.d.size}</td></tr>`),'<th>Medewerker</th><th>Omzet</th><th class="r">Bonnen</th><th class="r">Gem. bon</th><th class="r">Dagen</th>')}</div>`:'')+
-   (UL.length?`<div class="c span-12"><div class="ch"><div><h2>Uren per medewerker</h2><p>Gepland (rooster) tegenover gewerkt · ${perName()}</p></div></div>${rpTab(UL.map(([n,x])=>`<tr><td>${esc(n)}</td><td class="r">${x.g?uh(x.g):'–'}</td><td class="r">${x.w?uh(x.w):'–'}</td><td class="r">${x.g&&x.w?`<span class="delta ${x.w>x.g*1.05?'down':'flat'}">${x.w>=x.g?'+':''}${nl1(x.w-x.g)} u</span>`:'–'}</td><td class="r">${x.k?eur(x.k):'–'}</td></tr>`),'<th>Medewerker</th><th class="r">Gepland</th><th class="r">Gewerkt</th><th class="r">Verschil</th><th class="r">Loonkosten</th>')}</div>`:`<div class="c span-12"><p style="color:var(--fg-2)">Uren en loonkosten verschijnen zodra het rooster of de uren gekoppeld of geüpload zijn. SERVAI regelt dit voor je.</p></div>`);
+   (UL.length?`<div class="c span-12"><div class="ch"><div><h2>Uren per medewerker</h2><p>Gepland (rooster) tegenover gewerkt · ${perName()}</p></div></div>${rpTab(UL.map(([n,x])=>`<tr><td>${esc(n)}</td><td class="r">${x.g?uh(x.g):'–'}</td><td class="r">${x.w?uh(x.w):'–'}</td><td class="r">${x.g&&x.w?`<span class="delta ${x.w>x.g*1.05?'down':'flat'}">${x.w>=x.g?'+':''}${nl1(x.w-x.g)} u</span>`:'–'}</td><td class="r">${x.k?eur(x.k):'–'}</td></tr>`),'<th>Medewerker</th><th class="r">Gepland</th><th class="r">Gewerkt</th><th class="r">Verschil</th><th class="r">Loonkosten</th>')}</div>`:`<div class="c span-12"><p style="color:var(--fg-2)">Uren en loonkosten verschijnen zodra je ze uploadt of het rooster gekoppeld is.</p></div>`);
 }
 
 async function inkLoad(wrap){
@@ -1377,7 +1439,7 @@ async function inkLoad(wrap){
     ovFetch('omzet_per_dag','locatie_id,bedrijfsdag,omzet',R.f,R.t,['bedrijfsdag'])]);
   if(document.getElementById('rp-wrap')!==wrap)return;
   const cur=ink.filter(r=>r.bedrijfsdag>=R.f&&r.bedrijfsdag<=R.t),prv=R.pf?ink.filter(r=>r.bedrijfsdag>=R.pf&&r.bedrijfsdag<=R.pt):[];
-  if(!cur.length){wrap.innerHTML='<h2 style="margin-bottom:8px">Nog geen inkoopgegevens</h2><p style="color:var(--fg-2);max-width:620px">Hier verschijnen je inkoop, leveranciers en inkoopquote zodra je facturen of een inkoopbestand zijn ingelezen. SERVAI regelt dit voor je. Kies anders een langere periode.</p>';return}
+  if(!cur.length){wrap.outerHTML='<div class="c span-12"><h2 style="margin-bottom:8px">Nog geen inkoopgegevens</h2><p style="color:var(--fg-2);max-width:620px">Hier verschijnen je inkoop, leveranciers en inkoopquote zodra je een inkoopbestand hebt geüpload. Kies anders een langere periode.</p></div>'+upKnoppen(['inkoop']);return}
   const o=rpSum(cur,'bedrag'),ov=rpSum(prv,'bedrag'),om=rpSum(dag,'omzet');
   const lv={};cur.forEach(r=>{const x=lv[r.leverancier]||(lv[r.leverancier]={o:0,n:0,c:{}});x.o+=+r.bedrag||0;x.n+=+r.regels||0;x.c[r.categorie]=(x.c[r.categorie]||0)+(+r.bedrag||0)});
   const LL=Object.entries(lv).sort((a,b)=>b[1].o-a[1].o);
@@ -1386,7 +1448,7 @@ async function inkLoad(wrap){
   const perDag={};cur.forEach(r=>{perDag[r.bedrijfsdag]=(perDag[r.bedrijfsdag]||0)+(+r.bedrag||0)});
   const dagen=Object.keys(perDag).sort();
   const q=om>0?o/om*100:null;
-  wrap.outerHTML=
+  wrap.outerHTML=upKnoppen(['inkoop'])+
    rpKpi('Inkoop',eur(o),R.pf&&ov?dl(o,ov,true):'<span class="delta flat">'+perName()+'</span>','excl. btw'+(R.vs&&ov?' · '+R.vs:''))+
    rpKpi('Inkoop in % van omzet',q==null?'–':nl1(q)+'%','<span class="delta flat">'+(q==null?'omzet ontbreekt':'inkoopquote')+'</span>','inkoop gedeeld door omzet')+
    rpKpi('Leveranciers',nf(LL.length),'<span class="delta flat">nr. 1: '+esc(LL[0][0])+'</span>',nl1(LL[0][1].o/o*100)+'% van de inkoop')+
@@ -1418,7 +1480,7 @@ async function kopLoad(wrap){
   const f=t=>t?new Date(t).toLocaleString('nl-NL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'–';
   const verb=new Set(act.map(k=>k.systeem));
   const alle=[['unTill','Kassa'],['Nostradamus','Rooster & uren'],['Zenchef','Reserveringen'],['Google Business Profile','Reviews & zichtbaarheid']];
-  wrap.outerHTML=`<div class="c span-12"><div class="ch"><div><h2>Verbonden systemen</h2><p>SERVAI regelt de koppelingen voor je</p></div></div>${rpTab(alle.map(([n,soort])=>{const k=act.find(x=>(x.systeem||'').toLowerCase().replace(/\s/g,'')===n.toLowerCase().replace(/\s/g,''));return `<tr><td>${plogo(n)} <b>${n}</b><br><span style="color:var(--mute);font-size:12px">${soort}</span></td><td>${k?(st[k.status]||k.status):'Niet verbonden'}</td><td>${k?f(k.laatste_succes):'–'}</td><td>${k&&k.laatste_fout?esc(k.laatste_fout):''}</td></tr>`}),'<th>Systeem</th><th>Status</th><th>Laatst gelukt</th><th>Melding</th>')}</div>`;
+  wrap.outerHTML=(kanUpload()?`<div class="c span-12"><div class="ch"><div><h2>Gegevens uploaden</h2><p>Geen koppeling? Upload je uren, rooster of inkoop als Excel of CSV.</p></div></div><div style="display:flex;gap:10px;flex-wrap:wrap">${['gewerkt','gepland','inkoop'].filter(s=>cur().r!=='Boekhouder'||s==='inkoop').map(s=>`<button class="act" data-up="${s}">${{gewerkt:'Uren uploaden',gepland:'Rooster uploaden',inkoop:'Inkoop uploaden'}[s]}</button>`).join('')}</div></div>`:'')+`<div class="c span-12"><div class="ch"><div><h2>Verbonden systemen</h2><p>SERVAI regelt de koppelingen voor je</p></div></div>${rpTab(alle.map(([n,soort])=>{const k=act.find(x=>(x.systeem||'').toLowerCase().replace(/\s/g,'')===n.toLowerCase().replace(/\s/g,''));return `<tr><td>${plogo(n)} <b>${n}</b><br><span style="color:var(--mute);font-size:12px">${soort}</span></td><td>${k?(st[k.status]||k.status):'Niet verbonden'}</td><td>${k?f(k.laatste_succes):'–'}</td><td>${k&&k.laatste_fout?esc(k.laatste_fout):''}</td></tr>`}),'<th>Systeem</th><th>Status</th><th>Laatst gelukt</th><th>Melding</th>')}</div>`;
 }
 (()=>{const d={kansen:V.kansen,upselling:V.upselling,assistent:V.assistent,meldingen:V.meldingen,advies:V.advies,koppelingen:V.koppelingen,gebruikers:V.gebruikers,support:V.support};
   V.kansen=()=>REAL?rpNog('Markt & kansen','Kansen worden berekend uit je kassadata in combinatie met weer, evenementen en reserveringen.'):d.kansen();

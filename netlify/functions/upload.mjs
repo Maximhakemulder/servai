@@ -1,4 +1,4 @@
-// Alleen voor SERVAI-beheerders: leest uren, rooster of inkoop in uit een bestand dat in /beheer is herkend.
+// Voor SERVAI-beheerders en voor de eigen medewerkers van een klant (eigenaar, bedrijfsleider, boekhouder): leest uren, rooster of inkoop in uit een bestand dat in /beheer is herkend.
 // Body: { locatie_id, soort: "gewerkt" | "gepland" | "inkoop", rijen: [...] } (rijen in het standaardformaat).
 import { normaliseer, schrijf } from "../lib/kassa.mjs";
 import { normaliseerInkoop, schrijfInkoop } from "../lib/inkoop.mjs";
@@ -18,7 +18,13 @@ async function verwerk(req) {
   const u = ur && ur.ok ? await ur.json() : null;
   if (!u || !u.id) return json({ error: "Niet ingelogd" }, 401);
   const ad = await (await rest(`platform_beheerders?user_id=eq.${u.id}&select=user_id`)).json();
-  if (!Array.isArray(ad) || !ad.length) return json({ error: "Geen toegang" }, 403);
+  const beheerder = Array.isArray(ad) && ad.length > 0;
+  let prof = null;
+  if (!beheerder) {
+    const pr = await (await rest(`profielen?id=eq.${u.id}&select=klant_id,rol,locatie_id,actief`)).json();
+    prof = Array.isArray(pr) ? pr[0] : null;
+    if (!prof || !prof.actief || !["eigenaar", "bedrijfsleider", "boekhouder"].includes(prof.rol)) return json({ error: "Geen toegang" }, 403);
+  }
 
   let b; try { b = await req.json(); } catch { return json({ error: "Ongeldige invoer" }, 400); }
   if (!["gewerkt", "gepland", "inkoop"].includes(b.soort)) return json({ error: "soort moet gewerkt, gepland of inkoop zijn" }, 400);
@@ -27,6 +33,8 @@ async function verwerk(req) {
   const lr = await rest(`locaties?id=eq.${b.locatie_id}&select=id,klant_id`);
   const loc = lr.ok ? (await lr.json())[0] : null;
   if (!loc) return json({ error: "Locatie niet gevonden" }, 404);
+  if (prof && (loc.klant_id !== prof.klant_id || (prof.locatie_id && prof.locatie_id !== loc.id))) return json({ error: "Geen toegang tot deze locatie" }, 403);
+  if (prof && prof.rol === "boekhouder" && b.soort !== "inkoop") return json({ error: "Geen toegang" }, 403);
   const ctx = { klant_id: loc.klant_id, locatie_id: loc.id };
 
   let ingelezen;
