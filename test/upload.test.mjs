@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { detecteer, parseDatum, parseGetal, parseUren, bouwRijen } from "../assets/upload-kolommen.mjs";
+import { detecteer, parseDatum, parseGetal, parseUren, bouwRijen, eenheidBasis } from "../assets/upload-kolommen.mjs";
 import { normaliseerInkoop } from "../netlify/lib/inkoop.mjs";
 import { normaliseer } from "../netlify/lib/kassa.mjs";
 
@@ -71,4 +71,19 @@ test("inkoop: herkennen, en dezelfde upload geeft dezelfde sleutels", () => {
   assert.equal(a.fouten.length, 0);
   assert.deepEqual(a.rijen.map((x) => x.bron_ref), b.rijen.map((x) => x.bron_ref));
   assert.notEqual(a.rijen[0].bron_ref, a.rijen[1].bron_ref);
+});
+
+test("menu, prijzen en recepten uit CSV", () => {
+  const m = bouwRijen([["Friet speciaal", "Food", "5,50"], ["Cola", "Drinks", "€ 3,00"], ["", "Food", "1"]], detecteer(["Gerecht", "Groep", "Prijs"], "menu"), "menu");
+  assert.deepEqual(m.rijen[0], { naam: "Friet speciaal", groep: "Food", verkoopprijs: 5.5 });
+  assert.equal(m.rijen.length, 2); assert.equal(m.fouten.length, 1);
+  const p = bouwRijen([["Friet", "2,40", "kg", "Hanos"], ["Mayonaise", "0,009", "g", ""], ["Zout", "x", "kg", ""]], detecteer(["Ingrediënt", "Prijs", "Eenheid", "Leverancier"], "prijzen"), "prijzen");
+  assert.equal(p.rijen[0].prijs, 2.4); assert.equal(p.rijen[0].leverancier, "Hanos");
+  assert.deepEqual([p.rijen[1].eenheid, p.rijen[1].prijs], ["kg", 9]);   // €0,009 per gram = €9 per kg
+  assert.equal(p.fouten.length, 1);
+  const r = bouwRijen([["Friet speciaal", "Friet", "250", "g"], ["Friet speciaal", "Mayonaise", "20", "g"], ["Cola", "Cola", "1", "stuk"]], detecteer(["Gerecht", "Ingrediënt", "Hoeveelheid", "Eenheid"], "recept"), "recept");
+  assert.deepEqual(r.rijen[0], { gerecht: "Friet speciaal", ingredient: "Friet", eenheid: "kg", hoeveelheid: 0.25 });
+  assert.equal(r.rijen.length, 3);
+  assert.deepEqual(eenheidBasis("cl"), { basis: "l", factor: 0.01 });
+  assert.equal(eenheidBasis("bak"), null);
 });

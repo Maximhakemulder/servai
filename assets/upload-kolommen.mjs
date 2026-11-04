@@ -3,6 +3,17 @@
 
 const sleutel = (t) => String(t == null ? "" : t).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]/g, "");
 
+/** "g", "gr", "kilo", "cl", "ltr", "st" enzovoort naar { basis: "kg"|"l"|"stuk", factor } (hoeveelheid in basiseenheid = hoeveelheid × factor). */
+export function eenheidBasis(t) {
+  const k = sleutel(t);
+  if (!k) return null;
+  const M = { g: ["kg", 0.001], gr: ["kg", 0.001], gram: ["kg", 0.001], kg: ["kg", 1], kilo: ["kg", 1], kilogram: ["kg", 1],
+    ml: ["l", 0.001], cl: ["l", 0.01], dl: ["l", 0.1], l: ["l", 1], ltr: ["l", 1], liter: ["l", 1],
+    stuk: ["stuk", 1], stuks: ["stuk", 1], st: ["stuk", 1], pcs: ["stuk", 1], x: ["stuk", 1] };
+  const m = M[k];
+  return m ? { basis: m[0], factor: m[1] } : null;
+}
+
 export const VELDEN = {
   uren: [
     { id: "datum", naam: "Datum", syn: ["datum", "date", "dag", "werkdag", "day"], verplicht: true },
@@ -13,6 +24,24 @@ export const VELDEN = {
     { id: "pauze", naam: "Pauze", syn: ["pauze", "break", "pauzetijd"] },
     { id: "uurloon", naam: "Uurloon", syn: ["uurloon", "tarief", "rate", "loonperuur", "uurtarief"] },
     { id: "kosten", naam: "Loonkosten", syn: ["loonkosten", "kosten", "totaalloon", "cost", "bruto", "loon"] },
+  ],
+  menu: [
+    { id: "naam", naam: "Gerecht / artikel", syn: ["gerecht", "gerechtnaam", "menuitem", "artikel", "artikelnaam", "product", "naam", "omschrijving", "item"], verplicht: true },
+    { id: "groep", naam: "Groep", syn: ["groep", "categorie", "rubriek", "soort", "afdeling"] },
+    { id: "verkoopprijs", naam: "Verkoopprijs", syn: ["verkoopprijs", "prijs", "bedrag", "verkoop"] },
+  ],
+  prijzen: [
+    { id: "ingredient", naam: "Ingrediënt", syn: ["ingredient", "ingredientnaam", "grondstof", "product", "artikel", "naam", "omschrijving"], verplicht: true },
+    { id: "prijs", naam: "Inkoopprijs (excl. btw)", syn: ["inkoopprijs", "prijs", "prijsperkg", "prijsperliter", "tarief", "bedrag"], verplicht: true },
+    { id: "eenheid", naam: "Per (kg, l, stuk)", syn: ["eenheid", "per", "unit", "uom"] },
+    { id: "leverancier", naam: "Leverancier", syn: ["leverancier", "supplier", "crediteur"] },
+    { id: "datum", naam: "Datum", syn: ["datum", "factuurdatum", "date", "geldigvanaf"] },
+  ],
+  recept: [
+    { id: "gerecht", naam: "Gerecht", syn: ["gerecht", "gerechtnaam", "menuitem", "menu", "artikel"], verplicht: true },
+    { id: "ingredient", naam: "Ingrediënt", syn: ["ingredient", "ingredientnaam", "grondstof", "product"], verplicht: true },
+    { id: "hoeveelheid", naam: "Hoeveelheid", syn: ["hoeveelheid", "aantal", "qty", "gewicht", "portie"], verplicht: true },
+    { id: "eenheid", naam: "Eenheid (g, kg, ml, l, stuk)", syn: ["eenheid", "unit", "uom"] },
   ],
   inkoop: [
     { id: "datum", naam: "Datum", syn: ["datum", "factuurdatum", "leverdatum", "date", "boekdatum"], verplicht: true },
@@ -109,6 +138,37 @@ export function bouwRijen(rijen, kol, modus, opt = {}) {
   rijen.forEach((r, i) => {
     const n = i + 2;
     if (!r || r.every((c) => String(c == null ? "" : c).trim() === "")) { leeg++; return; }
+    if (modus === "menu") {
+      const naam = String(cel(r, "naam") ?? "").trim();
+      if (!naam) return fout(n, "naam ontbreekt");
+      const pr = kol.verkoopprijs >= 0 ? parseGetal(cel(r, "verkoopprijs")) : null;
+      uit.push({ naam, groep: String(cel(r, "groep") ?? "").trim() || null, verkoopprijs: pr === null ? null : r2(pr) });
+      return;
+    }
+    if (modus === "prijzen") {
+      const ing = String(cel(r, "ingredient") ?? "").trim();
+      const pr = parseGetal(cel(r, "prijs"));
+      if (!ing) return fout(n, "ingrediënt ontbreekt");
+      if (pr === null || pr < 0) return fout(n, `prijs niet herkend (“${cel(r, "prijs") ?? ""}”)`);
+      const raw = kol.eenheid >= 0 ? String(cel(r, "eenheid") ?? "").trim() : "";
+      const e = raw ? eenheidBasis(raw) : { basis: "kg", factor: 1 };
+      if (!e) return fout(n, `eenheid niet herkend (“${raw}”), gebruik kg, g, l, ml of stuk`);
+      const d = kol.datum >= 0 && String(cel(r, "datum") ?? "").trim() ? parseDatum(cel(r, "datum")) : null;
+      if (kol.datum >= 0 && String(cel(r, "datum") ?? "").trim() && !d) return fout(n, "datum niet herkend");
+      uit.push({ ingredient: ing, eenheid: e.basis, prijs: Math.round((pr / e.factor) * 10000) / 10000, leverancier: String(cel(r, "leverancier") ?? "").trim() || null, datum: d });
+      return;
+    }
+    if (modus === "recept") {
+      const ger = String(cel(r, "gerecht") ?? "").trim(), ing = String(cel(r, "ingredient") ?? "").trim();
+      const h = parseGetal(cel(r, "hoeveelheid"));
+      if (!ger || !ing) return fout(n, "gerecht of ingrediënt ontbreekt");
+      if (h === null || h <= 0) return fout(n, `hoeveelheid niet herkend (“${cel(r, "hoeveelheid") ?? ""}”)`);
+      const raw = kol.eenheid >= 0 ? String(cel(r, "eenheid") ?? "").trim() : "";
+      const e = raw ? eenheidBasis(raw) : { basis: "kg", factor: 1 };
+      if (!e) return fout(n, `eenheid niet herkend (“${raw}”), gebruik g, kg, ml, l of stuk`);
+      uit.push({ gerecht: ger, ingredient: ing, eenheid: e.basis, hoeveelheid: Math.round(h * e.factor * 10000) / 10000 });
+      return;
+    }
     const datum = parseDatum(cel(r, "datum"));
     if (!datum) return fout(n, `datum niet herkend (“${cel(r, "datum") ?? ""}”)`);
     if (modus === "inkoop") {
@@ -154,7 +214,15 @@ export function bouwRijen(rijen, kol, modus, opt = {}) {
   });
   // één medewerker kan meerdere diensten per dag hebben: tel die op
   let rijenUit = uit;
-  if (modus !== "inkoop") {
+  if (modus === "menu" || modus === "prijzen" || modus === "recept") {
+    const m = new Map();
+    for (const x of uit) {
+      const s = modus === "menu" ? x.naam.toLowerCase() : modus === "prijzen" ? x.ingredient.toLowerCase() + "|" + (x.datum || "") : x.gerecht.toLowerCase() + "|" + x.ingredient.toLowerCase();
+      const b = m.get(s);
+      if (!b) m.set(s, { ...x }); else if (modus === "recept") b.hoeveelheid = Math.round((b.hoeveelheid + x.hoeveelheid) * 10000) / 10000; else m.set(s, { ...x });
+    }
+    rijenUit = [...m.values()];
+  } else if (modus !== "inkoop") {
     const m = new Map();
     for (const x of uit) {
       const s = x.datum + "|" + x.medewerker.toLowerCase();
