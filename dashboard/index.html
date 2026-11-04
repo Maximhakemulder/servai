@@ -1288,13 +1288,13 @@ const WD=['zo','ma','di','wo','do','vr','za'];
 const nl1=n=>n.toFixed(1).replace('.',',');
 
 /* ---------------- uploaden door de klant zelf (uren, rooster, inkoop) ---------------- */
-const kanUpload=()=>{const u=cur();return REAL&&!!u&&['Eigenaar','Bedrijfsleider','Boekhouder'].includes(u.r)};
+const kanUpload=()=>{const u=cur();return REAL&&!!u&&['Eigenaar','Bedrijfsleider'].includes(u.r)};
 const upKnoppen=soorten=>kanUpload()?`<div class="c span-12" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">${soorten.filter(s=>cur().r!=='Boekhouder'||s==='inkoop').map(s=>`<button class="act" data-up="${s}">${{gewerkt:'Uren uploaden',gepland:'Rooster uploaden',inkoop:'Inkoop uploaden'}[s]}</button>`).join('')}<small style="color:var(--mute)">Excel of CSV, de kolommen worden automatisch herkend</small></div>`:'';
 async function upModal(preset){
   const K=await import('/assets/upload-kolommen.mjs');
   const SO={gewerkt:'uren',gepland:'uren',inkoop:'inkoop'};
   const locs=state.loc!=='all'?LOCS.filter(l=>l.id===state.loc):LOCS;
-  const soorten=cur().r==='Boekhouder'?['inkoop']:['gewerkt','gepland','inkoop'];
+  const soorten=['gewerkt','gepland'];
   const NM={gewerkt:'Gewerkte uren (loonkosten)',gepland:'Geplande uren (rooster)',inkoop:'Inkoop (facturen / leveranciers)'};
   const o=document.createElement('div');
   o.style.cssText='position:fixed;inset:0;z-index:300;background:rgba(4,5,12,.72);display:flex;align-items:flex-start;justify-content:center;padding:5vh 16px;overflow:auto';
@@ -1465,7 +1465,7 @@ async function inkLoad(wrap){
   V.dranken=()=>REAL?rpPage(w=>prodLoad(w,'drink','Dranken')):d.dranken();
   V.personeel=()=>REAL?rpPage(persLoad):d.personeel();
   V.reserveringen=()=>REAL?rpWacht('Reserveringen','Zenchef','je reserveringen, bezetting en no-shows'):d.reserveringen();
-  V.inkoop=()=>REAL?rpPage(inkLoad):d.inkoop();
+  V.inkoop=()=>REAL?rpWacht('Inkoop','je inkoop (per gerecht, met prijswaarschuwingen bij facturen)','je inkoopprijzen en welke gerechten duurder worden'):d.inkoop();
   V.gasten=()=>REAL?rpWacht('Gasten','Zenchef en Google Business Profile','gastgegevens, reviews en terugkerende gasten'):d.gasten();
 })();
 
@@ -1480,7 +1480,7 @@ async function kopLoad(wrap){
   const f=t=>t?new Date(t).toLocaleString('nl-NL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'–';
   const verb=new Set(act.map(k=>k.systeem));
   const alle=[['unTill','Kassa'],['Nostradamus','Rooster & uren'],['Zenchef','Reserveringen'],['Google Business Profile','Reviews & zichtbaarheid']];
-  wrap.outerHTML=(kanUpload()?`<div class="c span-12"><div class="ch"><div><h2>Gegevens uploaden</h2><p>Geen koppeling? Upload je uren, rooster of inkoop als Excel of CSV.</p></div></div><div style="display:flex;gap:10px;flex-wrap:wrap">${['gewerkt','gepland','inkoop'].filter(s=>cur().r!=='Boekhouder'||s==='inkoop').map(s=>`<button class="act" data-up="${s}">${{gewerkt:'Uren uploaden',gepland:'Rooster uploaden',inkoop:'Inkoop uploaden'}[s]}</button>`).join('')}</div></div>`:'')+`<div class="c span-12"><div class="ch"><div><h2>Verbonden systemen</h2><p>SERVAI regelt de koppelingen voor je</p></div></div>${rpTab(alle.map(([n,soort])=>{const k=act.find(x=>(x.systeem||'').toLowerCase().replace(/\s/g,'')===n.toLowerCase().replace(/\s/g,''));return `<tr><td>${plogo(n)} <b>${n}</b><br><span style="color:var(--mute);font-size:12px">${soort}</span></td><td>${k?(st[k.status]||k.status):'Niet verbonden'}</td><td>${k?f(k.laatste_succes):'–'}</td><td>${k&&k.laatste_fout?esc(k.laatste_fout):''}</td></tr>`}),'<th>Systeem</th><th>Status</th><th>Laatst gelukt</th><th>Melding</th>')}</div>`;
+  wrap.outerHTML=(kanUpload()?`<div class="c span-12"><div class="ch"><div><h2>Gegevens uploaden</h2><p>Geen koppeling? Upload je uren of rooster als Excel of CSV.</p></div></div><div style="display:flex;gap:10px;flex-wrap:wrap">${['gewerkt','gepland'].map(s=>`<button class="act" data-up="${s}">${{gewerkt:'Uren uploaden',gepland:'Rooster uploaden',inkoop:'Inkoop uploaden'}[s]}</button>`).join('')}</div></div>`:'')+`<div class="c span-12"><div class="ch"><div><h2>Verbonden systemen</h2><p>SERVAI regelt de koppelingen voor je</p></div></div>${rpTab(alle.map(([n,soort])=>{const k=act.find(x=>(x.systeem||'').toLowerCase().replace(/\s/g,'')===n.toLowerCase().replace(/\s/g,''));return `<tr><td>${plogo(n)} <b>${n}</b><br><span style="color:var(--mute);font-size:12px">${soort}</span></td><td>${k?(st[k.status]||k.status):'Niet verbonden'}</td><td>${k?f(k.laatste_succes):'–'}</td><td>${k&&k.laatste_fout?esc(k.laatste_fout):''}</td></tr>`}),'<th>Systeem</th><th>Status</th><th>Laatst gelukt</th><th>Melding</th>')}</div>`;
 }
 (()=>{const d={kansen:V.kansen,upselling:V.upselling,assistent:V.assistent,meldingen:V.meldingen,advies:V.advies,koppelingen:V.koppelingen,gebruikers:V.gebruikers,support:V.support};
   V.kansen=()=>REAL?rpNog('Markt & kansen','Kansen worden berekend uit je kassadata in combinatie met weer, evenementen en reserveringen.'):d.kansen();
