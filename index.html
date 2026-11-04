@@ -198,6 +198,25 @@ section{position:relative}
 
 /* sections */
 
+
+/* USP: groot en klein */
+.usp2{padding-block:70px 30px}
+.u2-head{max-width:860px}
+.u2-head h2{font-size:clamp(34px,4.6vw,58px);font-weight:700;margin-top:18px}
+.u2-head p{color:var(--mute);font-size:19px;margin-top:18px;max-width:38em}
+.u2-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:44px}
+.u2{position:relative;display:flex;flex-direction:column;gap:16px;padding:34px;border-radius:28px;background:var(--ink-2);border:1px solid var(--line);overflow:hidden}
+.u2.solo{background:linear-gradient(var(--ink-2),var(--ink-2)) padding-box,var(--grad) border-box;border:1.5px solid transparent;box-shadow:0 30px 80px -40px rgba(236,75,87,.45)}
+.u2 .tag{font:600 12px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--coral)}
+.u2 h3{font-size:clamp(26px,2.8vw,36px);font-weight:700;letter-spacing:-.025em;line-height:1.08}
+.u2>p{color:#C9CDEA;font-size:17px}
+.u2 ul{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:0}
+.u2 li{display:flex;gap:14px;align-items:baseline;padding:13px 0;border-top:1px solid var(--line);font-size:16px}
+.u2 li b{flex:none;min-width:116px;font:600 15px var(--f-display);color:#fff}
+.u2 li span{color:var(--mute)}
+.u2 .res{margin-top:auto;padding:16px 18px;border-radius:16px;background:rgba(75,214,163,.1);border:1px solid rgba(75,214,163,.3);color:#D8FFEF;font-size:15.5px;line-height:1.45}
+.u2 .res b{display:block;font:600 11px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ok);margin-bottom:4px}
+@media (max-width:900px){.u2-grid{grid-template-columns:1fr}.u2{padding:26px}.u2 li{flex-direction:column;gap:2px}.u2 li b{min-width:0}}
 /* waarom anders: afdelingen werken samen, AI geeft advies */
 .anders{padding-block:90px 30px}
 .an-head{display:grid;grid-template-columns:1.15fr .85fr;gap:56px;align-items:end}
@@ -731,6 +750,44 @@ footer.foot::before{content:"";position:absolute;top:0;left:0;right:0;height:2px
       <article class="al rv"><div class="al-top"><span class="ico"><svg><use href="#i-temp"/></svg></span><div class="t"><span class="tag">Koelcel</span><span class="bron">Sensoren × Voorraad</span></div><span class="sev act">Actie</span></div><h3>Koelcel 2 is 8,4° sinds 14:10</h3><p>Dat ligt boven de veilige grens van 7°. De voorraad in deze cel loopt risico.</p><div class="adv">Controleer de deur en leg de controle vast voor HACCP.</div></article>
     </div>
     <p class="an-note rv">Voorbeelden. Welke meldingen aan staan en bij welke grens ze afgaan, stellen we samen met jou in tijdens de onboarding.</p>
+  </div>
+</section>
+
+<section class="usp2" id="schaal" aria-labelledby="u2-h">
+  <div class="wrap">
+    <div class="u2-head rv">
+      <span class="eyebrow"><svg class="mk" viewBox="0 0 64 48"><use href="#brand" style="color:#8E95D0"/></svg>Voor groot en klein</span>
+      <h2 id="u2-h">Top voor de grote groep. <span class="gtext">Ook voor de zaak die alles zelf doet.</span></h2>
+      <p>Een horecagroep heeft een backoffice met mensen. Een zelfstandige ondernemer niet. SERVAI geeft allebei dezelfde afdelingen, volledig geautomatiseerd.</p>
+    </div>
+    <div class="u2-grid">
+      <article class="u2 solo rv">
+        <span class="tag">Eén zaak, één eigenaar</span>
+        <h3>Geen backoffice? Dan is SERVAI je backoffice.</h3>
+        <p>Je hebt geen controller, planner, inkoper of marketeer in dienst, en daar is ook geen budget voor. Dat doet SERVAI voor je, dag en nacht.</p>
+        <ul>
+          <li><b>Controller</b><span>Omzet, marge en loonkosten in % van je omzet, elke dag</span></li>
+          <li><b>Planner</b><span>Roosteradvies op reserveringen, weer en historie</span></li>
+          <li><b>Inkoper</b><span>Prijsstijgingen en marges per gerecht in beeld</span></li>
+          <li><b>Marketeer</b><span>Reviews beantwoord en social op orde</span></li>
+          <li><b>Administratie</b><span>Mails en rapportages vanzelf geregeld</span></li>
+        </ul>
+        <div class="res"><b>Wat het je oplevert</b>Je groeit zonder extra mensen aan te nemen, en krijgt je cijfers en adviezen op WhatsApp.</div>
+      </article>
+      <article class="u2 rv">
+        <span class="tag">Horecagroep &amp; keten</span>
+        <h3>Meer locaties? Eén lijn, elke locatie.</h3>
+        <p>Elke locatie werkt net anders en je kunt niet overal tegelijk zijn. SERVAI zet ze naast elkaar en meldt het zodra er één afwijkt.</p>
+        <ul>
+          <li><b>Naast elkaar</b><span>Locaties vergeleken op omzet, marge, bezetting en loonkosten</span></li>
+          <li><b>Alerts</b><span>Meldingen per locatie, naar de juiste persoon</span></li>
+          <li><b>Eigen KPI's</b><span>Sturen op dezelfde cijfers, rollen en rechten per team</span></li>
+          <li><b>Koppelingen</b><span>Met je kassa, rooster, inkoop en financiële pakket</span></li>
+          <li><b>Schaalbaar</b><span>Een locatie erbij zonder extra backoffice erbij</span></li>
+        </ul>
+        <div class="res"><b>Wat het je oplevert</b>Overzicht over al je locaties zonder dat je overhead meegroeit.</div>
+      </article>
+    </div>
   </div>
 </section>
 
