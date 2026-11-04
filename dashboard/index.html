@@ -388,6 +388,8 @@ body.on-assist .fab{display:none}
       <a href="#advies" data-v="advies"><svg><use href="#i-spark"/></svg><span>AI-advies</span></a>
       <div class="sep"></div>
       <div class="ng" data-g="beheer"><button type="button" class="nh"><svg><use href="#i-key"/></svg><span>Beheer</span><svg class="chv" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button><div class="nb"><a href="#koppelingen" data-v="koppelingen" class="sub"><svg><use href="#i-link"/></svg><span>Koppelingen</span></a><a href="#gebruikers" data-v="gebruikers" class="sub"><svg><use href="#i-key"/></svg><span>Gebruikers</span></a><a href="#support" data-v="support" class="sub"><svg><use href="#i-help"/></svg><span>Support</span></a></div></div>
+      <div class="ng" data-g="rec"><button type="button" class="nh"><svg><use href="#i-mail"/></svg><span>Receptie</span><svg class="chv" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button><div class="nb"><a href="#receptie" data-v="receptie" class="sub"><svg><use href="#i-mail"/></svg><span>AI-receptie</span></a></div></div>
+      <div class="ng" data-g="mkt"><button type="button" class="nh"><svg><use href="#i-mega"/></svg><span>Marketing</span><svg class="chv" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button><div class="nb"><a href="#social" data-v="social" class="sub"><svg><use href="#i-mega"/></svg><span>Social media</span></a></div></div>
       <div class="sep"></div>
       <a href="#assistent" data-v="assistent" class="ai"><svg><use href="#i-chat"/></svg><span>Vraag SERVAI</span></a>
     </nav>
@@ -418,7 +420,7 @@ body.on-assist .fab{display:none}
 <script>
 /* ---------------- data (seeded demo) ---------------- */
 let REAL=false,SB=null,KLANT='Struisenburg',KLANTNORM=30,KLANTID='';
-const REALPAGES=['overzicht','rooster','financien','menu','dranken','kansen','personeel','upselling','reserveringen','inkoop','gasten','assistent','meldingen','advies','koppelingen','gebruikers','support','loonkosten'];
+const REALPAGES=['overzicht','rooster','financien','menu','dranken','kansen','personeel','upselling','reserveringen','inkoop','gasten','assistent','meldingen','advies','koppelingen','gebruikers','support','loonkosten','social','receptie'];
 const RLAB={eigenaar:'Eigenaar',bedrijfsleider:'Bedrijfsleider',chef:'Chef-kok',boekhouder:'Boekhouder',bar:'Bar manager',gastvrouw:'Gastvrouw'};
 const LCOLS=['#3987e5','#d95926','#199e70','#c98500','#9b59b6','#16a085'];
 const LOCS=[
@@ -832,9 +834,9 @@ V.assistent=()=>({html:`<div class="c"><div class="chat">
 }});
 
 /* ---------------- account, gebruikers & toegang (demo) ---------------- */
-const PAGES=[['overzicht','Overzicht'],['financien','Financiën'],['menu','Gerechten'],['dranken','Dranken'],['kansen','Kansen'],['personeel','Personeel'],['rooster','Rooster'],['upselling','Upselling'],['reserveringen','Reserv.'],['inkoop','Inkoop'],['gasten','Gasten'],['assistent','Assistent'],['meldingen','Meldingen'],['advies','AI-advies'],['koppelingen','Koppelingen'],['gebruikers','Gebruikers'],['support','Support']];
+const PAGES=[['overzicht','Overzicht'],['financien','Financiën'],['menu','Gerechten'],['dranken','Dranken'],['kansen','Kansen'],['personeel','Personeel'],['rooster','Rooster'],['upselling','Upselling'],['reserveringen','Reserv.'],['inkoop','Inkoop'],['gasten','Gasten'],['assistent','Assistent'],['meldingen','Meldingen'],['advies','AI-advies'],['koppelingen','Koppelingen'],['gebruikers','Gebruikers'],['support','Support'],['receptie','AI-receptie'],['social','Social media']];
 const ALLP=PAGES.map(p=>p[0]);
-const PRESET={Eigenaar:ALLP,Bedrijfsleider:ALLP.filter(p=>p!=='gebruikers'&&p!=='koppelingen'),'Chef-kok':['overzicht','menu','dranken','kansen','inkoop','meldingen','support','assistent'],'Boekhouder':['overzicht','financien','inkoop','meldingen','support'],'Bar manager':['overzicht','dranken','personeel','rooster','upselling','inkoop','meldingen','support','assistent'],'Gastvrouw':['overzicht','rooster','reserveringen','gasten','meldingen','support','assistent']};
+const PRESET={Eigenaar:ALLP,Bedrijfsleider:ALLP.filter(p=>p!=='gebruikers'&&p!=='koppelingen'),'Chef-kok':['overzicht','menu','dranken','kansen','inkoop','meldingen','support','assistent'],'Boekhouder':['overzicht','financien','inkoop','meldingen','support'],'Bar manager':['overzicht','dranken','personeel','rooster','upselling','inkoop','meldingen','support','assistent'],'Gastvrouw':['overzicht','rooster','receptie','reserveringen','gasten','meldingen','support','assistent']};
 const USERS0=[
  {id:'u1',n:'Eva Bakker',e:'eva@struisenburg-demo.nl',r:'Eigenaar',locs:'all',st:'Actief',last:'Nu actief'},
  {id:'u2',n:'Mark de Wit',e:'mark@struisenburg-demo.nl',r:'Bedrijfsleider',locs:'cornelis',st:'Actief',last:'Vandaag 08:12'},
@@ -1532,7 +1534,7 @@ document.getElementById('view').addEventListener('click',e=>{
 
 /* ---------------- AI-advies: inzichten en aandachtspunten uit je cijfers (geen chat) ---------------- */
 const ADVK={warn:['#FFB86B','Aandacht'],goed:['#4ADE9A','Goed nieuws'],info:['#7C93FF','Kans']};
-const ADVP={financien:'Financiën',loonkosten:'Loonkosten',personeel:'Personeel',rooster:'Rooster',inkoop:'Menu & kostprijs',menu:'Verkoop gerechten',gasten:'Gasten & reviews',reserveringen:'Reserveringen',kansen:'Markt & kansen',dranken:'Dranken',upselling:'Upselling'};
+const ADVP={social:'Social media',receptie:'AI-receptie',financien:'Financiën',loonkosten:'Loonkosten',personeel:'Personeel',rooster:'Rooster',inkoop:'Menu & kostprijs',menu:'Verkoop gerechten',gasten:'Gasten & reviews',reserveringen:'Reserveringen',kansen:'Markt & kansen',dranken:'Dranken',upselling:'Upselling'};
 const advKey='servai-adv-klaar-'+(typeof KLANTID!=='undefined'&&KLANTID?KLANTID:'x');
 const advKlaar=()=>{try{return new Set(JSON.parse(localStorage.getItem(advKey)||'[]'))}catch(e){return new Set()}};
 const advSave=s=>{try{localStorage.setItem(advKey,JSON.stringify([...s].slice(-300)))}catch(e){}};
@@ -1657,6 +1659,40 @@ document.getElementById('view').addEventListener('click',e=>{
   render();
 });
 V.rooster=()=>rpPage(rooLoad);
+V.social=()=>{
+  const st=(n,t,x)=>`<div class="c span-4"><div style="display:flex;gap:10px;align-items:center;margin-bottom:8px"><span style="width:28px;height:28px;border-radius:50%;background:var(--panel-2);display:grid;place-items:center;font-weight:700;font-size:13px">${n}</span><h3 style="font-size:16px">${t}</h3></div><p style="color:var(--fg-2);font-size:14px">${x}</p></div>`;
+  const post=(net,kleur,kop,tekst,bron)=>`<div class="c span-4" style="display:flex;flex-direction:column;gap:10px"><div style="display:flex;justify-content:space-between;align-items:center"><b>${net}</b><span class="pill off">Voorbeeld</span></div><div style="height:140px;border-radius:12px;background:${kleur};display:flex;align-items:flex-end;padding:12px;font-weight:700;font-size:17px;line-height:1.2">${kop}</div><p style="font-size:14px;color:var(--fg-2)">${tekst}</p><p style="font-size:12px;color:var(--mute)">Gemaakt op basis van: ${bron}</p><div style="display:flex;gap:8px;margin-top:auto"><button class="act" disabled title="Beschikbaar in 2027" style="opacity:.55;cursor:not-allowed">Goedkeuren</button><button class="act ghost" disabled title="Beschikbaar in 2027" style="opacity:.55;cursor:not-allowed">Aanpassen</button></div></div>`;
+  return{html:`<div class="grid">
+   <div class="c span-12" style="border:1px solid var(--line-2)"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px"><h2>Social media op de automatische piloot</h2><span class="pill wait">Verwacht in 2027</span></div>
+    <p style="color:var(--fg-2);max-width:760px">Instagram en Facebook kosten tijd die je als ondernemer niet hebt. SERVAI maakt de posts, jij accepteert ze met één tik, en wij plaatsen ze automatisch op het juiste moment.</p>
+    <div style="margin-top:14px"><button class="act" data-ap-social>Houd me op de hoogte</button></div></div>
+   ${st(1,'SERVAI maakt de post','Tekst, beeld en hashtags, afgestemd op je menu, het weer, drukte, acties en evenementen.')}
+   ${st(2,'Jij keurt goed','Je krijgt een bericht op WhatsApp of in het dashboard. Accepteren, aanpassen of overslaan.')}
+   ${st(3,'Wij plaatsen automatisch','Na goedkeuring gaat de post op Instagram en Facebook, op het beste moment van de dag.')}
+   <div class="sec"><h2>Zo kan het eruitzien</h2><small>Voorbeelden met nepdata, de module is er nog niet</small></div>
+   ${post('Instagram','linear-gradient(135deg,#7C93FF,#E0568B)','Terras open! 24° en zon','Zaterdag 24 graden en zonnig. Kom lekker op ons terras zitten met een koud biertje en onze nieuwe kapsalon. Tot zaterdag!','weer, terras en gerecht van de week')}
+   ${post('Facebook','linear-gradient(135deg,#2C3E8F,#4ADE9A)','Gerecht van de week: Kapsalon','Deze week vers van de kaart: onze kapsalon met knapperige friet en huisgemaakte knoflooksaus. Reserveer nu je tafel.','menu en verkoop per gerecht')}
+   ${post('Instagram','linear-gradient(135deg,#FFB86B,#E0568B)','Zondag: voetbal op groot scherm','Zondag kijken we samen naar de wedstrijd. Bestel vooraf een bittergarnituur en reserveer je plek aan de bar.','evenementen in de buurt')}
+   <div class="c span-12"><p style="color:var(--mute);font-size:12.5px">Je blijft altijd zelf in controle: er wordt niets geplaatst zonder jouw goedkeuring.</p></div></div>`,after(){}}
+};
+document.getElementById('view').addEventListener('click',e=>{if(e.target.closest('[data-ap-social]')){e.target.closest('[data-ap-social]').textContent='✓ Genoteerd';flash('We houden je op de hoogte')}});
+V.receptie=()=>{
+  const st=(n,t,x)=>`<div class="c span-4"><div style="display:flex;gap:10px;align-items:center;margin-bottom:8px"><span style="width:28px;height:28px;border-radius:50%;background:var(--panel-2);display:grid;place-items:center;font-weight:700;font-size:13px">${n}</span><h3 style="font-size:16px">${t}</h3></div><p style="color:var(--fg-2);font-size:14px">${x}</p></div>`;
+  const R=[['Nieuw','wait','Mirjam de Boer','Verjaardag 40 personen, zaterdag 28 november','Vraagt naar een zaal, een driegangenmenu en 2 vegetarische gasten.','Vrije zaal op 28 nov: ja (max. 45 personen). Concept met menuopties en prijsindicatie staat klaar.'],
+   ['Concept klaar','ok','Bakkerij Smit','Bedrijfsuitje 25 personen, vrijdag 12 december','Wil een borrel met warm buffet, van 17:00 tot 21:00.','Beschikbaar. Concept-offerte klaar, wacht op jouw akkoord.'],
+   ['Wacht op klant','off','Jeroen Visser','Vraag over allergenen en openingstijden','Heeft een notenallergie en vraagt of de kaart daarop is aangepast.','Antwoord verstuurd. Wacht op reactie van de gast.'],
+   ['Nieuw','wait','Sanne Peters','Reservering van vrijdag verplaatsen','Wil van vrijdag 6 november naar zaterdag 7 november, 6 personen.','Zaterdag 19:00 is nog vrij. Voorstel klaar om te bevestigen.']];
+  return{html:`<div class="grid">
+   <div class="c span-12" style="border:1px solid var(--line-2)"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px"><h2>AI-receptie voor je back-office</h2><span class="pill wait">Binnenkort</span></div>
+    <p style="color:var(--fg-2);max-width:760px">Aanvragen voor feesten en partijen, vragen per mail, reserveringen verplaatsen: er komt veel binnen en het kost uren. SERVAI leest mee, zoekt de antwoorden op en maakt een antwoord klaar. Jij kijkt het na en verstuurt het met één tik.</p>
+    <div style="margin-top:14px"><button class="act" data-ap-social>Houd me op de hoogte</button></div></div>
+   ${st(1,'SERVAI leest de aanvraag','Uit mail, het formulier op je website of WhatsApp. Datum, aantal personen, wensen en vragen worden herkend.')}
+   ${st(2,'Checkt en maakt een antwoord','Met je reserveringen, rooster en menu erbij. Is de zaal vrij, kunnen we dat aan, wat kost het ongeveer?')}
+   ${st(3,'Jij of je receptioniste keurt goed','Je ziet de aanvraag en het concept naast elkaar. Aanpassen, versturen of zelf bellen.')}
+   <div class="sec"><h2>Zo kan het eruitzien</h2><small>Voorbeelden met nepdata, de module is er nog niet</small></div>
+   <div class="c span-12" style="padding:6px 0 0">${R.map(r=>`<div style="padding:12px 14px;border-bottom:1px solid var(--line);display:grid;gap:6px"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="pill ${r[1]}">${r[0]}</span><b>${r[3]}</b></div><div style="color:var(--mute);font-size:12.5px">${r[2]}</div><p style="font-size:14px;color:var(--fg-2)">${r[4]}</p><p style="font-size:14px"><b>SERVAI:</b> ${r[5]}</p><div style="display:flex;gap:8px"><button class="act" disabled title="Binnenkort" style="opacity:.55;cursor:not-allowed">Versturen</button><button class="act ghost" disabled title="Binnenkort" style="opacity:.55;cursor:not-allowed">Aanpassen</button></div></div>`).join('')}</div>
+   <div class="c span-12"><p style="color:var(--mute);font-size:12.5px">Er wordt nooit iets verstuurd zonder jouw goedkeuring.</p></div></div>`,after(){}}
+};
 async function finLoad(wrap){
   const D=await rpHaal();if(document.getElementById('rp-wrap')!==wrap)return;
   if(!D.cur.length){wrap.innerHTML=rpLeeg();return}
@@ -1975,7 +2011,7 @@ function jumpSpy(){
 }
 addEventListener('scroll',()=>{if(jumpNav)requestAnimationFrame(jumpSpy)},{passive:true});
 /* ---------------- router ---------------- */
-const TITLES={loonkosten:'Loonkosten',upselling:'Upselling',kansen:'Markt & kansen',gebruikers:'Gebruikers',koppelingen:'Koppelingen',meldingen:'Meldingen',advies:'AI-advies',support:'Support',dranken:'Dranken',overzicht:'Overzicht',financien:'Financiën',menu:'Verkoop gerechten',personeel:'Personeel',reserveringen:'Reserveringen',inkoop:'Menu & kostprijs',gasten:'Gasten & reviews',assistent:'Vraag SERVAI'};
+const TITLES={loonkosten:'Loonkosten',upselling:'Upselling',kansen:'Markt & kansen',gebruikers:'Gebruikers',koppelingen:'Koppelingen',meldingen:'Meldingen',advies:'AI-advies',support:'Support',dranken:'Dranken',overzicht:'Overzicht',financien:'Financiën',menu:'Verkoop gerechten',personeel:'Personeel',reserveringen:'Reserveringen',inkoop:'Menu & kostprijs',gasten:'Gasten & reviews',assistent:'Vraag SERVAI',social:'Social media',receptie:'AI-receptie'};
 function navSync(){
   document.querySelectorAll('#nav .ng').forEach(g=>{g.hidden=![...g.querySelectorAll('a[data-v]')].some(a=>!a.hidden)});
   const act=document.querySelector('#nav a.on'),grp=act&&act.closest('.ng');
@@ -2000,7 +2036,7 @@ function render(){
   let v=(location.hash||'#overzicht').slice(1);if(!V[v]||!can(v))v=firstAllowed();state.view=v;killCharts();
   const h=new Date().getHours();const greet=h<12?'Goedemorgen':h<18?'Goedemiddag':'Goedenavond';
   document.getElementById('title').textContent=state.view==='overzicht'?greet+', '+cur().n.split(' ')[0]:TITLES[state.view];
-  document.getElementById('period').style.display=['kansen','gebruikers','koppelingen','meldingen','support','assistent','rooster'].includes(state.view)?'none':'';
+  document.getElementById('period').style.display=['kansen','gebruikers','koppelingen','meldingen','support','assistent','rooster','social','receptie'].includes(state.view)?'none':'';
   document.getElementById('subtitle').textContent=locName()+' · '+(state.view==='gebruikers'?'toegang & rollen':state.view==='koppelingen'?'systemen die data aanleveren':state.view==='meldingen'?'WhatsApp en mail, per persoon':state.view==='advies'?'wat opvalt en waar je iets mee kunt':state.view==='support'?'meld een bug of probleem':state.view==='kansen'?'markt, laatste 12 maanden':perName())+' · bijgewerkt '+String(new Date().getHours()).padStart(2,'0')+':'+String(new Date().getMinutes()).padStart(2,'0');
   document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===state.view));navSync();
   document.body.classList.toggle('on-assist',state.view==='assistent');
