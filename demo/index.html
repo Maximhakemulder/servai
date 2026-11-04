@@ -1543,6 +1543,42 @@ async function dFetch(t){
   return A.map(x=>({locatie_id:'x',bedrijfsdag:'2026-11-01',artikel:x[0],groep:x[1],aantal:40,omzet:x[2]*40}));
 }
 
+/* ---------------- AI-advies: inzichten en aandachtspunten uit je cijfers (geen chat) ---------------- */
+const ADVK={warn:['#FFB86B','Aandacht'],goed:['#4ADE9A','Goed nieuws'],info:['#7C93FF','Kans']};
+const ADVP={financien:'Financiën',loonkosten:'Loonkosten',personeel:'Personeel',inkoop:'Menu & kostprijs',menu:'Verkoop gerechten',gasten:'Gasten & reviews',reserveringen:'Reserveringen',kansen:'Markt & kansen',dranken:'Dranken',upselling:'Upselling'};
+function advHtml(items,wacht,sub){
+  const n=t=>items.filter(i=>i.t===t).length;
+  const cats=[...new Set(items.map(i=>i.c))];
+  const kaart=i=>{const k=ADVK[i.t];return `<div class="c span-6" data-adc="${esc(i.c)}" style="border-left:3px solid ${k[0]};display:flex;flex-direction:column;gap:8px"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="font-size:11.5px;font-weight:600;color:${k[0]};text-transform:uppercase;letter-spacing:.04em">${k[1]}</span><span style="color:var(--mute);font-size:12px">${esc(i.c)}</span></div><h3 style="font-size:16px;line-height:1.3">${esc(i.h)}</h3><p style="color:var(--fg-2);font-size:14px">${esc(i.x)}</p>${i.a?`<p style="font-size:14px"><b>Advies:</b> ${esc(i.a)}</p>`:''}${i.v?`<div style="margin-top:auto"><a class="act ghost" href="#${i.v}" style="text-decoration:none;display:inline-block">Bekijk ${esc(ADVP[i.v]||i.v)}</a></div>`:''}</div>`};
+  return `<div class="grid">`+
+   rpKpi('Aandachtspunten',nf(n('warn')),'<span class="delta '+(n('warn')?'down':'flat')+'">'+(n('warn')?'nu bekijken':'alles rustig')+'</span>','waar je iets mee kunt')+
+   rpKpi('Goed nieuws',nf(n('goed')),'<span class="delta up">op koers</span>','wat goed gaat')+
+   rpKpi('Kansen',nf(n('info')),'<span class="delta flat">tips</span>','extra omzet of besparing')+
+   rpKpi('Onderwerpen',nf(cats.length),'<span class="delta flat">gecheckt</span>',sub||'')+
+   (items.length?`<div class="c span-12" style="display:flex;flex-direction:row;gap:8px;flex-wrap:wrap;align-items:center"><button class="act" data-adf="">Alles</button>${cats.map(c=>`<button class="act ghost" data-adf="${esc(c)}">${esc(c)}</button>`).join('')}</div>`:'')+
+   (items.length?items.map(kaart).join(''):'<div class="c span-12"><p style="color:var(--mute)">Nog geen inzichten. Zodra er genoeg data is, verschijnen ze hier vanzelf.</p></div>')+
+   (wacht&&wacht.length?`<div class="c span-12"><div class="ch"><div><h2>Nog niet beschikbaar</h2><p>Deze onderwerpen vullen zich zodra de koppeling actief is</p></div></div>${wacht.map(w=>`<p style="margin:6px 0"><b>${esc(w[0])}</b> <span style="color:var(--mute)">${esc(w[1])}</span></p>`).join('')}</div>`:'')+
+   `<div class="c span-12"><p style="color:var(--mute);font-size:12.5px">SERVAI adviseert en signaleert. Prijzen, roosters en bestellingen pas je altijd zelf aan.</p></div></div>`;
+}
+document.getElementById('view').addEventListener('click',e=>{const b=e.target.closest('[data-adf]');if(!b)return;const f=b.dataset.adf;
+  document.querySelectorAll('[data-adf]').forEach(x=>x.classList.toggle('ghost',x!==b));
+  document.querySelectorAll('[data-adc]').forEach(c=>{c.style.display=!f||c.dataset.adc===f?'':'none'})});
+const ADEMO=[
+ {t:'goed',c:'Omzet',h:'Omzet groeit +8,4%',x:'€ 61.200 tegenover € 56.450 in de vorige periode.',v:'financien'},
+ {t:'goed',c:'Omzet',h:'Gemiddelde bon stijgt +4,1%',x:'€ 42,80 per bon tegenover € 41,10 eerder.',v:'financien'},
+ {t:'info',c:'Omzet',h:'Dinsdag is je zwakste dag',x:'Gemiddeld € 3.150, 31% onder je gemiddelde dag.',a:'Plan op deze dag minder personeel of bedenk een actie die gasten trekt.',v:'financien'},
+ {t:'warn',c:'Personeel',h:'Loonkosten 33,1% van omzet, doel 30%',x:'3,1 procentpunt boven je doel (€ 20.260 op € 61.200 omzet). Vooral dinsdag en woensdag.',a:'Bekijk de dagen met de hoogste loonkosten en pas het rooster aan.',v:'loonkosten'},
+ {t:'warn',c:'Inkoop',h:'Tomaat +20,8% bij Groenteboer',x:'Van € 2,40 naar € 2,90 per kg. Raakt: Hamburger, Caesar salade.',a:'Kijk of je verkoopprijs of leverancier nog klopt.',v:'inkoop'},
+ {t:'warn',c:'Inkoop',h:'Friet +12,0% bij Hanos',x:'Van € 2,00 naar € 2,24 per kg. Raakt: Friet speciaal, Kapsalon.',a:'Kijk of je verkoopprijs of leverancier nog klopt.',v:'inkoop'},
+ {t:'warn',c:'Menu',h:'Hamburger: food cost 36,3%',x:'Kostprijs € 4,10 bij verkoopprijs € 13,50.',a:'Boven 35% blijft er weinig marge over.',v:'inkoop'},
+ {t:'info',c:'Menu',h:'3 gerechten zonder kostprijs',x:'Zonder kostprijs kan SERVAI geen food cost en geen prijsstijgingen voor die gerechten laten zien.',a:'Vul de kostprijs in bij Menu & kostprijs.',v:'inkoop'},
+ {t:'info',c:'Weer',h:'Zaterdag 24° en zonnig',x:'Op zonnige zaterdagen is je terras gemiddeld 35% drukker.',a:'Zet extra bediening en drank klaar voor het terras.',v:'kansen'},
+ {t:'info',c:'Evenement',h:'Zondag voetbalwedstrijd in de buurt',x:'Eerdere wedstrijddagen gaven +15% omzet aan de bar.',a:'Plan een extra barmedewerker in.',v:'kansen'},
+ {t:'warn',c:'Reserveringen',h:'No-shows op vrijdag: 9%',x:'Dat zijn gemiddeld 14 couverts per vrijdag.',a:'Stuur een bevestiging of herinnering een dag van tevoren.',v:'reserveringen'},
+ {t:'goed',c:'Gasten',h:'Gemiddelde review 4,6',x:'12 nieuwe reviews deze periode, 3 noemen de snelle bediening.',v:'gasten'},
+ {t:'warn',c:'Gasten',h:'2 reviews noemen wachttijd',x:'Beide op zaterdagavond tussen 19:00 en 20:30.',a:'Kijk naar de bezetting in de bediening op dat moment.',v:'gasten'}
+];
+V.advies=()=>({html:advHtml(ADEMO,[],'voorbeelddata')});
 V.inkoop=()=>rpPage(ikLoad);
 (()=>{const p=V.personeel;V.personeel=()=>{const o=p();o.html=o.html.replace('<div class="grid">','<div class="grid">'+upKnoppen(['gewerkt','gepland']));return o}})();
 
@@ -1764,8 +1800,8 @@ function render(){
   let v=(location.hash||'#overzicht').slice(1);if(!V[v]||!can(v))v=firstAllowed();state.view=v;killCharts();
   const h=new Date().getHours();const greet=h<12?'Goedemorgen':h<18?'Goedemiddag':'Goedenavond';
   document.getElementById('title').textContent=state.view==='overzicht'?greet+', '+cur().n.split(' ')[0]:TITLES[state.view];
-  document.getElementById('period').style.visibility=['kansen','gebruikers','koppelingen','meldingen','advies','support','assistent'].includes(state.view)?'hidden':'';
-  document.getElementById('subtitle').textContent=locName()+' · '+(state.view==='gebruikers'?'toegang & rollen':state.view==='koppelingen'?'systemen die data aanleveren':state.view==='meldingen'?'WhatsApp en mail, per persoon':state.view==='advies'?'AI-consultancy voor je zaak':state.view==='support'?'meld een bug of probleem':state.view==='kansen'?'markt, laatste 12 maanden':perName())+' · bijgewerkt '+String(new Date().getHours()).padStart(2,'0')+':'+String(new Date().getMinutes()).padStart(2,'0');
+  document.getElementById('period').style.visibility=['kansen','gebruikers','koppelingen','meldingen','support','assistent'].includes(state.view)?'hidden':'';
+  document.getElementById('subtitle').textContent=locName()+' · '+(state.view==='gebruikers'?'toegang & rollen':state.view==='koppelingen'?'systemen die data aanleveren':state.view==='meldingen'?'WhatsApp en mail, per persoon':state.view==='advies'?'wat opvalt en waar je iets mee kunt':state.view==='support'?'meld een bug of probleem':state.view==='kansen'?'markt, laatste 12 maanden':perName())+' · bijgewerkt '+String(new Date().getHours()).padStart(2,'0')+':'+String(new Date().getMinutes()).padStart(2,'0');
   document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===state.view));navSync();
   document.body.classList.toggle('on-assist',state.view==='assistent');
   const out=V[state.view]();const el=document.getElementById('view');el.innerHTML=`<div class="view">${out.html}</div>`;out.after&&out.after();buildJump();
