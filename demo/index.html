@@ -66,6 +66,8 @@ button{font:inherit;color:inherit}
 .seg{display:inline-flex;padding:3px;border-radius:12px;background:var(--panel);border:1px solid var(--line-2)}
 .seg button{border:0;background:none;padding:7px 12px;border-radius:9px;font-size:13.5px;font-weight:500;color:var(--fg-2);cursor:pointer}
 .seg button.on{background:var(--panel-2);color:#fff;box-shadow:inset 0 0 0 1px var(--line-2)}
+.seg .sh{display:none}
+@media (max-width:760px){.ctrls{width:100%}.seg{display:flex;width:100%;padding:3px}.seg .lg{display:none}.seg .sh{display:inline}.seg button{flex:1 1 auto;padding:8px 4px;font-size:13px;white-space:nowrap;text-align:center}}
 .betabar[hidden]{display:none!important}.betabar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;background:rgba(250,178,25,.07);border:1px solid rgba(250,178,25,.25);color:#F3DFA8;font-size:13px;margin-bottom:20px}
 .betabar b{color:var(--warn)}
 
@@ -1970,7 +1972,7 @@ function render(){
   document.querySelectorAll('#period button').forEach(b=>b.classList.toggle('on',+b.dataset.p===state.period));
 }
 document.getElementById('view').addEventListener('click',e=>{const b=e.target.closest('.act[data-done]');if(!b)return;b.textContent='✓ '+b.dataset.done;b.classList.add('done');b.removeAttribute('data-done')});
-document.getElementById('period').innerHTML=PERS.map(x=>`<button data-p="${x[0]}">${x[1]}</button>`).join('');
+document.getElementById('period').innerHTML=PERS.map(x=>`<button data-p="${x[0]}"><span class="lg">${x[1]}</span><span class="sh">${x[1].replace(' dagen','d').replace('Dit jaar','Jaar')}</span></button>`).join('');
 const sel=document.getElementById('loc');sel.innerHTML=`<option value="all">${KLANT} · alle locaties</option>`+LOCS.map(l=>`<option value="${l.id}">${l.name}</option>`).join('');sel.value=state.loc;
 sel.addEventListener('change',()=>{state.loc=sel.value;save();render()});
 document.getElementById('period').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;state.period=+b.dataset.p;save();render()});
