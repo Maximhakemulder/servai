@@ -220,6 +220,7 @@ body.on-assist .fab{display:none}
 .nav .ng.open .nb{display:flex}
 .nav .ng[hidden]{display:none!important}
 .subbar{display:none}
+@media (max-width:600px){.adr [data-adt]>span{display:none!important}.adr [data-adt]>b{white-space:normal!important}}
 /* phone */
 @media (max-width:900px){
   .app{grid-template-columns:1fr}
@@ -1510,23 +1511,39 @@ document.getElementById('view').addEventListener('click',e=>{
 /* ---------------- AI-advies: inzichten en aandachtspunten uit je cijfers (geen chat) ---------------- */
 const ADVK={warn:['#FFB86B','Aandacht'],goed:['#4ADE9A','Goed nieuws'],info:['#7C93FF','Kans']};
 const ADVP={financien:'Financiën',loonkosten:'Loonkosten',personeel:'Personeel',inkoop:'Menu & kostprijs',menu:'Verkoop gerechten',gasten:'Gasten & reviews',reserveringen:'Reserveringen',kansen:'Markt & kansen',dranken:'Dranken',upselling:'Upselling'};
+const advKey='servai-adv-klaar-'+(typeof KLANTID!=='undefined'&&KLANTID?KLANTID:'x');
+const advKlaar=()=>{try{return new Set(JSON.parse(localStorage.getItem(advKey)||'[]'))}catch(e){return new Set()}};
+const advSave=s=>{try{localStorage.setItem(advKey,JSON.stringify([...s].slice(-300)))}catch(e){}};
+let ADVS=null,advF='';
+const advId=i=>i.c+'|'+i.h;
 function advHtml(items,wacht,sub){
-  const n=t=>items.filter(i=>i.t===t).length;
-  const cats=[...new Set(items.map(i=>i.c))];
-  const kaart=i=>{const k=ADVK[i.t];return `<div class="c span-6" data-adc="${esc(i.c)}" style="border-left:3px solid ${k[0]};display:flex;flex-direction:column;gap:8px"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="font-size:11.5px;font-weight:600;color:${k[0]};text-transform:uppercase;letter-spacing:.04em">${k[1]}</span><span style="color:var(--mute);font-size:12px">${esc(i.c)}</span></div><h3 style="font-size:16px;line-height:1.3">${esc(i.h)}</h3><p style="color:var(--fg-2);font-size:14px">${esc(i.x)}</p>${i.a?`<p style="font-size:14px"><b>Advies:</b> ${esc(i.a)}</p>`:''}${i.v?`<div style="margin-top:auto"><a class="act ghost" href="#${i.v}" style="text-decoration:none;display:inline-block">Bekijk ${esc(ADVP[i.v]||i.v)}</a></div>`:''}</div>`};
-  return `<div class="grid">`+
+  ADVS={items,wacht,sub};const klaar=advKlaar();
+  const ORD={warn:0,info:1,goed:2},open=items.filter(i=>!klaar.has(advId(i))).sort((x,y)=>ORD[x.t]-ORD[y.t]),af=items.filter(i=>klaar.has(advId(i)));
+  const n=t=>open.filter(i=>i.t===t).length;
+  const cats=[...new Set(open.map(i=>i.c))];
+  const rij=(i,done)=>{const k=ADVK[i.t];return `<div class="adr" data-adc="${esc(i.c)}" data-id="${esc(advId(i))}" style="border-bottom:1px solid var(--line);border-left:3px solid ${done?'transparent':k[0]};${done?'opacity:.55':''}"><div style="display:flex;align-items:center;gap:12px;padding:9px 12px;cursor:pointer" data-adt><input type="checkbox" data-add aria-label="Afvinken"${done?' checked':''} style="width:18px;height:18px;flex:none;cursor:pointer"><span style="flex:none;width:86px;font-size:11.5px;color:var(--mute)">${esc(i.c)}</span><b style="font-size:14.5px;font-weight:600;${done?'text-decoration:line-through;':''}flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(i.h)}</b><svg class="chv" viewBox="0 0 24 24" style="width:15px;height:15px;flex:none;fill:none;stroke:var(--mute);stroke-width:1.8;stroke-linecap:round"><path d="M9 6l6 6-6 6"/></svg></div><div class="adx" hidden style="padding:0 12px 12px 52px"><p style="color:var(--fg-2);font-size:14px">${esc(i.x)}</p>${i.a?`<p style="font-size:14px;margin-top:4px"><b>Advies:</b> ${esc(i.a)}</p>`:''}${i.v?`<a class="act ghost" href="#${i.v}" style="text-decoration:none;display:inline-block;margin-top:8px">Bekijk ${esc(ADVP[i.v]||i.v)}</a>`:''}</div></div>`};
+  return `<div class="grid" id="adv-root">`+
    rpKpi('Aandachtspunten',nf(n('warn')),'<span class="delta '+(n('warn')?'down':'flat')+'">'+(n('warn')?'nu bekijken':'alles rustig')+'</span>','waar je iets mee kunt')+
    rpKpi('Goed nieuws',nf(n('goed')),'<span class="delta up">op koers</span>','wat goed gaat')+
    rpKpi('Kansen',nf(n('info')),'<span class="delta flat">tips</span>','extra omzet of besparing')+
-   rpKpi('Onderwerpen',nf(cats.length),'<span class="delta flat">gecheckt</span>',sub||'')+
-   (items.length?`<div class="c span-12" style="display:flex;flex-direction:row;gap:8px;flex-wrap:wrap;align-items:center"><button class="act" data-adf="">Alles</button>${cats.map(c=>`<button class="act ghost" data-adf="${esc(c)}">${esc(c)}</button>`).join('')}</div>`:'')+
-   (items.length?items.map(kaart).join(''):'<div class="c span-12"><p style="color:var(--mute)">Nog geen inzichten. Zodra er genoeg data is, verschijnen ze hier vanzelf.</p></div>')+
+   rpKpi('Afgevinkt',nf(af.length),'<span class="delta flat">afgehandeld</span>',sub||'')+
+   `<div class="c span-12" style="padding:6px 0 0">`+
+   (cats.length>1?`<div style="display:flex;flex-direction:row;gap:8px;flex-wrap:wrap;padding:10px 12px"><button class="act${advF?' ghost':''}" data-adf="">Alles</button>${cats.map(c=>`<button class="act${advF===c?'':' ghost'}" data-adf="${esc(c)}">${esc(c)}</button>`).join('')}</div>`:'')+
+   (open.length?open.filter(i=>!advF||i.c===advF).map(i=>rij(i,false)).join(''):'<p style="color:var(--mute);padding:12px">'+(items.length?'Alles afgevinkt. Netjes!':'Nog geen inzichten. Zodra er genoeg data is, verschijnen ze hier vanzelf.')+'</p>')+
+   `</div>`+
+   (af.length?`<details class="c span-12"><summary style="cursor:pointer;font-weight:600">Afgevinkt (${af.length})</summary><div style="margin-top:8px">${af.map(i=>rij(i,true)).join('')}</div></details>`:'')+
    (wacht&&wacht.length?`<div class="c span-12"><div class="ch"><div><h2>Nog niet beschikbaar</h2><p>Deze onderwerpen vullen zich zodra de koppeling actief is</p></div></div>${wacht.map(w=>`<p style="margin:6px 0"><b>${esc(w[0])}</b> <span style="color:var(--mute)">${esc(w[1])}</span></p>`).join('')}</div>`:'')+
-   `<div class="c span-12"><p style="color:var(--mute);font-size:12.5px">SERVAI adviseert en signaleert. Prijzen, roosters en bestellingen pas je altijd zelf aan.</p></div></div>`;
+   `<div class="c span-12"><p style="color:var(--mute);font-size:12.5px">SERVAI adviseert en signaleert. Prijzen, roosters en bestellingen pas je altijd zelf aan. Afvinken wordt in deze browser onthouden.</p></div></div>`;
 }
-document.getElementById('view').addEventListener('click',e=>{const b=e.target.closest('[data-adf]');if(!b)return;const f=b.dataset.adf;
-  document.querySelectorAll('[data-adf]').forEach(x=>x.classList.toggle('ghost',x!==b));
-  document.querySelectorAll('[data-adc]').forEach(c=>{c.style.display=!f||c.dataset.adc===f?'':'none'})});
+document.getElementById('view').addEventListener('click',e=>{
+  const r=document.getElementById('adv-root');if(!r||!ADVS||!r.contains(e.target))return;
+  const f=e.target.closest('[data-adf]');
+  if(f){advF=f.dataset.adf;r.outerHTML=advHtml(ADVS.items,ADVS.wacht,ADVS.sub);return}
+  const c=e.target.closest('[data-add]');
+  if(c){const id=c.closest('.adr').dataset.id,k=advKlaar();c.checked?k.add(id):k.delete(id);advSave(k);r.outerHTML=advHtml(ADVS.items,ADVS.wacht,ADVS.sub);return}
+  if(e.target.closest('a'))return;
+  const t=e.target.closest('[data-adt]');if(t){const x=t.nextElementSibling;x.hidden=!x.hidden;t.querySelector('.chv').style.transform=x.hidden?'':'rotate(90deg)'}
+});
 async function advLoad(wrap){
   const D=await rpHaal();if(document.getElementById('rp-wrap')!==wrap)return;
   const it=[],pct=p=>(p>0?'+':'−')+nl1(Math.abs(p))+'%';
