@@ -614,7 +614,6 @@ footer.foot::before{content:"";position:absolute;top:0;left:0;right:0;height:2px
       <a href="#personeel">Personeelskosten</a>
       <a href="#hoe">Hoe het werkt</a>
       <a href="#modules">Platform</a>
-      <a href="#rekenen">Besparing</a>
       <a href="#advies">AI-advies</a>
       <a href="#faq">Vragen</a>
     </div>
@@ -862,52 +861,7 @@ footer.foot::before{content:"";position:absolute;top:0;left:0;right:0;height:2px
   </div>
 </section>
 
-<section class="sec" id="rekenen" style="padding-top:20px">
-  <div class="wrap">
-    <div class="sec-head rv">
-      <span class="eyebrow"><svg class="mk" viewBox="0 0 64 48"><use href="#brand" style="color:#8E95D0"/></svg>Rekenvoorbeeld</span>
-      <h2>Wat laat jij <span class="gtext">liggen?</span></h2>
-      <p>Schuif met je eigen cijfers en zie een indicatie van wat slimmer roosteren, betere marges en minder handwerk per maand kunnen opleveren.</p>
-    </div>
-    <div class="calc rv">
-      <div class="calc-in">
-        <div class="field">
-          <label for="c-rev">Omzet per maand <output id="o-rev"></output></label>
-          <input type="range" id="c-rev" min="20000" max="1000000" step="5000" value="120000">
-        </div>
-        <div class="field">
-          <label for="c-hours">Personeelsuren per week <output id="o-hours"></output></label>
-          <input type="range" id="c-hours" min="40" max="3000" step="10" value="420">
-          <small>Alle medewerkers samen, inclusief oproepkrachten</small>
-        </div>
-        <div class="field">
-          <label for="c-wage">Loonkosten per uur <output id="o-wage"></output></label>
-          <input type="range" id="c-wage" min="15" max="45" step="1" value="24">
-          <small>Inclusief werkgeverslasten</small>
-        </div>
-        <div class="field">
-          <label for="c-admin">Uren admin per week (jij en je managers) <output id="o-admin"></output></label>
-          <input type="range" id="c-admin" min="0" max="80" step="1" value="12">
-        </div>
-      </div>
-      <div class="calc-out" aria-live="polite">
-        <div>
-          <div class="lbl">Indicatie besparing per maand</div>
-          <div class="big" id="o-total">€ 0</div>
-          <div class="hrs"><svg class="ti" style="stroke:#fff"><use href="#i-clock"/></svg>en <b id="o-hrs">0</b> uur per maand terug, dat is <b id="o-fte">0</b> fte</div>
-        </div>
-        <div class="calc-split">
-          <div><small>Slimmer roosteren</small><b id="o-staff">€ 0</b></div>
-          <div><small>Betere marge</small><b id="o-margin">€ 0</b></div>
-          <div><small>Minder handwerk</small><b id="o-time">€ 0</b></div>
-          <div><small>Per jaar</small><b id="o-year">€ 0</b></div>
-        </div>
-        <a class="btn" href="#demo">Bespreek dit met ons<span class="arrow">→</span></a>
-        <p class="fine">Rekenvoorbeeld op basis van aannames: 6% efficiënter roosteren, 1,5% omzet extra marge door menu en inkoop, 60% minder handwerk. Je werkelijke resultaat bepalen we samen in de demo.</p>
-      </div>
-    </div>
-  </div>
-</section>
+
 
 <section class="sec" style="padding-top:20px">
   <div class="wrap">
@@ -1051,7 +1005,7 @@ footer.foot::before{content:"";position:absolute;top:0;left:0;right:0;height:2px
       </nav>
       <nav class="f-col" aria-label="Besparen">
         <h4>Besparen</h4>
-        <a href="#personeel">Personeelskosten</a><a href="#rekenen">Rekentool</a><a href="#partners">Partners</a><a href="#faq">Vragen</a>
+        <a href="#personeel">Personeelskosten</a><a href="#partners">Partners</a><a href="#faq">Vragen</a>
       </nav>
       <div class="f-col">
         <h4>Contact</h4>
@@ -1174,18 +1128,6 @@ let cur=0;
 M.forEach((m,i)=>{const b=document.createElement('button');b.className='tab';b.setAttribute('role','tab');b.innerHTML=`<span class="tl"><svg class="ti"><use href="#${m.i}"/></svg>${m.k}</span><small>${m.s}</small>`;b.onclick=()=>{show(i);stopAuto()};tabs.appendChild(b)});
 tabs.addEventListener('keydown',e=>{if(['ArrowDown','ArrowRight'].includes(e.key)){e.preventDefault();show((cur+1)%M.length,1);stopAuto()}if(['ArrowUp','ArrowLeft'].includes(e.key)){e.preventDefault();show((cur-1+M.length)%M.length,1);stopAuto()}});
 show(0);let auto=RM?null:setInterval(()=>{const r=panel.getBoundingClientRect();if(r.top<innerHeight&&r.bottom>0)show((cur+1)%M.length)},5500);function stopAuto(){clearInterval(auto)}
-
-/* calculator */
-const eur=n=>'€ '+Math.round(n).toLocaleString('nl-NL');
-const C=['rev','hours','wage','admin'].map(k=>document.getElementById('c-'+k));
-function calc(){C.forEach(i=>i.style.setProperty('--p',(i.value-i.min)/(i.max-i.min)*100+'%'));
-const[rev,hrs,wage,adm]=C.map(i=>+i.value);
-document.getElementById('o-rev').textContent=eur(rev);document.getElementById('o-hours').textContent=hrs+' uur';document.getElementById('o-wage').textContent=eur(wage);document.getElementById('o-admin').textContent=adm+' uur';
-const staff=hrs*4.33*wage*.06,margin=rev*.015,time=adm*4.33*.6*35,tot=staff+margin+time;
-document.getElementById('o-staff').textContent=eur(staff);document.getElementById('o-margin').textContent=eur(margin);document.getElementById('o-time').textContent=eur(time);document.getElementById('o-year').textContent=eur(tot*12);{const h=adm*4.33*.6+hrs*4.33*.06;document.getElementById('o-hrs').textContent=Math.round(h);document.getElementById('o-fte').textContent=(h/(38*4.33)).toLocaleString('nl-NL',{maximumFractionDigits:1});}
-tween(tot)}
-let shown=0,raf;function tween(to){cancelAnimationFrame(raf);const from=shown,t0=performance.now();const el=document.getElementById('o-total');(function f(t){const p=RM?1:Math.min(1,(t-t0)/450),v=from+(to-from)*(1-Math.pow(1-p,3));el.textContent=eur(v);shown=v;if(p<1)raf=requestAnimationFrame(f)})(t0)}
-C.forEach(i=>i.addEventListener('input',calc));calc();
 
 /* chips onboarding animation */
 (()=>{const names=['Omzetdashboard','WhatsApp-assistent','Roosteradvies','Upselling-score','Menu engineering','Prijsalerts','No-show voorspelling','Partijen automatiseren','Review-antwoorden','Social kalender','Cashflow-forecast','HACCP digitaal','Locaties vergelijken','Mailafhandeling'];
