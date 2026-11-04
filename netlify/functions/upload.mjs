@@ -1,5 +1,5 @@
 // Voor SERVAI-beheerders en voor de eigen medewerkers van een klant (eigenaar, bedrijfsleider, boekhouder): leest uren, rooster of inkoop in uit een bestand dat in /beheer is herkend.
-// Body: { locatie_id, soort: "gewerkt" | "gepland" | "inkoop", rijen: [...] } (rijen in het standaardformaat).
+// Body: { locatie_id, soort: "rooster" | "gewerkt" | "gepland" | "inkoop", rijen: [...] } (rijen in het standaardformaat).
 import { normaliseer, schrijf } from "../lib/kassa.mjs";
 import { normaliseerInkoop, schrijfInkoop } from "../lib/inkoop.mjs";
 
@@ -27,7 +27,7 @@ async function verwerk(req) {
   }
 
   let b; try { b = await req.json(); } catch { return json({ error: "Ongeldige invoer" }, 400); }
-  if (!["gewerkt", "gepland", "inkoop"].includes(b.soort)) return json({ error: "soort moet gewerkt, gepland of inkoop zijn" }, 400);
+  if (!["rooster", "gewerkt", "gepland", "inkoop"].includes(b.soort)) return json({ error: "soort moet rooster, gewerkt, gepland of inkoop zijn" }, 400);
   if (!Array.isArray(b.rijen) || !b.rijen.length) return json({ error: "Geen rijen ontvangen" }, 400);
   if (typeof b.locatie_id !== "string" || !/^[0-9a-f-]{36}$/i.test(b.locatie_id)) return json({ error: "locatie_id ontbreekt" }, 400);
   const lr = await rest(`locaties?id=eq.${b.locatie_id}&select=id,klant_id`);
@@ -38,7 +38,38 @@ async function verwerk(req) {
   const ctx = { klant_id: loc.klant_id, locatie_id: loc.id };
 
   let ingelezen;
-  if (b.soort === "inkoop") {
+  if (b.soort === "rooster") {
+    // Een nieuw rooster vervangt het oude voor de datums in het bestand; nieuwe datums worden toegevoegd.
+    const dienst = [];
+    for (const [i, r] of b.rijen.entries()) {
+      const datum = String(r.datum || ""), med = String(r.medewerker || "").trim().slice(0, 120), uren = Number(r.uren);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(datum) || !med || !Number.isFinite(uren) || uren < 0 || uren > 24) return json({ error: `Rij ${i + 1}: datum, medewerker of uren klopt niet` }, 422);
+      const tijd = (t) => (typeof t === "string" && /^\d{2}:\d{2}$/.test(t) ? t : null);
+      dienst.push({ klant_id: ctx.klant_id, locatie_id: ctx.locatie_id, datum, medewerker: med, begin_tijd: tijd(r.begin), eind_tijd: tijd(r.eind), uren: Math.round(uren * 100) / 100, functie: r.functie ? String(r.functie).trim().slice(0, 60) || null : null, bron: "upload" });
+    }
+    if (dienst.length > 20000) return json({ error: "Te veel regels in één bestand" }, 413);
+    const dagen = dienst.map((d) => d.datum).sort(), van = dagen[0], tot = dagen[dagen.length - 1];
+    if ((Date.parse(tot) - Date.parse(van)) / 864e5 > 400) return json({ error: "Het rooster beslaat meer dan 400 dagen" }, 422);
+    const bereik = `locatie_id=eq.${loc.id}&datum=gte.${van}&datum=lte.${tot}`;
+    let x = await rest(`rooster?${bereik}`, { method: "DELETE" });
+    if (!x.ok) return json({ error: "Oude rooster verwijderen mislukt" }, 500);
+    for (let i = 0; i < dienst.length; i += 1000) {
+      x = await rest("rooster", { method: "POST", body: JSON.stringify(dienst.slice(i, i + 1000)) });
+      if (!x.ok) return json({ error: "Rooster opslaan mislukt" }, 500);
+    }
+    // geplande uren per medewerker per dag: eerst leegmaken voor deze periode, daarna vullen
+    x = await rest(`uren?${bereik}`, { method: "PATCH", body: JSON.stringify({ gepland_uren: 0 }) });
+    if (!x.ok) return json({ error: "Geplande uren bijwerken mislukt" }, 500);
+    const m = new Map();
+    for (const d of dienst) {
+      const k = d.datum + "|" + d.medewerker.toLowerCase(), e = m.get(k);
+      if (e) e.gepland_uren = Math.round((e.gepland_uren + d.uren) * 100) / 100;
+      else m.set(k, { klant_id: d.klant_id, locatie_id: d.locatie_id, datum: d.datum, medewerker: d.medewerker, gepland_uren: d.uren });
+    }
+    const d = await schrijf(rest, ctx, { bonnen: [], regels: [], uren: [...m.values()] });
+    ingelezen = dienst.length;
+    void d;
+  } else if (b.soort === "inkoop") {
     const n = normaliseerInkoop(b.rijen, ctx);
     if (n.fouten.length) return json({ error: n.fouten.slice(0, 5).join("; "), fouten: n.fouten }, 422);
     ingelezen = await schrijfInkoop(rest, n.rijen);

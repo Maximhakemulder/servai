@@ -25,6 +25,15 @@ export const VELDEN = {
     { id: "uurloon", naam: "Uurloon", syn: ["uurloon", "tarief", "rate", "loonperuur", "uurtarief"] },
     { id: "kosten", naam: "Loonkosten", syn: ["loonkosten", "kosten", "totaalloon", "cost", "bruto", "loon"] },
   ],
+  rooster: [
+    { id: "datum", naam: "Datum", syn: ["datum", "date", "dag", "werkdag", "day"], verplicht: true },
+    { id: "medewerker", naam: "Medewerker", syn: ["medewerker", "werknemer", "naam", "employee", "name", "personeel", "persoon"], verplicht: true },
+    { id: "begin", naam: "Begintijd", syn: ["begin", "start", "begintijd", "starttijd", "van", "in"] },
+    { id: "eind", naam: "Eindtijd", syn: ["eind", "einde", "eindtijd", "tot", "uit", "end"] },
+    { id: "uren", naam: "Uren (als er geen tijden zijn)", syn: ["uren", "geplandeuren", "gepland", "hours", "aantaluren", "duur", "totaaluren"] },
+    { id: "pauze", naam: "Pauze", syn: ["pauze", "break", "pauzetijd"] },
+    { id: "functie", naam: "Functie / afdeling", syn: ["functie", "afdeling", "rol", "positie", "team", "dienst"] },
+  ],
   menu: [
     { id: "naam", naam: "Gerecht / artikel", syn: ["gerecht", "gerechtnaam", "menuitem", "artikel", "artikelnaam", "product", "naam", "omschrijving", "item"], verplicht: true },
     { id: "groep", naam: "Groep", syn: ["groep", "categorie", "rubriek", "soort", "afdeling"] },
@@ -128,7 +137,7 @@ const r2 = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
  * Zet tabelrijen om naar standaardrijen.
  * @param {string[][]} rijen  alle rijen zonder de kopregel
  * @param {Record<string, number>} kol  uitkomst van detecteer (of aangepast door de gebruiker)
- * @param {"gewerkt"|"gepland"|"inkoop"} modus
+ * @param {"gewerkt"|"gepland"|"rooster"|"inkoop"} modus
  * @param {{uurloon?: number}} opt  uurloon als er geen loonkolom is
  */
 export function bouwRijen(rijen, kol, modus, opt = {}) {
@@ -205,7 +214,14 @@ export function bouwRijen(rijen, kol, modus, opt = {}) {
     }
     if (uren === null) return fout(n, "uren niet herkend");
     const rij = { datum, medewerker: med };
-    if (modus === "gepland") rij.gepland = r2(uren);
+    if (modus === "rooster") {
+      const a = kol.begin >= 0 ? minuten(cel(r, "begin")) : null, b2 = kol.eind >= 0 ? minuten(cel(r, "eind")) : null;
+      const hm = (m) => String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0");
+      rij.begin = a !== null && b2 !== null ? hm(a) : null;
+      rij.eind = a !== null && b2 !== null ? hm(b2) : null;
+      rij.uren = r2(uren);
+      rij.functie = kol.functie >= 0 ? String(cel(r, "functie") ?? "").trim() || null : null;
+    } else if (modus === "gepland") rij.gepland = r2(uren);
     else {
       rij.gewerkt = r2(uren);
       let k = kol.kosten >= 0 ? parseGetal(cel(r, "kosten")) : null;
@@ -226,6 +242,11 @@ export function bouwRijen(rijen, kol, modus, opt = {}) {
       const b = m.get(s);
       if (!b) m.set(s, { ...x }); else if (modus === "recept") b.hoeveelheid = b.hoeveelheid === null && x.hoeveelheid === null ? null : Math.round(((b.hoeveelheid || 0) + (x.hoeveelheid || 0)) * 10000) / 10000; else m.set(s, { ...x });
     }
+    rijenUit = [...m.values()];
+  } else if (modus === "rooster") {
+    // meerdere diensten per dag blijven los staan; alleen identieke regels tellen we één keer
+    const m = new Map();
+    for (const x of uit) m.set([x.datum, x.medewerker.toLowerCase(), x.begin, x.eind, x.uren].join("|"), x);
     rijenUit = [...m.values()];
   } else if (modus !== "inkoop") {
     const m = new Map();

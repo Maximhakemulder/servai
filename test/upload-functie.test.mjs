@@ -51,3 +51,25 @@ test("boekhouder mag alleen inkoop", async () => {
   assert.equal(r.status, 200);
   assert.equal(w.find((x) => x.u.includes("/inkoop")).body[0].leverancier, "Hanos");
 });
+
+test("rooster-upload vervangt oude diensten in de periode en telt geplande uren per dag", async () => {
+  const w = mock({ profiel: { klant_id: "K1", rol: "bedrijfsleider", locatie_id: null, actief: true } });
+  const calls = [];
+  const orig = globalThis.fetch;
+  globalThis.fetch = async (u, o = {}) => { if (/rooster\?|uren\?/.test(String(u)) && o.method) calls.push(o.method + " " + String(u).split("/rest/v1/")[1]); return orig(u, o); };
+  const rijen = [
+    { datum: "2026-11-02", medewerker: "Eva", begin: "17:00", eind: "23:00", uren: 6, functie: "Bediening" },
+    { datum: "2026-11-02", medewerker: "Eva", begin: "12:00", eind: "14:00", uren: 2, functie: null },
+    { datum: "2026-11-04", medewerker: "Daan", begin: null, eind: null, uren: 8, functie: null },
+  ];
+  const r = await roep({ locatie_id: L1, soort: "rooster", rijen });
+  assert.equal(r.status, 200);
+  assert.ok(calls.some((c) => c.startsWith("DELETE rooster?") && c.includes("datum=gte.2026-11-02") && c.includes("datum=lte.2026-11-04")));
+  assert.ok(calls.some((c) => c.startsWith("PATCH uren?")));
+  assert.equal(w.find((x) => x.u.endsWith("/rooster")).body.length, 3);
+  const u = w.find((x) => x.u.includes("/uren")).body;
+  assert.equal(u.find((x) => x.medewerker === "Eva").gepland_uren, 8);
+  assert.equal("gewerkt_uren" in u[0], false);
+  mock({ profiel: { klant_id: "K1", rol: "boekhouder", locatie_id: null, actief: true } });
+  assert.equal((await roep({ locatie_id: L1, soort: "rooster", rijen })).status, 403);
+});

@@ -92,3 +92,11 @@ test("menu, prijzen en recepten uit CSV", () => {
   assert.deepEqual(eenheidBasis("cl"), { basis: "l", factor: 0.01 });
   assert.equal(eenheidBasis("bak"), null);
 });
+
+test("rooster uit CSV houdt tijden en meerdere diensten per dag", () => {
+  const kop = ["Datum", "Medewerker", "Start", "Einde", "Pauze", "Afdeling"];
+  const r = bouwRijen([["02-11-2026", "Eva", "17:00", "23:00", "", "Bediening"], ["02-11-2026", "Eva", "12:00", "14:00", "", ""], ["03-11-2026", "Daan", "18:00", "01:00", "0:30", "Bar"]], detecteer(kop, "rooster"), "rooster");
+  assert.equal(r.fouten.length, 0); assert.equal(r.rijen.length, 3);
+  assert.deepEqual(r.rijen[0], { datum: "2026-11-02", medewerker: "Eva", begin: "17:00", eind: "23:00", uren: 6, functie: "Bediening" });
+  assert.deepEqual([r.rijen[2].begin, r.rijen[2].eind, r.rijen[2].uren], ["18:00", "01:00", 6.5]);
+});
