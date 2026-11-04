@@ -103,6 +103,7 @@ textarea{resize:vertical;min-height:70px}select{appearance:none;-webkit-appearan
       <a href="#abonnementen" data-p="abonnementen"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10.5h18M7 15h3"/></svg>Abonnementen</a>
       <a href="#agenda" data-p="agenda"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Agenda</a>
       <a href="#aanvragen" data-p="aanvragen"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z"/></svg>Aanvragen<span class="n" id="n-aanv" hidden></span></a>
+      <a href="#verkoop" data-p="verkoop"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3 8l9 6 9-6"/></svg>B2B verkoop</a>
       <a href="#tickets" data-p="tickets"><svg viewBox="0 0 24 24"><path d="M3 9a2 2 0 0 0 0 6v3h18v-3a2 2 0 0 1 0-6V6H3z"/><path d="M14 6v12" stroke-dasharray="2 2.5"/></svg>Tickets<span class="n" id="n-tick" hidden></span></a>
     </nav>
     <div class="sfoot"><span>Ingelogd als</span><b id="me"></b><a class="btn ghost sm" href="../dashboard/">Naar dashboard</a><button class="btn ghost sm" id="out">Uitloggen</button></div>
@@ -176,7 +177,7 @@ const mrr=()=>D.klanten.reduce((s,k)=>s+(k.ab&&k.ab.status==='actief'?+k.ab.prij
 function route(){
   const [pg,id]=(location.hash.slice(1)||'overzicht').split('/');
   document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.p===(pg==='klant'?'klanten':pg==='ticket'?'tickets':pg)));
-  const V={overzicht:vOverzicht,klanten:vKlanten,gebruikers:vGebruikers,klant:()=>vKlant(id),abonnementen:vAbo,agenda:vAgenda,aanvragen:vAanvragen,tickets:vTickets,ticket:()=>vTicket(id)}[pg]||vOverzicht;
+  const V={overzicht:vOverzicht,klanten:vKlanten,gebruikers:vGebruikers,klant:()=>vKlant(id),abonnementen:vAbo,agenda:vAgenda,aanvragen:vAanvragen,verkoop:vVerkoop,tickets:vTickets,ticket:()=>vTicket(id)}[pg]||vOverzicht;
   Promise.resolve(V()).then(h=>{if(h!=null)$('#view').innerHTML=h;window.scrollTo(0,0);bindView()}).catch(e=>{$('#view').innerHTML=`<div class="card"><h2>Er ging iets mis</h2><p class="mute">${esc(e.message||e)}</p></div>`});
 }
 const head=(t,s,r='')=>`<div class="top"><div><h1>${esc(t)}</h1>${s?`<p class="sub">${s}</p>`:''}</div><div class="bar" style="margin:0">${r}</div></div>`;
@@ -449,6 +450,144 @@ const FORM={
   async tReactie(d,f){const t=f.tekst.value.trim();if(!t)return;await q(SB.from('ticket_berichten').insert({ticket_id:+d.id,van_support:true,auteur:null,tekst:t}));
     const tk=D.tickets.find(x=>String(x.id)===d.id);if(tk&&tk.status==='open')await q(SB.from('tickets').update({status:'wacht_op_klant'}).eq('id',tk.id));await load();route();toast('Reactie verstuurd')},
 };
+/* ===== B2B verkoop: leads, mailer en prestaties ===== */
+const MST={te_keuren:['wait','Te keuren'],wachtrij:['blue','In de wachtrij'],gemaild:['ok','Gemaild'],opgevolgd:['ok','Opgevolgd'],afspraak:['blue','Afspraak'],klant:['ok','Klant'],overgeslagen:['off','Overgeslagen'],afgemeld:['err','Afgemeld'],fout:['err','Fout']};
+const MV={tab:'overzicht',f:'te_keuren',q:'',per:'vandaag',sel:new Set(),max:200};
+const MD={loaded:false,dirty:true,c:[],v:[],inst:null,sj:[]};
+const STD_EERSTE={onderwerp:'Even kort over {{bedrijf}}',tekst:'Hoi {{voornaam}},\n\n{{openingszin}}\n\nIk ben Maxim van SERVAI. Wij bouwen een dashboard voor horecazaken dat je kassa, rooster en inkoop samenbrengt: omzet, loonkosten en food cost in één overzicht, met advies zodra er iets opvalt.\n\nBenieuwd hoe dat eruitziet voor een zaak als {{bedrijf}}? Bekijk de demo: {{demolink}}\n\nLiever dat ik je even bel? Laat je nummer achter: {{terugbellink}}\n\nGroet,\nMaxim Hakemulder\nSERVAI'};
+const STD_OPVOLG={onderwerp:'Nog even over {{bedrijf}}',tekst:'Hoi {{voornaam}},\n\nIk stuurde je een paar dagen geleden een mail over SERVAI en wilde even checken of die goed is aangekomen.\n\nIn de demo zie je in twee minuten hoe het dashboard eruitziet: {{demolink}}\n\nOf laat je nummer achter, dan bel ik je terug en plannen we een demo in: {{terugbellink}}\n\nGroet,\nMaxim Hakemulder\nSERVAI'};
+const pagina=async(tabel,sel,order)=>{let all=[];for(let i=0;i<20000;i+=1000){const {data,error}=await SB.from(tabel).select(sel).order(order,{ascending:false}).range(i,i+999);if(error)throw error;all=all.concat(data||[]);if(!data||data.length<1000)break}return all};
+async function mvLaad(){
+  const [c,v,i,s]=await Promise.all([pagina('mail_contacten','*','aangemaakt'),pagina('mail_verzonden','id,contact_id,type,status,aangemaakt,afgeleverd_op,geopend_op,geklikt_op,bounce_op,klacht_op','aangemaakt'),q(SB.from('mail_instellingen').select('*').eq('id',1)),q(SB.from('mail_sjablonen').select('*'))]);
+  MD.c=c;MD.v=v;MD.inst=i[0]||null;MD.sj=s;MD.loaded=true;MD.dirty=false}
+const mvDag=d=>{const x=new Date(d);return x.getFullYear()+'-'+pad(x.getMonth()+1)+'-'+pad(x.getDate())};
+const mvKlaarOpvolg=c=>MD.inst&&c.status==='gemaild'&&!c.afgemeld&&!c.gereageerd&&!c.geklikt_op&&!c.opvolg_mail_op&&c.eerste_mail_op&&(Date.now()-new Date(c.eerste_mail_op))>=MD.inst.opvolg_na_dagen*864e5;
+const MF=[['te_keuren','Te keuren',c=>c.status==='te_keuren'],['warm','Warm',c=>c.geklikt_op&&!['klant','afgemeld'].includes(c.status)],['wachtrij','Wachtrij',c=>c.status==='wachtrij'],['gemaild','Gemaild',c=>c.status==='gemaild'],['klaar','Klaar voor opvolging',mvKlaarOpvolg],['opgevolgd','Opgevolgd',c=>c.status==='opgevolgd'],['afspraak','Afspraak',c=>c.status==='afspraak'],['klant','Klant',c=>c.status==='klant'],['overgeslagen','Overgeslagen',c=>c.status==='overgeslagen'],['afgemeld','Afgemeld',c=>c.status==='afgemeld'],['fout','Fout',c=>c.status==='fout'],['alle','Alle',()=>true]];
+const mvTabs=()=>`<div class="bar" style="margin:0 0 16px">${[['overzicht','Overzicht'],['leads','Leads'],['teksten','Mailteksten & instellingen']].map(([k,t])=>`<button class="btn${MV.tab===k?'':' ghost'}" data-act="mvTab" data-t="${k}">${t}</button>`).join('')}</div>`;
+async function vVerkoop(){
+  if(MD.dirty||!MD.loaded){try{await mvLaad()}catch(e){return head('B2B verkoop','')+`<div class="card"><h2>Laden mislukt</h2><p class="mute">${esc(e.message||e)}. Is migratie 0010 uitgevoerd in Supabase?</p></div>`}}
+  return MV.tab==='leads'?mvLeads():MV.tab==='teksten'?mvTeksten():mvOverzicht()}
+function mvOverzicht(){
+  const c=MD.c,v=MD.v,inst=MD.inst||{},nu=Date.now();
+  const mailbaar=c.filter(x=>!x.afgemeld),gemaild=c.filter(x=>['gemaild','opgevolgd','afspraak','klant'].includes(x.status)||x.eerste_mail_op);
+  const warm=c.filter(x=>x.geklikt_op),reacties=c.filter(x=>x.gereageerd);
+  const kpi=(t,b,s,groen)=>`<div class="card kpi"${groen?' style="background:rgba(91,214,160,.07)"':''}><small>${t}</small><b>${b}</b><span class="c">${s}</span></div>`;
+  const dagS=mvDag(nu),gist=mvDag(nu-864e5);
+  const inPer=r=>{const d=mvDag(r.aangemaakt);return MV.per==='vandaag'?d===dagS:MV.per==='gisteren'?d===gist:MV.per==='alles'?true:(nu-new Date(r.aangemaakt))<=(MV.per==='7'?7:30)*864e5};
+  const pv=v.filter(r=>r.type!=='test'&&r.status==='verstuurd'&&inPer(r)),n=pv.length||0;
+  const pc=(k)=>n?Math.round(pv.filter(r=>r[k]).length/n*100)+'%':'–';
+  const n1=pv.filter(r=>r.type==='eerste').length,n2=pv.filter(r=>r.type==='opvolg').length;
+  const bouncePct=n?pv.filter(r=>r.bounce_op).length/n*100:0,afm=gemaild.length?c.filter(x=>x.afgemeld).length/Math.max(1,gemaild.length)*100:0;
+  const alert=bouncePct>3?`Bounce ${bouncePct.toFixed(1)}%: te veel mails komen niet aan. Check de adressen.`:afm>2?`Afmeldingen ${afm.toFixed(1)}%: de mail past mogelijk niet bij deze zaken.`:'';
+  const sm=(t,b,s,g)=>`<div class="card kpi"${g?' style="background:rgba(91,214,160,.07)"':''}><small>${t}</small><b>${b}</b><span class="c">${s}</span></div>`;
+  const rY=mvDag(nu);const vandaagN=v.filter(r=>r.type!=='test'&&r.status==='verstuurd'&&mvDag(r.aangemaakt)===rY).length;
+  const uurNu=new Date().getHours(),open=inst.aan&&uurNu>=inst.van_uur&&uurNu<inst.tot_uur&&(!inst.alleen_werkdagen||![0,6].includes(new Date().getDay()));
+  const pct=inst.daglimiet?Math.min(100,Math.round(vandaagN/inst.daglimiet*100)):0;
+  const wacht=c.filter(x=>x.status==='wachtrij').length,klaar=c.filter(mvKlaarOpvolg).length,keur=c.filter(x=>x.status==='te_keuren').length;
+  const dagen=[...Array(14)].map((_,i)=>mvDag(nu-(13-i)*864e5)),perD=Object.fromEntries(dagen.map(d=>[d,{v:0,k:0}]));
+  v.forEach(r=>{if(r.type==='test'||r.status!=='verstuurd')return;const d=mvDag(r.aangemaakt);if(perD[d]){perD[d].v++;if(r.geklikt_op)perD[d].k++}});
+  const max=Math.max(1,...dagen.map(d=>perD[d].v));
+  const grp=(sleutel)=>{const m=new Map();c.forEach(x=>{const k=(x[sleutel]||'onbekend').trim()||'onbekend';const e=m.get(k)||{g:0,m:0,k:0,r:0};e.g++;if(x.eerste_mail_op)e.m++;if(x.geklikt_op)e.k++;if(x.gereageerd)e.r++;m.set(k,e)});return [...m.entries()].sort((a,b)=>b[1].g-a[1].g).slice(0,12)};
+  const tab=(t,l)=>`<div class="card"><h2>${t}</h2><div class="tw"><table><thead><tr><th>${t.replace('Per ','')}</th><th style="text-align:right">Gevonden</th><th style="text-align:right">Gemaild</th><th style="text-align:right">Demo bekeken</th><th style="text-align:right">Reacties</th></tr></thead><tbody>${l.map(([k,e])=>`<tr><td>${esc(k)}</td><td style="text-align:right">${e.g}</td><td style="text-align:right">${e.m}</td><td style="text-align:right">${e.k}</td><td style="text-align:right">${e.r}</td></tr>`).join('')||'<tr><td colspan="5" class="mute">Nog geen leads</td></tr>'}</tbody></table></div></div>`;
+  return head('B2B verkoop','Leads uit je scraper, de mailer verstuurt ze binnen de verzendtijden. Klikt iemand op de demo, dan krijg je een warme lead.',`<button class="btn" data-act="mvTab" data-t="leads">Naar de leads</button>`)+mvTabs()+
+   `<div class="kpis">${kpi('Leads',c.length,mailbaar.length+' kunnen gemaild worden')}${kpi('Te keuren',keur,'wachten op jouw akkoord')}${kpi('Gemaild',gemaild.length,c.filter(x=>x.afgemeld).length+' afgemeld')}${kpi('Demo bekeken',warm.length,reacties.length+' reacties',1)}${kpi('Afspraken',c.filter(x=>['afspraak','klant'].includes(x.status)).length,c.filter(x=>x.status==='klant').length+' klant geworden')}</div>`+
+   `<div class="card" style="margin-bottom:18px"><h2>Mailprestaties <span style="font-weight:400">${[['vandaag','Vandaag'],['gisteren','Gisteren'],['7','7 dagen'],['30','30 dagen'],['alles','Alles']].map(([k,t])=>`<button class="btn sm${MV.per===k?'':' ghost'}" data-act="mvPer" data-p="${k}">${t}</button>`).join(' ')}</span></h2>
+    ${alert?`<p style="background:rgba(255,138,138,.12);color:#FF8A8A;padding:10px 14px;border-radius:10px;margin:0 0 12px">${alert}</p>`:''}
+    <div class="kpis" style="margin-bottom:8px">${sm('Verstuurd',n,n1+' eerste · '+n2+' opvolg')}${sm('Afgeleverd',pc('afgeleverd_op'),'volgens Resend')}${sm('Geopend',pc('geopend_op'),'indicatie')}${sm('Demo geklikt',pc('geklikt_op'),'warme leads',1)}${sm('Bounce',pc('bounce_op'),'kwamen niet aan')}${sm('Klachten',pc('klacht_op'),'als spam gemarkeerd')}</div>
+    <p class="mute sm">Percentages t.o.v. verstuurde mails. Geopend is een indicatie. Een klik op de demo is het sterkste signaal. Richtwaarden: bounce onder 3%, klachten bijna 0.</p></div>`+
+   `<div class="g2" style="margin-bottom:18px"><div class="card"><h2>Vandaag <span class="pill ${open?'ok':'off'}"><i></i>${!inst.aan?'Mailer uit':open?'Binnen verzendtijd':'Buiten verzendtijd'}</span></h2>
+    <div style="height:8px;border-radius:99px;background:var(--panel-2);margin:10px 0"><div style="height:8px;border-radius:99px;width:${pct}%;background:var(--grad)"></div></div>
+    <p><b>${vandaagN} van ${inst.daglimiet||0} mails verstuurd</b></p><p class="mute sm">${inst.per_uur||0} per uur · ${inst.van_uur??8}:00–${inst.tot_uur??17}:00${inst.alleen_werkdagen?' op werkdagen':''}</p>
+    <table><tbody><tr><td class="mute">In de wachtrij</td><td>${wacht} eerste mails</td></tr><tr><td class="mute">Klaar voor opvolging</td><td>${klaar}${inst.opvolgen?' (gaat automatisch)':' (opvolgen staat uit)'}</td></tr><tr><td class="mute">Te keuren</td><td>${keur}</td></tr></tbody></table></div>
+    <div class="card"><h2>Laatste 14 dagen</h2><div style="display:flex;align-items:flex-end;gap:5px;height:120px;margin-top:10px">${dagen.map(d=>`<div title="${d}: ${perD[d].v} verstuurd, ${perD[d].k} geklikt" style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%"><div style="height:${Math.round(perD[d].v/max*100)}%;min-height:${perD[d].v?3:1}px;background:#8FB6FF;border-radius:4px 4px 0 0"></div></div>`).join('')}</div><p class="mute sm" style="margin-top:8px">Verstuurd per dag (${dagen[0].slice(5)} t/m ${dagen[13].slice(5)})</p></div></div>`+
+   `<div class="g2">${tab('Per soort zaak',grp('soort'))}${tab('Per plaats',grp('plaats'))}</div>`}
+function mvLeads(){
+  const inst=MD.inst||{},cnt=Object.fromEntries(MF.map(([k,,fn])=>[k,MD.c.filter(fn).length]));
+  const fn=(MF.find(x=>x[0]===MV.f)||MF[0])[2],ql=MV.q.trim().toLowerCase();
+  let rows=MD.c.filter(fn).filter(c=>!ql||[c.bedrijf,c.naam,c.plaats,c.email,c.soort].some(x=>String(x||'').toLowerCase().includes(ql)));
+  const totaal=rows.length;rows=rows.slice(0,MV.max);
+  const laatst=c=>c.opvolg_mail_op||c.eerste_mail_op||c.aangemaakt;
+  const act=(b,t,cls='ghost')=>`<button class="btn sm ${cls}" data-act="mvBulk" data-b="${b}">${t}</button>`;
+  return head('Leads','Zaken die we mailen. Keur goed wat past; de mailer verstuurt binnen de verzendtijden en de daglimiet.',`<button class="btn ghost" data-act="mvAdd">Lead toevoegen</button><button class="btn ghost" data-act="mvImport">CSV importeren</button>`)+mvTabs()+
+  `<div class="bar" style="margin-bottom:10px">${MF.map(([k,t])=>`<button class="btn sm${MV.f===k?'':' ghost'}" data-act="mvF" data-f="${k}">${t} <span class="mute">${cnt[k]}</span></button>`).join('')}</div>
+   <div class="bar"><span class="mute sm">Selecteer leads voor een actie (<b id="mvn">${MV.sel.size}</b>)</span>${act('goed','Goedkeuren en mailen','')}${act('nu','Nu mailen')}${act('overslaan','Overslaan')}${act('terug','Terugzetten')}${act('reactie','Reactie')}${act('afspraak','Afspraak')}${act('klant','Klant')}${act('verwijder','Verwijderen')}<input id="mvq" placeholder="Zoek zaak, plaats of mail" value="${esc(MV.q)}" style="margin-left:auto"></div>
+   <div class="card" style="padding:0"><div class="tw"><table><thead><tr><th style="width:34px"><input type="checkbox" data-mvall></th><th>Zaak</th><th>Soort · plaats</th><th>Mailadres</th><th>Status</th><th>Openingszin / reden</th><th>Laatst</th></tr></thead><tbody>${rows.map(c=>`<tr><td><input type="checkbox" data-mvsel="${c.id}"${MV.sel.has(c.id)?' checked':''}></td><td><b>${esc(c.bedrijf||c.naam||c.email)}</b>${c.website?`<div class="mute sm">${esc(c.website)}</div>`:''}</td><td>${esc([c.soort,c.plaats].filter(Boolean).join(' · '))}</td><td>${esc(c.email)}</td><td>${pill(MST,c.status)}${c.geklikt_op?' <span class="pill ok"><i></i>Warm</span>':''}${c.gereageerd?' <span class="pill blue"><i></i>Reactie</span>':''}${mvKlaarOpvolg(c)?' <span class="pill wait"><i></i>Opvolgen</span>':''}</td><td class="sm">${esc(c.fout||c.openingszin||c.notitie||'')}</td><td class="mute sm">${fdt(laatst(c))}</td></tr>`).join('')||`<tr><td colspan="7" class="mute" style="text-align:center;padding:28px">Niets in deze lijst. Stuur leads vanuit je scraper of importeer een CSV.</td></tr>`}</tbody></table></div></div>
+   ${totaal>rows.length?`<div class="bar" style="margin-top:12px"><button class="btn ghost" data-act="mvMeer">Toon meer (${totaal-rows.length} resterend)</button></div>`:''}`}
+function mvTeksten(){
+  const inst=MD.inst||{},e=MD.sj.find(x=>x.id===inst.eerste_sjabloon_id)||STD_EERSTE,o=MD.sj.find(x=>x.id===inst.opvolg_sjabloon_id)||STD_OPVOLG;
+  const blok=(k,t,s)=>`<div class="card" style="margin-bottom:16px"><h2>${t}</h2><form class="fs" data-form="mvTekst" data-k="${k}"><label>Onderwerp<input name="onderwerp" value="${esc(s.onderwerp)}" required></label><label>Tekst<textarea name="tekst" rows="12" required>${esc(s.tekst)}</textarea></label><p class="mute sm">Variabelen: {{voornaam}} {{naam}} {{bedrijf}} {{plaats}} {{openingszin}} {{demolink}} {{terugbellink}}. De afmeldlink en afzender worden automatisch onderaan toegevoegd.</p><div class="acts" style="justify-content:flex-start"><button class="btn" type="submit">Opslaan</button><input name="test" type="email" placeholder="Testmail naar…" value="${esc(ME&&ME.email||'')}" style="max-width:260px"><button type="button" class="btn ghost" data-act="mvTest" data-k="${k}">Testmail sturen</button></div></form></div>`;
+  return head('B2B verkoop','Mailteksten en instellingen van de mailer.')+mvTabs()+
+   `<div class="g2" style="align-items:start"><div>${blok('eerste','Eerste mail',e)}${blok('opvolg','Opvolgmail',o)}</div><div>
+   <div class="card" style="margin-bottom:16px"><h2>Mailer</h2><form class="fs" data-form="mvInst"><label style="flex-direction:row;gap:10px;align-items:center"><input type="checkbox" name="aan"${inst.aan?' checked':''} style="width:auto"> Mailer staat aan (verstuurt de wachtrij automatisch)</label>
+    <div class="f2"><label>Daglimiet<input name="daglimiet" type="number" min="0" max="500" value="${inst.daglimiet??50}"></label><label>Per uur<input name="per_uur" type="number" min="1" max="100" value="${inst.per_uur??12}"></label></div>
+    <div class="f2"><label>Verzenden vanaf (uur)<input name="van_uur" type="number" min="0" max="23" value="${inst.van_uur??8}"></label><label>Tot (uur)<input name="tot_uur" type="number" min="1" max="24" value="${inst.tot_uur??17}"></label></div>
+    <label style="flex-direction:row;gap:10px;align-items:center"><input type="checkbox" name="alleen_werkdagen"${inst.alleen_werkdagen!==false?' checked':''} style="width:auto"> Alleen op werkdagen</label>
+    <label style="flex-direction:row;gap:10px;align-items:center"><input type="checkbox" name="opvolgen"${inst.opvolgen!==false?' checked':''} style="width:auto"> Automatisch opvolgen</label>
+    <label>Opvolgen na (dagen zonder reactie of klik)<input name="opvolg_na_dagen" type="number" min="1" max="60" value="${inst.opvolg_na_dagen??4}"></label>
+    <label>Waar leidt {{demolink}} naartoe?<input name="demo_url" type="url" value="${esc(inst.demo_url||'https://servai.nl/demo/')}"></label>
+    <div class="acts" style="justify-content:flex-start"><button class="btn" type="submit">Instellingen opslaan</button></div></form></div>
+   <div class="card"><h2>Scraper koppelen</h2><p class="mute sm">Laat je scraper zijn leads sturen naar <code>${location.origin}/api/leads</code> met <code>Authorization: Bearer &lt;LEADS_API_KEY&gt;</code>. Nieuwe leads komen onder "Te keuren"; bestaande adressen worden overgeslagen.</p><pre style="white-space:pre-wrap;font-size:12px;background:var(--panel-2);padding:12px;border-radius:10px;overflow:auto">{ "leads": [{
+  "email": "info@zaak.nl", "bedrijf": "Zaak", "naam": "Jan",
+  "plaats": "Utrecht", "soort": "restaurant",
+  "website": "zaak.nl", "telefoon": "030 1234567",
+  "openingszin": "Een gezellig restaurant aan de gracht…"
+}] }</pre><p class="mute sm">Instellen in Netlify: <code>RESEND_API_KEY</code>, <code>MAIL_VAN</code>, <code>LEADS_API_KEY</code>, <code>RESEND_WEBHOOK_SECRET</code> (optioneel <code>MAIL_ANTWOORD</code>).</p></div></div></div>`}
+async function mvApi(actie,data){const {data:{session}}=await SB.auth.getSession();const r=await fetch('/api/mail',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+(session&&session.access_token)},body:JSON.stringify({actie,...data})});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Mail versturen mislukt');return d}
+const mvChunk=(a,n)=>{const o=[];for(let i=0;i<a.length;i+=n)o.push(a.slice(i,i+n));return o};
+function mvCsv(t){
+  const sep=[';','\t',','].map(s=>[s,(t.split('\n')[0]||'').split(s).length]).sort((a,b)=>b[1]-a[1])[0][0],rows=[];let r=[],c='',q=false;
+  for(let i=0;i<t.length;i++){const ch=t[i];if(q){if(ch==='"'){if(t[i+1]==='"'){c+='"';i++}else q=false}else c+=ch}else if(ch==='"')q=true;else if(ch===sep){r.push(c);c=''}else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&t[i+1]==='\n')i++;r.push(c);c='';if(r.some(x=>x.trim()))rows.push(r);r=[]}else c+=ch}
+  r.push(c);if(r.some(x=>x.trim()))rows.push(r);return rows}
+const MKOL={email:['email','e-mail','mail','mailadres','e-mailadres'],bedrijf:['bedrijf','zaak','naam zaak','bedrijfsnaam','company','business'],naam:['naam','contactpersoon','contact','voornaam'],plaats:['plaats','stad','city'],soort:['soort','type','categorie'],website:['website','url','site'],telefoon:['telefoon','tel','phone'],openingszin:['openingszin','intro','opening']};
+const mvLeadsInsert=async rijen=>{
+  const gezien=new Set(),uit=[];let ongeldig=0;
+  rijen.forEach(x=>{const e=String(x.email||'').trim().toLowerCase();if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e)){ongeldig++;return}if(gezien.has(e))return;gezien.add(e);
+    uit.push({email:e,bedrijf:(x.bedrijf||'').trim()||null,naam:(x.naam||'').trim()||null,plaats:(x.plaats||'').trim()||null,soort:(x.soort||'').trim()||null,website:(x.website||'').trim()||null,telefoon:(x.telefoon||'').trim()||null,openingszin:(x.openingszin||'').trim()||null,bron:x.bron||'handmatig',status:'te_keuren'})});
+  const voor=MD.c.length;
+  for(const c of mvChunk(uit,200))await q(SB.from('mail_contacten').upsert(c,{onConflict:'email',ignoreDuplicates:true}));
+  MD.dirty=true;await mvLaad();return {nieuw:MD.c.length-voor,ongeldig,totaal:uit.length}};
+Object.assign(ACT,{
+  mvTab(d){MV.tab=d.t;route()},mvPer(d){MV.per=d.p;route()},mvF(d){MV.f=d.f;MV.sel.clear();MV.max=200;route()},mvMeer(){MV.max+=300;route()},
+  mvAdd(){formModal('Lead toevoegen',`<label>Mailadres<input name="email" type="email" required></label><div class="f2"><label>Bedrijf<input name="bedrijf"></label><label>Contactpersoon<input name="naam"></label></div><div class="f2"><label>Plaats<input name="plaats"></label><label>Soort<input name="soort" placeholder="restaurant"></label></div><label>Openingszin (persoonlijke eerste zin)<textarea name="openingszin"></textarea></label>`,async(d,f,m)=>{const r=await mvLeadsInsert([d]);m.close();MV.f='te_keuren';route();toast(r.nieuw?'Lead toegevoegd':'Dit mailadres stond er al')})},
+  mvImport(){const m=formModal('CSV importeren',`<p class="mute sm">Kolommen worden herkend aan de kop: email, bedrijf, naam, plaats, soort, website, telefoon, openingszin. Alleen mailadressen zijn verplicht.</p><label>CSV-bestand<input type="file" name="bestand" accept=".csv,.txt"></label><label>Of plak hier je CSV<textarea name="csv" rows="6"></textarea></label>`,async(d,f,m2)=>{
+    const fl=f.bestand.files[0];const tekst=fl?await fl.text():d.csv;if(!tekst||!tekst.trim())throw new Error('Kies een bestand of plak je CSV');
+    const rows=mvCsv(tekst),kop=rows[0].map(x=>x.trim().toLowerCase()),idx={};Object.entries(MKOL).forEach(([k,syn])=>{idx[k]=kop.findIndex(h=>syn.includes(h))});
+    if(idx.email<0)throw new Error('Geen kolom "email" gevonden in de kop');
+    const r=await mvLeadsInsert(rows.slice(1).map(x=>Object.fromEntries(Object.entries(idx).map(([k,i])=>[k,i>=0?x[i]:'']).concat([['bron','csv']]))));
+    m2.close();MV.f='te_keuren';route();toast(`${r.nieuw} nieuwe leads, ${r.totaal-r.nieuw} bestonden al${r.ongeldig?', '+r.ongeldig+' ongeldig':''}`)},{ok:'Importeren'})},
+  async mvBulk(d){
+    const ids=[...MV.sel];if(!ids.length)return toast('Selecteer eerst leads');
+    const upd=async(body,filter)=>{for(const c of mvChunk(ids,150)){let x=SB.from('mail_contacten').update(body).in('id',c);if(filter)x=filter(x);await q(x)}};
+    const b=d.b;
+    if(b==='goed'){await upd({status:'wachtrij'},x=>x.in('status',['te_keuren','overgeslagen','fout']));toast('Goedgekeurd: de mailer verstuurt ze binnen de verzendtijden')}
+    else if(b==='nu'){if(ids.length>25)return toast('Maximaal 25 tegelijk');const r=await mvApi('nu',{contact_ids:ids});toast(r.verstuurd+' mails verstuurd')}
+    else if(b==='overslaan')await upd({status:'overgeslagen'},x=>x.not('status','in','(afgemeld,klant)'));
+    else if(b==='terug')await upd({status:'te_keuren',fout:null},x=>x.not('status','in','(afgemeld,klant)'));
+    else if(b==='reactie')await upd({gereageerd:true});
+    else if(b==='afspraak')await upd({status:'afspraak',gereageerd:true});
+    else if(b==='klant')await upd({status:'klant',gereageerd:true});
+    else if(b==='verwijder'){if(!await ask('Leads verwijderen',`${ids.length} leads definitief verwijderen?`,'Verwijderen'))return;for(const c of mvChunk(ids,150))await q(SB.from('mail_contacten').delete().in('id',c))}
+    MV.sel.clear();MD.dirty=true;route()},
+  async mvTest(d,el){const f=el.closest('form'),mail=f.test.value.trim();if(!mail)return toast('Vul een e-mailadres in');
+    await mvSaveTekst(d.k,f);await mvApi('test',{naar:mail,soort:d.k});toast('Testmail verstuurd naar '+mail)},
+});
+async function mvSaveTekst(k,f){
+  const inst=MD.inst||{},veld=k==='eerste'?'eerste_sjabloon_id':'opvolg_sjabloon_id',id=inst[veld],row={soort:k,naam:k==='eerste'?'Eerste mail':'Opvolgmail',onderwerp:f.onderwerp.value.trim(),tekst:f.tekst.value.trim()};
+  if(!row.onderwerp||!row.tekst)throw new Error('Vul onderwerp en tekst in');
+  if(id)await q(SB.from('mail_sjablonen').update(row).eq('id',id));
+  else{const n=await q(SB.from('mail_sjablonen').insert(row).select('id'));await q(SB.from('mail_instellingen').update({[veld]:n[0].id}).eq('id',1))}
+  MD.dirty=true;await mvLaad()}
+Object.assign(FORM,{
+  async mvTekst(d,f){await mvSaveTekst(d.k,f);route();toast('Mailtekst opgeslagen')},
+  async mvInst(d,f){const n=x=>Math.round(+f[x].value);const v={aan:f.aan.checked,daglimiet:n('daglimiet'),per_uur:n('per_uur'),van_uur:n('van_uur'),tot_uur:n('tot_uur'),alleen_werkdagen:f.alleen_werkdagen.checked,opvolgen:f.opvolgen.checked,opvolg_na_dagen:n('opvolg_na_dagen'),demo_url:f.demo_url.value.trim()};
+    if(v.tot_uur<=v.van_uur)throw new Error('Het eind-uur moet na het begin-uur liggen');if(!/^https:\/\//.test(v.demo_url))throw new Error('De demo-link moet met https:// beginnen');
+    if(v.aan&&(!MD.inst||!MD.inst.eerste_sjabloon_id))throw new Error('Sla eerst de eerste mailtekst op');
+    await q(SB.from('mail_instellingen').update(v).eq('id',1));MD.dirty=true;route();toast('Instellingen opgeslagen')}});
+document.addEventListener('change',e=>{
+  const s=e.target.closest('[data-mvsel]');if(s){s.checked?MV.sel.add(s.dataset.mvsel):MV.sel.delete(s.dataset.mvsel);const n=$('#mvn');if(n)n.textContent=MV.sel.size;return}
+  if(e.target.matches('[data-mvall]')){document.querySelectorAll('[data-mvsel]').forEach(c=>{c.checked=e.target.checked;e.target.checked?MV.sel.add(c.dataset.mvsel):MV.sel.delete(c.dataset.mvsel)});const n=$('#mvn');if(n)n.textContent=MV.sel.size}});
+document.addEventListener('input',e=>{if(e.target.id==='mvq'){MV.q=e.target.value;clearTimeout(MV.t);MV.t=setTimeout(()=>{route();const i=$('#mvq');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}},250)}});
+
 document.addEventListener('click',async e=>{
   const a=e.target.closest('[data-act]');
   if(a&&!(a.tagName==='SELECT')){if(a.tagName==='A'&&a.getAttribute('href')==='#agenda'&&location.hash==='#agenda')e.preventDefault();try{await ACT[a.dataset.act](a.dataset,a)}catch(x){toast(x.message||String(x))}return}
