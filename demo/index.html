@@ -67,7 +67,7 @@ button{font:inherit;color:inherit}
 .seg button{border:0;background:none;padding:7px 12px;border-radius:9px;font-size:13.5px;font-weight:500;color:var(--fg-2);cursor:pointer}
 .seg button.on{background:var(--panel-2);color:#fff;box-shadow:inset 0 0 0 1px var(--line-2)}
 .seg .sh{display:none}
-@media (max-width:760px){.ctrls{width:100%}.seg{display:flex;width:100%;padding:3px}.seg .lg{display:none}.seg .sh{display:inline}.seg button{flex:1 1 auto;padding:8px 4px;font-size:13px;white-space:nowrap;text-align:center}}
+@media (max-width:760px){.ctrls{width:100%}.seg{display:flex;width:100%;padding:3px}.seg .lg{display:none}.seg .sh{display:inline}.seg button{flex:1 1 0;min-width:0;padding:9px 2px;font-size:13px;white-space:nowrap;text-align:center}}
 .betabar[hidden]{display:none!important}.betabar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;background:rgba(250,178,25,.07);border:1px solid rgba(250,178,25,.25);color:#F3DFA8;font-size:13px;margin-bottom:20px}
 .betabar b{color:var(--warn)}
 
@@ -328,7 +328,7 @@ body.on-assist .fab{display:none}
 .daychips button{flex:none;cursor:pointer;font:500 13px var(--f-b);color:var(--fg-2);background:transparent;border:1px solid var(--line-2);border-radius:99px;padding:6px 13px}
 .daychips button:hover{color:var(--fg);background:rgba(255,255,255,.05)}.daychips button.on{color:#fff;background:var(--panel-2);border-color:transparent;box-shadow:0 0 0 1px rgba(34,181,115,.6)}
 .medal{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:50%;font:700 17px var(--f-d);color:#10132A;flex:none}.medal.sm{width:20px;height:20px;font-size:11px;vertical-align:middle;margin-right:4px}
-#period{max-width:100%;overflow-x:auto;scrollbar-width:none}#period::-webkit-scrollbar{display:none}#period button{flex:none;white-space:nowrap}
+#period{max-width:100%;overflow-x:auto;scrollbar-width:none}#period::-webkit-scrollbar{display:none}#period button{flex:none;white-space:nowrap}@media (max-width:760px){#period button{flex:1 1 0}#period button:nth-child(-n+2){flex-grow:1.4}}
 #ov-x{display:contents}
 #ov-x>.c{min-width:0}
 .wd .st,.tr .st{display:inline-block;padding:3px 8px;border-radius:7px;font:600 10.5px var(--f-m);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
