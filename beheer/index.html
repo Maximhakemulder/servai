@@ -531,7 +531,7 @@ function mvTeksten(){
   "plaats": "Utrecht", "soort": "restaurant",
   "website": "zaak.nl", "telefoon": "030 1234567",
   "openingszin": "Een gezellig restaurant aan de gracht…"
-}] }</pre><p class="mute sm">Instellen in Netlify: <code>RESEND_API_KEY</code>, <code>MAIL_VAN</code>, <code>LEADS_API_KEY</code>, <code>RESEND_WEBHOOK_SECRET</code> (optioneel <code>MAIL_ANTWOORD</code>).</p></div></div></div>`}
+}] }</pre><p class="mute sm">Versturen: <code>MAIL_USER</code> + <code>MAIL_PASSWORD</code> (je eigen mailbox, standaard Hostnet; reacties en bounces worden uit de inbox gelezen) of <code>RESEND_API_KEY</code> + <code>MAIL_VAN</code>. Leads zoeken: <code>OUTSCRAPER_API_KEY</code>. Eigen scraper: <code>LEADS_API_KEY</code>.</p></div></div></div>`}
 async function mvApi(actie,data){const {data:{session}}=await SB.auth.getSession();const r=await fetch('/api/mail',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+(session&&session.access_token)},body:JSON.stringify({actie,...data})});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Mail versturen mislukt');return d}
 async function mvScout(actie,data){const {data:{session}}=await SB.auth.getSession();const r=await fetch('/api/scout',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+(session&&session.access_token)},body:JSON.stringify({actie,...data})});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Zoeken mislukt');return d}
 const mvChunk=(a,n)=>{const o=[];for(let i=0;i<a.length;i+=n)o.push(a.slice(i,i+n));return o};
@@ -567,7 +567,7 @@ Object.assign(ACT,{
     const upd=async(body,filter)=>{for(const c of mvChunk(ids,150)){let x=SB.from('mail_contacten').update(body).in('id',c);if(filter)x=filter(x);await q(x)}};
     const b=d.b;
     if(b==='goed'){await upd({status:'wachtrij'},x=>x.in('status',['te_keuren','overgeslagen','fout']));toast('Goedgekeurd: de mailer verstuurt ze binnen de verzendtijden')}
-    else if(b==='nu'){if(ids.length>25)return toast('Maximaal 25 tegelijk');const r=await mvApi('nu',{contact_ids:ids});toast(r.verstuurd+' mails verstuurd')}
+    else if(b==='nu'){if(ids.length>25)return toast('Maximaal 25 tegelijk');let n=0;for(const c of mvChunk(ids,5)){toast('Versturen… '+n+' van '+ids.length);const r=await mvApi('nu',{contact_ids:c});n+=r.verstuurd}toast(n+' mails verstuurd')}
     else if(b==='overslaan')await upd({status:'overgeslagen'},x=>x.not('status','in','(afgemeld,klant)'));
     else if(b==='terug')await upd({status:'te_keuren',fout:null},x=>x.not('status','in','(afgemeld,klant)'));
     else if(b==='reactie')await upd({gereageerd:true});

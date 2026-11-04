@@ -54,3 +54,33 @@ test("uitOutscraper: pakt eerste mail, slaat zaken zonder mail en gesloten zaken
   assert.equal(r.gevonden, 4); assert.equal(r.zonderMail, 1); assert.equal(r.leads.length, 2);
   assert.equal(r.leads[0].email, "Info@A.nl"); assert.equal(r.leads[1].email, "d@d.nl"); assert.equal(r.leads[0].soort, "restaurant");
 });
+
+import { beoordeel } from "../netlify/functions/inbox.mjs";
+import { modus } from "../netlify/lib/transport.mjs";
+test("beoordeel: reactie, stop en bounce", () => {
+  const cs = [{ id: 1, email: "a@x.nl" }, { id: 2, email: "b@y.nl" }];
+  assert.equal(beoordeel({ van: "A@x.nl", tekst: "Leuk, bel me maar" }, cs, new Map()).soort, "reactie");
+  assert.equal(beoordeel({ van: "a@x.nl", tekst: "Graag afmelden a.u.b." }, cs, new Map()).soort, "stop");
+  const b = beoordeel({ van: "MAILER-DAEMON@h.nl", tekst: "Delivery to b@y.nl failed" }, cs, new Map());
+  assert.equal(b.soort, "bounce"); assert.equal(b.contact.id, 2);
+  assert.equal(beoordeel({ van: "z@z.nl", tekst: "hoi" }, cs, new Map()), null);
+});
+test("modus: SMTP gaat voor Resend, anders null", () => {
+  const bewaar = { ...process.env };
+  for (const k of ["MAIL_USER", "MAIL_PASSWORD", "RESEND_API_KEY", "MAIL_VAN", "MAIL_TRANSPORT"]) delete process.env[k];
+  assert.equal(modus(), null);
+  process.env.RESEND_API_KEY = "k"; process.env.MAIL_VAN = "a@b.nl"; assert.equal(modus(), "resend");
+  process.env.MAIL_USER = "u"; process.env.MAIL_PASSWORD = "p"; assert.equal(modus(), "smtp");
+  Object.assign(process.env, bewaar);
+});
+test("verstuur via SMTP: logt, markeert status en gebruikt pixel", async () => {
+  const { verstuur } = await import("../netlify/lib/mail.mjs");
+  const calls = [], verstuurd = [];
+  const rest = async (p, o = {}) => { calls.push([p, o.body]); return { ok: true, json: async () => [] }; };
+  const c = { id: "c1", email: "a@x.nl", naam: "Jan", afmeld_token: "t-1" };
+  const r = await verstuur(rest, { items: [{ contact: c, type: "eerste" }], sjablonen: { eerste: { onderwerp: "Hoi", tekst: "Tekst {{demolink}}" } }, inst: {}, from: "S <s@x.nl>", via: "smtp", stuur: async (m) => { verstuurd.push(m); return { id: "<id1>" }; }, pauze: async () => {} });
+  assert.equal(r.verstuurd, 1); assert.equal(r.fout, null);
+  assert.match(verstuurd[0].html, /\/api\/o\?t=t-1/);
+  assert.ok(calls.some(([p, b]) => p === "mail_verzonden" && b.includes("<id1>")));
+  assert.ok(calls.some(([p, b]) => p.startsWith("mail_contacten") && b.includes("gemaild")));
+});

@@ -1,0 +1,9 @@
+{
+  "name": "servai",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "imapflow": "^1.0.188",
+    "nodemailer": "^6.9.16"
+  }
+}
