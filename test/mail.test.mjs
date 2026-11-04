@@ -47,3 +47,10 @@ test("scraper-import: schoont adressen, dubbele en ongeldige weg", () => {
   assert.equal(r.ongeldig, 2);
   assert.equal(r.uit[0].status, "te_keuren"); assert.equal(r.uit[0].bron, "scraper");
 });
+
+import { uitOutscraper } from "../netlify/functions/scout.mjs";
+test("uitOutscraper: pakt eerste mail, slaat zaken zonder mail en gesloten zaken over", () => {
+  const r = uitOutscraper([[{ name: "A", city: "Utrecht", site: "a.nl", email_1: "Info@A.nl" }, { name: "B" }, { name: "C", emails: ["x"], business_status: "CLOSED_PERMANENTLY", email_1: "c@c.nl" }, { name: "D", emails: [{ value: "d@d.nl" }] }]], "restaurant");
+  assert.equal(r.gevonden, 4); assert.equal(r.zonderMail, 1); assert.equal(r.leads.length, 2);
+  assert.equal(r.leads[0].email, "Info@A.nl"); assert.equal(r.leads[1].email, "d@d.nl"); assert.equal(r.leads[0].soort, "restaurant");
+});
