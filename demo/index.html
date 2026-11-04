@@ -346,6 +346,23 @@ body.on-assist .fab{display:none}
 .xalarm{background:rgba(224,72,72,.14);color:#FF9A9A;border-radius:10px;padding:9px 12px;font-size:13.5px;font-weight:600;margin-bottom:8px}
 .gk{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:12px;margin-bottom:12px}.gk small{display:block;color:var(--mute);font-size:12px}.gk b{display:block;font:600 20px var(--f-d);margin:2px 0}
 @media (max-width:560px){.tr{grid-template-columns:minmax(0,1fr) 56px auto}.tr .spk{display:none}}
+
+.cbar{display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:16px;margin-bottom:20px;background:linear-gradient(100deg,rgba(94,123,255,.16),rgba(155,89,182,.12) 55%,rgba(255,122,89,.12));border:1px solid rgba(170,180,255,.22)}
+.cbar img{width:52px;height:52px;border-radius:50%;object-fit:cover;flex:none;border:2px solid rgba(255,255,255,.7)}
+.cbar .tx{flex:1;min-width:0}.cbar .tx b{display:block;font:600 15px var(--f-d);color:var(--fg)}.cbar .tx span{display:block;font-size:13px;color:var(--fg-2);margin-top:2px}
+.cbtns{display:flex;gap:8px;flex-wrap:wrap}
+.cb{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:99px;font:600 13.5px var(--f-b);text-decoration:none;white-space:nowrap;color:#fff;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.06)}
+.cb svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.cb.wa{background:#1FA855;border-color:#1FA855}.cb.main{background:var(--grad);border-color:transparent}.cb:hover{filter:brightness(1.1)}
+@media (max-width:760px){.cbar{flex-wrap:wrap}.cbtns{width:100%}.cb{flex:1;justify-content:center;padding:10px 8px}}
+.side-foot.mx{display:block;text-align:center;color:var(--fg-2)}.side-foot.mx img{width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.7);margin-bottom:8px}
+.side-foot.mx b{display:block;margin-bottom:2px}.side-foot.mx .cbtns{flex-direction:column;margin-top:10px}.side-foot.mx .cb{justify-content:center}
+.cpop{position:fixed;right:max(22px,calc(env(safe-area-inset-right,0px) + 16px));bottom:calc(92px + env(safe-area-inset-bottom,0px));z-index:45;width:min(330px,calc(100vw - 32px));padding:16px;border-radius:18px;background:#161A38;border:1px solid rgba(170,180,255,.3);box-shadow:0 18px 50px rgba(0,0,0,.45);animation:cpop .4s cubic-bezier(.2,.8,.2,1)}
+.cpop[hidden]{display:none}.cpop .hd{display:flex;gap:12px;align-items:center;margin-bottom:12px;padding-right:18px}.cpop img{width:48px;height:48px;border-radius:50%;object-fit:cover}
+.cpop .hd b{display:block;font:600 15px var(--f-d)}.cpop .hd span{font-size:13px;color:var(--fg-2)}.cpop .x{position:absolute;top:8px;right:10px;background:none;border:0;color:var(--mute);font-size:20px;cursor:pointer;line-height:1}
+.cpop .cbtns{flex-direction:column}.cpop .cb{justify-content:center}
+@keyframes cpop{from{opacity:0;transform:translateY(16px)}}
+@media (max-width:900px){.side-foot.mx{display:none}}
 </style>
 </head>
 <body>
@@ -394,7 +411,7 @@ body.on-assist .fab{display:none}
       <div class="sep"></div>
       <div class="ng" data-g="beheer"><button type="button" class="nh"><svg><use href="#i-key"/></svg><span>Beheer</span><svg class="chv" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button><div class="nb"><a href="#koppelingen" data-v="koppelingen" class="sub"><svg><use href="#i-link"/></svg><span>Koppelingen</span></a><a href="#gebruikers" data-v="gebruikers" class="sub"><svg><use href="#i-key"/></svg><span>Gebruikers</span></a><a href="#support" data-v="support" class="sub"><svg><use href="#i-help"/></svg><span>Support</span></a></div></div>
     </nav>
-    <div class="side-foot"><b><span class="dot"></span>Team actief</b>7 digitale collega's werken nu voor Diggels.</div>
+    <div class="side-foot mx"><img src="/assets/maxim.webp" alt="Maxim Hakemulder" width="64" height="64" loading="lazy"><b>Maxim Hakemulder</b>Eigenaar SERVAI<br>06 19 92 12 22<div class="cbtns"><a class="cb" href="tel:+31619921222" data-ct="bel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>Bel me</a><a class="cb wa" href="https://wa.me/31619921222?text=Hoi%20Maxim%2C%20ik%20heb%20de%20SERVAI-demo%20bekeken%20en%20wil%20graag%20een%20demo%20voor%20mijn%20zaak." target="_blank" rel="noopener" data-ct="whatsapp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21l1.6-4.7A8.5 8.5 0 1 1 8 19.6z"/><path d="M9 9.5c.3 2 2.5 4.3 4.6 4.6l1.2-1.2 1.7.8c-.2 1-1 1.8-2 1.8-3.5 0-6.6-3.1-6.6-6.6 0-1 .8-1.8 1.8-2l.8 1.7z"/></svg>WhatsApp</a><a class="cb main" href="/#demo" data-ct="plan">Plan een demo</a></div></div>
   </aside>
   <div class="subbar" id="subbar"></div>
 
@@ -407,7 +424,7 @@ body.on-assist .fab{display:none}
         <div class="seg" id="period" role="group" aria-label="Periode"></div>
       </div>
     </div>
-    <div class="betabar"><b>BETA</b> Voorbeeldomgeving met realistische cijfers van een restaurant (± 100 couverts per avond, ± € 2,5 mln omzet per jaar). Zo ziet SERVAI eruit met jouw data.</div>
+    <div class="cbar"><img src="/assets/maxim.webp" alt="Maxim Hakemulder" width="52" height="52"><div class="tx"><b>Dit kan jouw zaak zijn. Plan een demo met mij.</b><span>Voorbeeld met nepcijfers van een restaurant (± 100 couverts per avond, ± € 2,5 mln per jaar). Bel of WhatsApp me, dan laat ik zien wat SERVAI met jouw cijfers doet.</span></div><div class="cbtns"><a class="cb" href="tel:+31619921222" data-ct="bel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>Bel me</a><a class="cb wa" href="https://wa.me/31619921222?text=Hoi%20Maxim%2C%20ik%20heb%20de%20SERVAI-demo%20bekeken%20en%20wil%20graag%20een%20demo%20voor%20mijn%20zaak." target="_blank" rel="noopener" data-ct="whatsapp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21l1.6-4.7A8.5 8.5 0 1 1 8 19.6z"/><path d="M9 9.5c.3 2 2.5 4.3 4.6 4.6l1.2-1.2 1.7.8c-.2 1-1 1.8-2 1.8-3.5 0-6.6-3.1-6.6-6.6 0-1 .8-1.8 1.8-2l.8 1.7z"/></svg>WhatsApp</a><a class="cb main" href="/#demo" data-ct="plan">Plan een demo</a></div></div>
     <div id="view"></div>
   </main>
 </div>
@@ -416,6 +433,7 @@ body.on-assist .fab{display:none}
   <form id="pwform" hidden><h2 style="font-size:18px;margin-bottom:6px">Kies een wachtwoord</h2><p class="lp" style="margin-bottom:10px">Minstens 8 tekens. Hiermee log je voortaan in.</p><label for="pw1">Nieuw wachtwoord</label><input id="pw1" type="password" autocomplete="new-password" minlength="8" required><label for="pw2">Herhaal wachtwoord</label><input id="pw2" type="password" autocomplete="new-password" minlength="8" required><button class="lgo" type="submit">Wachtwoord opslaan</button><p class="note" id="pw-err" role="alert" hidden style="color:#FF8A8A;font-size:13px;margin-top:10px"></p></form>
   <div id="demoWrap"><form id="lform"><label for="l-e">E-mailadres</label><input id="l-e" type="email" value="eva@diggels.nl" autocomplete="username"><label for="l-p">Wachtwoord</label><input id="l-p" type="password" value="demo-demo-demo" autocomplete="current-password"><button class="lgo" type="submit">Inloggen</button></form>
   <div class="ldemo"><p>Demo · log in als</p><div id="ldemo"></div></div><p class="lnote">Dit is een demo-omgeving met fictieve accounts en voorbeelddata. Echte inlog met beveiliging volgt zodra de koppelingen live staan.</p></div></div></div>
+<div class="cpop" id="cpop" hidden role="dialog" aria-label="Contact"><button class="x" type="button" aria-label="Sluiten">×</button><div class="hd"><img src="/assets/maxim.webp" alt="" width="48" height="48" loading="lazy"><div><b>Zo ziet het eruit voor jouw zaak</b><span>Maxim · 06 19 92 12 22</span></div></div><div class="cbtns"><a class="cb" href="tel:+31619921222" data-ct="bel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>Bel me</a><a class="cb wa" href="https://wa.me/31619921222?text=Hoi%20Maxim%2C%20ik%20heb%20de%20SERVAI-demo%20bekeken%20en%20wil%20graag%20een%20demo%20voor%20mijn%20zaak." target="_blank" rel="noopener" data-ct="whatsapp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21l1.6-4.7A8.5 8.5 0 1 1 8 19.6z"/><path d="M9 9.5c.3 2 2.5 4.3 4.6 4.6l1.2-1.2 1.7.8c-.2 1-1 1.8-2 1.8-3.5 0-6.6-3.1-6.6-6.6 0-1 .8-1.8 1.8-2l.8 1.7z"/></svg>WhatsApp</a><a class="cb main" href="/#demo" data-ct="plan">Plan een demo</a></div></div>
 <a class="fab" href="#assistent"><svg><use href="#i-chat"/></svg>Vraag SERVAI</a>
 
 <script>
@@ -2095,6 +2113,12 @@ document.getElementById('pwform').addEventListener('submit',async e=>{
     showLogin();return;
   }
   if(!(cur()&&cur().st==='Actief'))state.uid='u1';doLogin(state.uid)
+})();
+/* contact: popup na 40 s (1x per sessie) */
+(()=>{const c=document.getElementById('cpop');if(!c)return;let seen=false;try{seen=sessionStorage.getItem('servai-demo-cpop')==='1'}catch(e){}
+  if(!seen)setTimeout(()=>{if(!document.body.classList.contains('locked'))c.hidden=false;try{sessionStorage.setItem('servai-demo-cpop','1')}catch(e){}},40000);
+  c.querySelector('.x').addEventListener('click',()=>c.hidden=true);
+  document.addEventListener('click',e=>{const a=e.target.closest('[data-ct]');if(a)c.hidden=true});
 })();
 </script>
 </body>
