@@ -84,6 +84,11 @@ test("menu, prijzen en recepten uit CSV", () => {
   const r = bouwRijen([["Friet speciaal", "Friet", "250", "g"], ["Friet speciaal", "Mayonaise", "20", "g"], ["Cola", "Cola", "1", "stuk"]], detecteer(["Gerecht", "Ingrediënt", "Hoeveelheid", "Eenheid"], "recept"), "recept");
   assert.deepEqual(r.rijen[0], { gerecht: "Friet speciaal", ingredient: "Friet", eenheid: "kg", hoeveelheid: 0.25 });
   assert.equal(r.rijen.length, 3);
+  const r2 = bouwRijen([["Burger", "Friet"], ["Burger", "Rundvlees"]], detecteer(["Gerecht", "Ingrediënt"], "recept"), "recept");
+  assert.deepEqual(r2.rijen[0], { gerecht: "Burger", ingredient: "Friet", eenheid: "kg", hoeveelheid: null });
+  assert.equal(r2.fouten.length, 0);
+  const mk = bouwRijen([["Burger", "4,10"]], detecteer(["Gerecht", "Kostprijs"], "menu"), "menu");
+  assert.equal(mk.rijen[0].kostprijs, 4.1);
   assert.deepEqual(eenheidBasis("cl"), { basis: "l", factor: 0.01 });
   assert.equal(eenheidBasis("bak"), null);
 });

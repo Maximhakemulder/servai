@@ -1367,9 +1367,9 @@ let IK=null;
 const ikQ=(t,sel)=>{let x=DSB.from(t).select(sel);if(VIEWAS)x=x.eq('klant_id',VIEWAS);return x};
 async function ikHaal(){
   const [menu,ing,kost,regels]=await Promise.all([
-    sbw(ikQ('menu_items','id,naam,groep,verkoopprijs,bron').order('naam')),
+    sbw(ikQ('menu_items','id,naam,groep,verkoopprijs,kostprijs,bron').order('naam')),
     sbw(ikQ('ingredient_prijs_nu','ingredient_id,naam,eenheid,prijs,datum,leverancier,leverancier_standaard,vorige_prijs,vorige_datum').order('naam')),
-    sbw(ikQ('gerecht_kostprijs','menu_item_id,regels,kostprijs,kostprijs_vorig,zonder_prijs')),
+    sbw(ikQ('gerecht_kostprijs','menu_item_id,regels,kostprijs,kostprijs_vorig,zonder_prijs,kostprijs_ingevuld')),
     sbw(ikQ('recept_regels','menu_item_id,ingredient_id,hoeveelheid'))]);
   IK={menu,ing,kost:Object.fromEntries(kost.map(k=>[k.menu_item_id,k])),regels};
 }
@@ -1391,49 +1391,50 @@ function ikGerechtModal(){
 }
 function ikIngModal(id){
   const e=id?IK.ing.find(x=>x.ingredient_id===id):null;
-  miniModal(e?'Prijs bijwerken: '+e.naam:'Ingrediënt en prijs',`<div class="two"><div><label>Ingrediënt</label><input class="fld" name="naam" required list="ik-ings" value="${e?esc(e.naam):''}" ${e?'readonly':''}><datalist id="ik-ings">${IK.ing.map(x=>`<option value="${esc(x.naam)}">`).join('')}</datalist></div>
+  miniModal(e?'Prijs bijwerken: '+e.naam:'Ingrediënt toevoegen',`<div class="two"><div><label>Ingrediënt</label><input class="fld" name="naam" required list="ik-ings" value="${e?esc(e.naam):''}" ${e?'readonly':''}><datalist id="ik-ings">${IK.ing.map(x=>`<option value="${esc(x.naam)}">`).join('')}</datalist></div>
    <div><label>Prijs per</label><select class="fld" name="eenheid">${['kg','l','stuk'].map(x=>`<option${e&&e.eenheid===x?' selected':''}>${x}</option>`).join('')}</select></div></div>
-   <div class="two"><div><label>Inkoopprijs (excl. btw) €</label><input class="fld" name="prijs" inputmode="decimal" required placeholder="2,40"></div><div><label>Leverancier</label><input class="fld" name="lev" value="${e?esc(e.leverancier||e.leverancier_standaard||''):''}" placeholder="Hanos"></div></div>
+   <div class="two"><div><label>Inkoopprijs excl. btw € (optioneel)</label><input class="fld" name="prijs" inputmode="decimal" placeholder="2,40"></div><div><label>Leverancier</label><input class="fld" name="lev" value="${e?esc(e.leverancier||e.leverancier_standaard||''):''}" placeholder="Hanos"></div></div>
    <div><label>Datum van deze prijs</label><input class="fld" name="datum" type="date" value="${vandaag()}"></div>`,async(f,sluit)=>{
     const K=await import('/assets/upload-kolommen.mjs');
     const naam=f.naam.value.trim(),p=K.parseGetal(f.prijs.value);
-    if(!naam)throw new Error('Vul een ingrediënt in');if(p===null||p<0)throw new Error('Vul een geldige prijs in');
+    if(!naam)throw new Error('Vul een ingrediënt in');if(f.prijs.value.trim()&&(p===null||p<0))throw new Error('Vul een geldige prijs in');
     let ing=IK.ing.find(x=>x.naam.toLowerCase()===naam.toLowerCase());
     if(ing&&ing.eenheid!==f.eenheid.value)throw new Error(naam+' staat al per '+ing.eenheid+'. Kies dezelfde eenheid.');
     let iid=ing&&ing.ingredient_id;
     if(!iid){const n=await sbw(DSB.from('ingredienten').insert({klant_id:KLANTID,naam,eenheid:f.eenheid.value,leverancier:f.lev.value.trim()||null}).select('id').single());iid=n.id}
-    await sbw(DSB.from('ingredient_prijzen').upsert({klant_id:KLANTID,ingredient_id:iid,datum:f.datum.value||vandaag(),prijs_per_eenheid:p,leverancier:f.lev.value.trim()||null,bron:'handmatig'},{onConflict:'ingredient_id,datum'}));
-    sluit();flash('Prijs opgeslagen');render()});
+    if(p!==null)await sbw(DSB.from('ingredient_prijzen').upsert({klant_id:KLANTID,ingredient_id:iid,datum:f.datum.value||vandaag(),prijs_per_eenheid:p,leverancier:f.lev.value.trim()||null,bron:'handmatig'},{onConflict:'ingredient_id,datum'}));
+    sluit();flash(p!==null?'Prijs opgeslagen':'Ingrediënt opgeslagen');render()});
 }
 async function ikRecept(id){
   const K=await import('/assets/upload-kolommen.mjs');
   const m=IK.menu.find(x=>x.id===id);
-  if(!IK.ing.length){flash('Voeg eerst ingrediënten met een prijs toe');return}
-  const UN=['g','kg','ml','l','stuk'];
-  const toon=(r)=>{const i=IK.ing.find(x=>x.ingredient_id===r.ingredient_id);if(!i)return{h:'',e:'g'};const h=+r.hoeveelheid;return i.eenheid==='kg'?{h:h*1000,e:'g'}:i.eenheid==='l'?{h:h*1000,e:'ml'}:{h,e:'stuk'}};
-  const lijn=(r)=>{const t=r?toon(r):{h:'',e:'g'};return `<div class="ik-l" style="display:grid;grid-template-columns:1fr 90px 84px 36px;gap:8px;margin-bottom:8px"><select class="fld" name="i"><option value="">Kies ingrediënt…</option>${IK.ing.map(x=>`<option value="${x.ingredient_id}"${r&&r.ingredient_id===x.ingredient_id?' selected':''}>${esc(x.naam)} (per ${x.eenheid})</option>`).join('')}</select><input class="fld" name="h" inputmode="decimal" value="${t.h===''?'':String(Math.round(t.h*100)/100).replace('.',',')}" placeholder="250"><select class="fld" name="e">${UN.map(u=>`<option${t.e===u?' selected':''}>${u}</option>`).join('')}</select><button type="button" class="act ghost" data-del aria-label="Regel verwijderen">×</button></div>`};
-  const cur0=IK.regels.filter(r=>r.menu_item_id===id);
-  const {f,sluit}=miniModal('Recept: '+m.naam,`<p style="color:var(--mute);font-size:13.5px;margin-bottom:12px">Wat zit er in één portie? De kostprijs rekent SERVAI uit met de laatste inkoopprijzen.</p><div id="ik-lijnen">${(cur0.length?cur0:[null,null,null]).map(lijn).join('')}</div><button type="button" class="act ghost" data-add>+ Regel toevoegen</button>`,async(f,sluit)=>{
-    const m2=new Map();
-    for(const l of f.querySelectorAll('.ik-l')){
-      const iid=l.querySelector('[name=i]').value,h=K.parseGetal(l.querySelector('[name=h]').value);if(!iid&&(h===null||h===0))continue;
-      if(!iid||h===null||h<=0)throw new Error('Kies bij elke regel een ingrediënt en een hoeveelheid');
-      const ing=IK.ing.find(x=>x.ingredient_id===iid),e=K.eenheidBasis(l.querySelector('[name=e]').value);
-      if(!e||e.basis!==ing.eenheid)throw new Error(ing.naam+' staat per '+ing.eenheid+'. Kies een passende eenheid.');
-      m2.set(iid,Math.round(((m2.get(iid)||0)+h*e.factor)*10000)/10000);
-    }
+  const gekozen=new Set(IK.regels.filter(r=>r.menu_item_id===id).map(r=>r.ingredient_id));
+  const kp=m.kostprijs!=null?String(m.kostprijs).replace('.',','):'';
+  const lijst=IK.ing.length?IK.ing.map(x=>`<label class="ik-c" data-n="${esc(x.naam.toLowerCase())}" style="display:flex;gap:8px;align-items:center;padding:5px 2px;font-size:14px"><input type="checkbox" value="${x.ingredient_id}"${gekozen.has(x.ingredient_id)?' checked':''}> ${esc(x.naam)}</label>`).join(''):'<p style="color:var(--mute);font-size:13.5px">Nog geen ingrediënten. Voeg ze hieronder toe.</p>';
+  const {f,sluit}=miniModal('Gerecht: '+m.naam,`<div><label>Kostprijs per portie € (zelf invullen)</label><input class="fld" name="kost" inputmode="decimal" value="${kp}" placeholder="4,10"></div>
+   <p style="color:var(--mute);font-size:13.5px;margin:12px 0 6px">Welke ingrediënten zitten erin? Wordt een inkoopprijs duurder, dan laat SERVAI zien welke gerechten dat raakt.</p>
+   <input class="fld" id="ik-izoek" placeholder="Zoek ingrediënt…" style="margin-bottom:6px"><div style="max-height:240px;overflow:auto;border:1px solid var(--line,#2a2d3d);border-radius:10px;padding:6px 10px">${lijst}</div>
+   <div style="margin-top:10px"><label>Nieuw ingrediënt (meerdere? zet er een komma tussen)</label><input class="fld" name="nieuw" placeholder="Friet, Mayonaise"></div>`,async(f,sluit)=>{
+    const kost=f.kost.value.trim()?K.parseGetal(f.kost.value):null;
+    if(f.kost.value.trim()&&(kost===null||kost<0))throw new Error('Vul een geldige kostprijs in');
+    const ids=new Set([...f.querySelectorAll('.ik-c input:checked')].map(i=>i.value));
+    const nw=[...new Set(f.nieuw.value.split(',').map(x=>x.trim()).filter(Boolean))];
+    for(const naam of nw){
+      const bestaand=IK.ing.find(x=>x.naam.toLowerCase()===naam.toLowerCase());
+      if(bestaand){ids.add(bestaand.ingredient_id);continue}
+      const n=await sbw(DSB.from('ingredienten').insert({klant_id:KLANTID,naam,eenheid:'kg'}).select('id').single());ids.add(n.id)}
+    const oud=new Map(IK.regels.filter(r=>r.menu_item_id===id).map(r=>[r.ingredient_id,r.hoeveelheid]));
+    await sbw(DSB.from('menu_items').update({kostprijs:kost}).eq('id',id));
     await sbw(DSB.from('recept_regels').delete().eq('menu_item_id',id));
-    if(m2.size)await sbw(DSB.from('recept_regels').insert([...m2].map(([iid,h])=>({klant_id:KLANTID,menu_item_id:id,ingredient_id:iid,hoeveelheid:h}))));
-    sluit();flash('Recept opgeslagen');render()});
-  f.addEventListener('click',e=>{
-    if(e.target.closest('[data-add]'))f.querySelector('#ik-lijnen').insertAdjacentHTML('beforeend',lijn(null));
-    const d=e.target.closest('[data-del]');if(d)d.closest('.ik-l').remove()});
+    if(ids.size)await sbw(DSB.from('recept_regels').insert([...ids].map(iid=>({klant_id:KLANTID,menu_item_id:id,ingredient_id:iid,hoeveelheid:oud.get(iid)??null}))));
+    sluit();flash('Gerecht opgeslagen');render()});
+  f.querySelector('#ik-izoek').addEventListener('input',e=>{const q=e.target.value.trim().toLowerCase();f.querySelectorAll('.ik-c').forEach(l=>{l.style.display=!q||l.dataset.n.includes(q)?'flex':'none'})});
 }
 /** CSV-regels van menu, prijzen of recepten wegschrijven (rechtstreeks, met de rechten van de gebruiker). */
 async function ikSchrijf(soort,rijen){
   await ikHaal();
   if(soort==='menu'){
-    for(const c of chunk(rijen.map(r=>({klant_id:KLANTID,naam:r.naam,groep:r.groep,verkoopprijs:r.verkoopprijs,bron:'csv'})),500))await sbw(DSB.from('menu_items').upsert(c,{onConflict:'klant_id,naam'}));
+    for(const c of chunk(rijen.map(r=>({klant_id:KLANTID,naam:r.naam,groep:r.groep,verkoopprijs:r.verkoopprijs,bron:'csv',...(r.kostprijs!==undefined?{kostprijs:r.kostprijs}:{})})),500))await sbw(DSB.from('menu_items').upsert(c,{onConflict:'klant_id,naam'}));
     return rijen.length}
   const ingBy=new Map(IK.ing.map(i=>[i.naam.toLowerCase(),i]));
   if(soort==='prijzen'){
@@ -1447,9 +1448,9 @@ async function ikSchrijf(soort,rijen){
     return rows.length}
   // recept
   const mBy=new Map(IK.menu.map(m=>[m.naam.toLowerCase(),m.id]));
-  const onbekend=[...new Set(rijen.filter(r=>!ingBy.has(r.ingredient.toLowerCase())).map(r=>r.ingredient))];
-  if(onbekend.length)throw new Error('Deze ingrediënten bestaan nog niet: '+onbekend.slice(0,5).join(', ')+(onbekend.length>5?' …':'')+'. Upload eerst de ingrediënten en prijzen.');
-  const mis=rijen.filter(r=>ingBy.get(r.ingredient.toLowerCase()).eenheid!==r.eenheid)[0];
+  const onbekend=[...new Map(rijen.filter(r=>!ingBy.has(r.ingredient.toLowerCase())).map(r=>[r.ingredient.toLowerCase(),r.ingredient])).values()];
+  if(onbekend.length){const n=await sbw(DSB.from('ingredienten').insert(onbekend.map(naam=>({klant_id:KLANTID,naam,eenheid:'kg'}))).select('id,naam,eenheid'));n.forEach(i=>ingBy.set(i.naam.toLowerCase(),{ingredient_id:i.id,eenheid:i.eenheid}))}
+  const mis=rijen.filter(r=>r.hoeveelheid!==null&&ingBy.get(r.ingredient.toLowerCase()).eenheid!==r.eenheid)[0];
   if(mis)throw new Error(mis.ingredient+' staat per '+ingBy.get(mis.ingredient.toLowerCase()).eenheid+'. Gebruik een passende eenheid in het bestand.');
   const nieuweG=[...new Set(rijen.filter(r=>!mBy.has(r.gerecht.toLowerCase())).map(r=>r.gerecht))];
   if(nieuweG.length){const n=await sbw(DSB.from('menu_items').insert(nieuweG.map(g=>({klant_id:KLANTID,naam:g,bron:'csv'}))).select('id,naam'));n.forEach(m=>mBy.set(m.naam.toLowerCase(),m.id))}
@@ -1466,24 +1467,25 @@ async function ikLoad(wrap){
   const wijz=ing.filter(i=>i.vorige_prijs>0&&i.prijs>0).map(i=>({i,p:(i.prijs-i.vorige_prijs)/i.vorige_prijs*100})).filter(x=>Math.abs(x.p)>=3).sort((a,b)=>Math.abs(b.p)-Math.abs(a.p));
   const pct=p=>(p>0?'+':'−')+nl1(Math.abs(p))+'%';
   const e4=n=>eur(n,2);
-  const knop=k?`<div class="c span-12" style="display:flex;flex-direction:row;gap:10px;flex-wrap:wrap;align-items:center"><button class="act" data-ik="ing">+ Ingrediënt / prijs</button><button class="act ghost" data-ik="gerecht">+ Gerecht</button><button class="act ghost" data-ik="import">Menu uit kassa halen</button><button class="act ghost" data-up="menu">CSV: menu</button><button class="act ghost" data-up="prijzen">CSV: prijzen</button><button class="act ghost" data-up="recept">CSV: recepten</button></div>`:'';
+  const knop=k?`<div class="c span-12" style="display:flex;flex-direction:row;gap:10px;flex-wrap:wrap;align-items:center"><button class="act" data-ik="ing">+ Ingrediënt</button><button class="act ghost" data-ik="gerecht">+ Gerecht</button><button class="act ghost" data-ik="import">Menu uit kassa halen</button><button class="act ghost" data-up="menu">CSV: menu</button><button class="act ghost" data-up="prijzen">CSV: prijzen</button><button class="act ghost" data-up="recept">CSV: recepten</button></div>`:'';
   const zonderRecept=menu.filter(m=>!(kost[m.id]&&kost[m.id].regels>0)).length;
-  const kpis=rpKpi('Gerechten',nf(menu.length),'<span class="delta flat">'+(menu.length-zonderRecept)+' met recept</span>',zonderRecept?zonderRecept+' nog zonder recept':'alle gerechten hebben een recept')+
-   rpKpi('Ingrediënten',nf(ing.length),'<span class="delta flat">met prijs</span>','laatste inkoopprijzen')+
+  const kpis=rpKpi('Gerechten',nf(menu.length),'<span class="delta flat">'+(menu.length-zonderRecept)+' met ingrediënten</span>',zonderRecept?zonderRecept+' nog zonder ingrediënten':'alle gerechten hebben ingrediënten')+
+   rpKpi('Ingrediënten',nf(ing.length),'<span class="delta flat">'+ing.filter(i=>i.prijs>0).length+' met prijs</span>','prijs is optioneel')+
    rpKpi('Prijswijzigingen',nf(wijz.length),wijz.length?`<span class="delta ${wijz.some(x=>x.p>0)?'down':'up'}">${wijz.filter(x=>x.p>0).length} omhoog</span>`:'<span class="delta flat">–</span>','vanaf 3% t.o.v. vorige prijs');
-  const warn=wijz.length?rpTab(wijz.map(({i,p})=>{const g=geraakt(i.ingredient_id);return `<tr><td><b>${esc(i.naam)}</b><br><span style="color:var(--mute);font-size:12px">${esc(i.leverancier||i.leverancier_standaard||'')}</span></td><td><span class="delta ${p>0?'down':'up'}">${p>0?'▲':'▼'} ${pct(p)}</span></td><td class="r">${e4(i.vorige_prijs)} → ${e4(i.prijs)} per ${i.eenheid}</td><td>${g.length?esc(g.slice(0,4).join(', '))+(g.length>4?' +'+(g.length-4)+' meer':''):'<span style="color:var(--mute)">nog in geen recept</span>'}</td></tr>`}),'<th>Ingrediënt</th><th>Verandering</th><th class="r">Inkoopprijs</th><th>Raakt gerechten</th>'):'<p style="color:var(--mute)">Geen prijswijzigingen. Zodra een inkoopprijs verandert, zie je hier hoeveel en welke gerechten dat raakt. Of je daarop je verkoopprijs aanpast, bepaal je zelf.</p>';
+  const warn=wijz.length?rpTab(wijz.map(({i,p})=>{const g=geraakt(i.ingredient_id);return `<tr><td><b>${esc(i.naam)}</b><br><span style="color:var(--mute);font-size:12px">${esc(i.leverancier||i.leverancier_standaard||'')}</span></td><td><span class="delta ${p>0?'down':'up'}">${p>0?'▲':'▼'} ${pct(p)}</span></td><td class="r">${e4(i.vorige_prijs)} → ${e4(i.prijs)} per ${i.eenheid}</td><td>${g.length?esc(g.slice(0,4).join(', '))+(g.length>4?' +'+(g.length-4)+' meer':''):'<span style="color:var(--mute)">nog aan geen gerecht gekoppeld</span>'}</td></tr>`}),'<th>Ingrediënt</th><th>Verandering</th><th class="r">Inkoopprijs</th><th>Raakt gerechten</th>'):'<p style="color:var(--mute)">Geen prijswijzigingen. Zodra een inkoopprijs verandert, zie je hier hoeveel en welke gerechten dat raakt. Of je daarop je verkoopprijs aanpast, bepaal je zelf.</p>';
   const FOOD=/food|eten|keuken|gerecht|voor|hoofd|na|lunch|diner|ontbijt|snack|bijgerecht|dessert|pizza|burger/i;
   const rij=m=>{const x=kost[m.id]||{regels:0,kostprijs:0,kostprijs_vorig:0,zonder_prijs:0};
     const dv=x.kostprijs_vorig>0&&x.kostprijs>0?(x.kostprijs-x.kostprijs_vorig)/x.kostprijs_vorig*100:0;
-    const fc=x.regels>0&&m.verkoopprijs>0&&FOOD.test(m.groep||'')?x.kostprijs/(m.verkoopprijs/1.09)*100:null;
-    const st=!x.regels?'<span style="color:var(--mute)">recept ontbreekt</span>':x.zonder_prijs?'<span style="color:#FFB86B">prijs ontbreekt</span>':'';
-    return `<tr data-zoek="${esc((m.naam+' '+(m.groep||'')).toLowerCase())}"><td>${esc(m.naam)}<br><span style="color:var(--mute);font-size:12px">${esc(m.groep||'')}</span></td><td class="r">${m.verkoopprijs>0?e4(m.verkoopprijs):'–'}</td><td class="r">${x.regels?e4(x.kostprijs):'–'}${Math.abs(dv)>=1?`<br><span class="delta ${dv>0?'down':'up'}">${dv>0?'▲':'▼'} ${pct(dv)}</span>`:''}</td><td class="r">${fc==null?'–':nl1(fc)+'%'}</td><td>${st}</td><td class="r">${k?`<button class="act ghost" data-ik="recept" data-id="${m.id}">${x.regels?'Recept':'+ Recept'}</button>`:''}</td></tr>`};
+    const fc=x.kostprijs>0&&m.verkoopprijs>0&&FOOD.test(m.groep||'')?x.kostprijs/(m.verkoopprijs/1.09)*100:null;
+    const op=regels.filter(r=>r.menu_item_id===m.id).map(r=>wijz.find(w=>w.i.ingredient_id===r.ingredient_id)).filter(w=>w&&w.p>0);
+    const st=[op.length?'<span class="delta down">'+op.slice(0,2).map(w=>esc(w.i.naam)+' '+pct(w.p)).join(', ')+(op.length>2?' +'+(op.length-2):'')+'</span>':'',!(x.kostprijs>0)?'<span style="color:var(--mute)">kostprijs ontbreekt</span>':'',!x.regels?'<span style="color:var(--mute)">geen ingrediënten</span>':''].filter(Boolean).join('<br>');
+    return `<tr data-zoek="${esc((m.naam+' '+(m.groep||'')).toLowerCase())}"><td>${esc(m.naam)}<br><span style="color:var(--mute);font-size:12px">${esc(m.groep||'')}</span></td><td class="r">${m.verkoopprijs>0?e4(m.verkoopprijs):'–'}</td><td class="r">${x.kostprijs>0?e4(x.kostprijs):'–'}${Math.abs(dv)>=1?`<br><span class="delta ${dv>0?'down':'up'}">${dv>0?'▲':'▼'} ${pct(dv)}</span>`:''}</td><td class="r">${fc==null?'–':nl1(fc)+'%'}</td><td>${st}</td><td class="r">${k?`<button class="act ghost" data-ik="recept" data-id="${m.id}">${x.regels||x.kostprijs>0?'Bewerken':'+ Kostprijs / ingrediënten'}</button>`:''}</td></tr>`};
   const gerechten=menu.length?`<div style="margin:0 0 10px"><input class="fld" id="ik-zoek" placeholder="Zoek gerecht…" style="max-width:280px"></div>`+rpTab(menu.map(rij),'<th>Gerecht</th><th class="r">Verkoopprijs</th><th class="r">Kostprijs</th><th class="r">Food cost*</th><th>Status</th><th></th>')+'<p style="color:var(--mute);font-size:12px;margin-top:8px">* kostprijs gedeeld door de verkoopprijs excl. 9% btw, alleen voor gerechten. Prijzen komen uit je kassa of CSV; SERVAI past nooit prijzen aan.</p>':`<p style="color:var(--mute)">Nog geen menu. ${k?'Haal je menu uit de kassa, upload een CSV of voeg een gerecht toe.':''}</p>`;
-  const ingr=ing.length?rpTab(ing.map(i=>`<tr><td>${esc(i.naam)}</td><td class="r">${e4(i.prijs)} per ${i.eenheid}</td><td>${esc(i.leverancier||i.leverancier_standaard||'')}</td><td class="r">${i.datum?i.datum.split('-').reverse().join('-'):''}</td><td class="r">${k?`<button class="act ghost" data-ik="ing" data-id="${i.ingredient_id}">Prijs bijwerken</button>`:''}</td></tr>`),'<th>Ingrediënt</th><th class="r">Inkoopprijs excl. btw</th><th>Leverancier</th><th class="r">Sinds</th><th></th>'):'<p style="color:var(--mute)">Nog geen ingrediënten. Voeg er een toe of upload een CSV met prijzen.</p>';
+  const ingr=ing.length?rpTab(ing.map(i=>`<tr><td>${esc(i.naam)}</td><td class="r">${i.prijs>0?e4(i.prijs)+' per '+i.eenheid:'–'}</td><td>${esc(i.leverancier||i.leverancier_standaard||'')}</td><td class="r">${i.datum?i.datum.split('-').reverse().join('-'):''}</td><td class="r">${k?`<button class="act ghost" data-ik="ing" data-id="${i.ingredient_id}">${i.prijs>0?'Prijs bijwerken':'+ Prijs'}</button>`:''}</td></tr>`),'<th>Ingrediënt</th><th class="r">Inkoopprijs excl. btw</th><th>Leverancier</th><th class="r">Sinds</th><th></th>'):'<p style="color:var(--mute)">Nog geen ingrediënten. Voeg er een toe, koppel ze aan een gerecht of upload een CSV.</p>';
   wrap.outerHTML=knop+kpis+
    `<div class="c span-12"><div class="ch"><div><h2>Prijswaarschuwingen</h2><p>Waar de inkoop duurder of goedkoper is geworden</p></div></div>${warn}</div>`+
-   `<div class="c span-12"><div class="ch"><div><h2>Gerechten en kostprijs</h2><p>Wat een portie kost om te maken</p></div></div>${gerechten}</div>`+
-   `<div class="c span-12"><div class="ch"><div><h2>Ingrediënten en inkoopprijzen</h2><p>Laatste prijs per eenheid</p></div></div>${ingr}</div>`;
+   `<div class="c span-12"><div class="ch"><div><h2>Gerechten en kostprijs</h2><p>Kostprijs vul je zelf in; ingrediënten koppel je eraan</p></div></div>${gerechten}</div>`+
+   `<div class="c span-12"><div class="ch"><div><h2>Ingrediënten</h2><p>Lijst zonder verplichte prijs; met een prijs krijg je waarschuwingen</p></div></div>${ingr}</div>`;
   const z=document.getElementById('ik-zoek');
   if(z)z.addEventListener('input',()=>{const q=z.value.trim().toLowerCase();document.querySelectorAll('tr[data-zoek]').forEach(r=>{r.style.display=!q||r.dataset.zoek.includes(q)?'':'none'})});
 }
@@ -1494,14 +1496,14 @@ document.getElementById('view').addEventListener('click',e=>{
 
 /* ---------------- demo: nagemaakte database voor Inkoop & kostprijs (blijft in deze browser) ---------------- */
 let KLANTID='demo';
-const DKEY='servai-demo-ik-v1';
+const DKEY='servai-demo-ik-v2';
 function dSeed(){
   const ing=[['Friet','kg',2.0,2.24,'Hanos'],['Mayonaise','kg',8.6,8.6,'Sligro'],['Rundergehakt','kg',9.8,10.9,'Hanos'],['Broodje','stuk',0.32,0.32,'Bidfood'],['Sla','kg',3.1,3.1,'Groenteboer'],['Tomaat','kg',2.4,2.9,'Groenteboer'],['Kipfilet','kg',8.9,8.9,'Hanos'],['Kaas','kg',9.2,9.2,'Sligro'],['Cola 20cl','stuk',0.41,0.41,'Sligro'],['Pilsner fust','l',2.3,2.3,'Brouwerij']].map((x,i)=>({id:'i'+i,klant_id:'demo',naam:x[0],eenheid:x[1],leverancier:x[4],p0:x[2],p1:x[3]}));
   const prijzen=[];ing.forEach(i=>{prijzen.push({id:'p'+i.id+'a',klant_id:'demo',ingredient_id:i.id,datum:'2026-10-01',prijs_per_eenheid:i.p0,leverancier:i.leverancier});prijzen.push({id:'p'+i.id+'b',klant_id:'demo',ingredient_id:i.id,datum:'2026-11-02',prijs_per_eenheid:i.p1,leverancier:i.leverancier})});
   ing.forEach(i=>{delete i.p0;delete i.p1});
-  const menu=[['Friet speciaal','Food',5.5],['Hamburger','Food',13.5],['Kapsalon','Food',14.5],['Caesar salade','Food',12.5],['Tosti kaas','Food',6.5],['Kipsaté','Food',15.5],['Cola','Drinks',3.2],['Pilsner','Drinks',3.8],['Koffie','Drinks',2.9]].map((x,i)=>({id:'m'+i,klant_id:'demo',naam:x[0],groep:x[1],verkoopprijs:x[2],bron:'kassa'}));
-  const R=(m,i,h)=>({id:'r'+m+i,klant_id:'demo',menu_item_id:'m'+m,ingredient_id:'i'+i,hoeveelheid:h});
-  const recept=[R(0,0,.25),R(0,1,.02),R(1,2,.18),R(1,3,1),R(1,4,.03),R(1,5,.03),R(1,7,.02),R(2,0,.3),R(2,6,.15),R(2,4,.05),R(2,1,.03),R(3,6,.12),R(3,4,.1),R(3,5,.05),R(8,8,1),R(7,9,.3)];
+  const menu=[['Friet speciaal','Food',5.5],['Hamburger','Food',13.5],['Kapsalon','Food',14.5],['Caesar salade','Food',12.5],['Tosti kaas','Food',6.5],['Kipsaté','Food',15.5],['Cola','Drinks',3.2],['Pilsner','Drinks',3.8],['Koffie','Drinks',2.9]].map((x,i)=>({id:'m'+i,klant_id:'demo',naam:x[0],groep:x[1],verkoopprijs:x[2],kostprijs:[1.1,4.1,4.6,3.2,1.5,null,0.45,0.9,0.25][i],bron:'kassa'}));
+  const R=(m,i,h)=>({id:'r'+m+i,klant_id:'demo',menu_item_id:'m'+m,ingredient_id:'i'+i,hoeveelheid:null});
+  const recept=[R(0,0),R(0,1),R(1,2),R(1,3),R(1,4),R(1,5),R(1,7),R(2,0),R(2,6),R(2,4),R(2,1),R(3,6),R(3,4),R(3,5),R(6,8),R(7,9)];
   return {menu_items:menu,ingredienten:ing,ingredient_prijzen:prijzen,recept_regels:recept};
 }
 let DDB;try{DDB=JSON.parse(localStorage.getItem(DKEY)||'null')}catch(e){}
@@ -1510,15 +1512,15 @@ const dSave=()=>{try{localStorage.setItem(DKEY,JSON.stringify(DDB))}catch(e){}};
 let dN=0;const dId=()=>'d'+Date.now().toString(36)+(dN++);
 function dView(t){
   if(t==='ingredient_prijs_nu')return DDB.ingredienten.map(i=>{const p=DDB.ingredient_prijzen.filter(x=>x.ingredient_id===i.id).sort((a,b)=>b.datum.localeCompare(a.datum));return {ingredient_id:i.id,klant_id:i.klant_id,naam:i.naam,eenheid:i.eenheid,leverancier_standaard:i.leverancier,prijs:p[0]?p[0].prijs_per_eenheid:null,datum:p[0]?p[0].datum:null,leverancier:p[0]?p[0].leverancier:null,vorige_prijs:p[1]?p[1].prijs_per_eenheid:null,vorige_datum:p[1]?p[1].datum:null}});
-  if(t==='gerecht_kostprijs'){const n=Object.fromEntries(dView('ingredient_prijs_nu').map(x=>[x.ingredient_id,x]));return DDB.menu_items.map(m=>{const r=DDB.recept_regels.filter(x=>x.menu_item_id===m.id);let k=0,kv=0,zp=0;r.forEach(x=>{const i=n[x.ingredient_id]||{};if(i.prijs==null)zp++;k+=x.hoeveelheid*(i.prijs||0);kv+=x.hoeveelheid*(i.vorige_prijs!=null?i.vorige_prijs:(i.prijs||0))});return {menu_item_id:m.id,klant_id:m.klant_id,naam:m.naam,groep:m.groep,verkoopprijs:m.verkoopprijs,regels:r.length,kostprijs:k,kostprijs_vorig:kv,zonder_prijs:zp}})}
+  if(t==='gerecht_kostprijs'){const n=Object.fromEntries(dView('ingredient_prijs_nu').map(x=>[x.ingredient_id,x]));return DDB.menu_items.map(m=>{const r=DDB.recept_regels.filter(x=>x.menu_item_id===m.id);let k=0,kv=0,zp=0;r.forEach(x=>{const i=n[x.ingredient_id]||{};if(i.prijs==null)zp++;if(x.hoeveelheid!=null){k+=x.hoeveelheid*(i.prijs||0);kv+=x.hoeveelheid*(i.vorige_prijs!=null?i.vorige_prijs:(i.prijs||0))}});const ki=m.kostprijs!=null;return {menu_item_id:m.id,klant_id:m.klant_id,naam:m.naam,groep:m.groep,verkoopprijs:m.verkoopprijs,regels:r.length,kostprijs:ki?m.kostprijs:k,kostprijs_vorig:ki?m.kostprijs:kv,zonder_prijs:zp,kostprijs_ingevuld:ki}})}
   return (DDB[t]||[]).map(x=>({...x}));
 }
 const DSB={auth:{getSession:async()=>({data:{session:{access_token:'demo'}}})},from(t){
-  let rows=dView(t),del=false;
+  let rows=dView(t),del=false,upd=null;
   const b={select(){return b},order(c){rows=rows.slice().sort((x,y)=>String(x[c]).localeCompare(String(y[c])));return b},range(){return b},gte(){return b},lte(){return b},
-    eq(c,v){if(del){DDB[t]=DDB[t].filter(r=>r[c]!==v);dSave()}else rows=rows.filter(r=>r[c]===v);return b},
+    eq(c,v){if(upd){DDB[t].filter(r=>r[c]===v).forEach(r=>Object.assign(r,upd));dSave()}else if(del){DDB[t]=DDB[t].filter(r=>r[c]!==v);dSave()}else rows=rows.filter(r=>r[c]===v);return b},
     in(c,vs){if(del){DDB[t]=DDB[t].filter(r=>!vs.includes(r[c]));dSave()}else rows=rows.filter(r=>vs.includes(r[c]));return b},
-    delete(){del=true;return b},
+    delete(){del=true;return b},update(p){upd=p;return b},
     insert(r){r=[].concat(r).map(x=>({id:dId(),...x}));DDB[t].push(...r);dSave();rows=r;return b},
     upsert(r,o){const keys=o.onConflict.split(',');[].concat(r).forEach(x=>{const e=DDB[t].find(y=>keys.every(k=>y[k]===x[k]));if(e){if(!o.ignoreDuplicates)Object.assign(e,x)}else DDB[t].push({id:dId(),...x})});dSave();rows=[];return b},
     single(){rows=rows[0];return b},maybeSingle(){rows=rows[0]||null;return b},

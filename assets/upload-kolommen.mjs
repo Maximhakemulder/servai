@@ -29,6 +29,7 @@ export const VELDEN = {
     { id: "naam", naam: "Gerecht / artikel", syn: ["gerecht", "gerechtnaam", "menuitem", "artikel", "artikelnaam", "product", "naam", "omschrijving", "item"], verplicht: true },
     { id: "groep", naam: "Groep", syn: ["groep", "categorie", "rubriek", "soort", "afdeling"] },
     { id: "verkoopprijs", naam: "Verkoopprijs", syn: ["verkoopprijs", "prijs", "bedrag", "verkoop"] },
+    { id: "kostprijs", naam: "Kostprijs per portie (optioneel)", syn: ["kostprijs", "kostprijsperportie", "inkoopwaarde", "foodcost", "kosten"] },
   ],
   prijzen: [
     { id: "ingredient", naam: "Ingrediënt", syn: ["ingredient", "ingredientnaam", "grondstof", "product", "artikel", "naam", "omschrijving"], verplicht: true },
@@ -40,7 +41,7 @@ export const VELDEN = {
   recept: [
     { id: "gerecht", naam: "Gerecht", syn: ["gerecht", "gerechtnaam", "menuitem", "menu", "artikel"], verplicht: true },
     { id: "ingredient", naam: "Ingrediënt", syn: ["ingredient", "ingredientnaam", "grondstof", "product"], verplicht: true },
-    { id: "hoeveelheid", naam: "Hoeveelheid", syn: ["hoeveelheid", "aantal", "qty", "gewicht", "portie"], verplicht: true },
+    { id: "hoeveelheid", naam: "Hoeveelheid", syn: ["hoeveelheid", "aantal", "qty", "gewicht", "portie"] },
     { id: "eenheid", naam: "Eenheid (g, kg, ml, l, stuk)", syn: ["eenheid", "unit", "uom"] },
   ],
   inkoop: [
@@ -142,7 +143,10 @@ export function bouwRijen(rijen, kol, modus, opt = {}) {
       const naam = String(cel(r, "naam") ?? "").trim();
       if (!naam) return fout(n, "naam ontbreekt");
       const pr = kol.verkoopprijs >= 0 ? parseGetal(cel(r, "verkoopprijs")) : null;
-      uit.push({ naam, groep: String(cel(r, "groep") ?? "").trim() || null, verkoopprijs: pr === null ? null : r2(pr) });
+      const x = { naam, groep: String(cel(r, "groep") ?? "").trim() || null, verkoopprijs: pr === null ? null : r2(pr) };
+      const kp = kol.kostprijs >= 0 ? parseGetal(cel(r, "kostprijs")) : null;
+      if (kp !== null && kp >= 0) x.kostprijs = r2(kp);
+      uit.push(x);
       return;
     }
     if (modus === "prijzen") {
@@ -160,13 +164,14 @@ export function bouwRijen(rijen, kol, modus, opt = {}) {
     }
     if (modus === "recept") {
       const ger = String(cel(r, "gerecht") ?? "").trim(), ing = String(cel(r, "ingredient") ?? "").trim();
-      const h = parseGetal(cel(r, "hoeveelheid"));
+      const hRaw = kol.hoeveelheid >= 0 ? String(cel(r, "hoeveelheid") ?? "").trim() : "";
+      const h = hRaw ? parseGetal(hRaw) : null;
       if (!ger || !ing) return fout(n, "gerecht of ingrediënt ontbreekt");
-      if (h === null || h <= 0) return fout(n, `hoeveelheid niet herkend (“${cel(r, "hoeveelheid") ?? ""}”)`);
+      if (hRaw && (h === null || h <= 0)) return fout(n, `hoeveelheid niet herkend (“${hRaw}”)`);
       const raw = kol.eenheid >= 0 ? String(cel(r, "eenheid") ?? "").trim() : "";
       const e = raw ? eenheidBasis(raw) : { basis: "kg", factor: 1 };
       if (!e) return fout(n, `eenheid niet herkend (“${raw}”), gebruik g, kg, ml, l of stuk`);
-      uit.push({ gerecht: ger, ingredient: ing, eenheid: e.basis, hoeveelheid: Math.round(h * e.factor * 10000) / 10000 });
+      uit.push({ gerecht: ger, ingredient: ing, eenheid: e.basis, hoeveelheid: h === null ? null : Math.round(h * e.factor * 10000) / 10000 });
       return;
     }
     const datum = parseDatum(cel(r, "datum"));
@@ -219,7 +224,7 @@ export function bouwRijen(rijen, kol, modus, opt = {}) {
     for (const x of uit) {
       const s = modus === "menu" ? x.naam.toLowerCase() : modus === "prijzen" ? x.ingredient.toLowerCase() + "|" + (x.datum || "") : x.gerecht.toLowerCase() + "|" + x.ingredient.toLowerCase();
       const b = m.get(s);
-      if (!b) m.set(s, { ...x }); else if (modus === "recept") b.hoeveelheid = Math.round((b.hoeveelheid + x.hoeveelheid) * 10000) / 10000; else m.set(s, { ...x });
+      if (!b) m.set(s, { ...x }); else if (modus === "recept") b.hoeveelheid = b.hoeveelheid === null && x.hoeveelheid === null ? null : Math.round(((b.hoeveelheid || 0) + (x.hoeveelheid || 0)) * 10000) / 10000; else m.set(s, { ...x });
     }
     rijenUit = [...m.values()];
   } else if (modus !== "inkoop") {
