@@ -109,3 +109,10 @@ test("maakClient: http://IP:poort wordt geaccepteerd, andere schema's niet", () 
   assert.equal(typeof maakClient({ host: "http://46.129.137.158:3063/shield/api", dbname: "d", user: "u", password: "p", appToken: "t" }).get, "function");
   assert.throws(() => maakClient({ host: "ftp://x.nl", dbname: "d", user: "u", password: "p", appToken: "t" }), /https/);
 });
+
+test("menuUitStamdata: unieke artikelen met groep, zonder opties", async () => {
+  const { menuUitStamdata, haalStamdata } = await import("../netlify/lib/untill.mjs");
+  const client = { get: async (pad) => pad === "article" ? [{ id: 1, name: "Hamburger", groupId: 7 }, { id: 2, name: "hamburger", groupId: 7 }, { id: 3, name: " ", groupId: 7 }] : pad === "group" ? [{ id: 7, name: "Food" }] : [] };
+  const sd = await haalStamdata(client);
+  assert.deepEqual(menuUitStamdata(sd, "k1"), [{ klant_id: "k1", naam: "Hamburger", groep: "Food", bron: "kassa" }]);
+});

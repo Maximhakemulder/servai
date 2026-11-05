@@ -2,7 +2,7 @@
 // Opnieuw ophalen van dezelfde periode is veilig (schrijf() werkt bestaande bonnen bij), daarom halen we
 // bij elke run één dag extra op en gaan we nooit meer dan MAX_DAGEN per run terug of vooruit.
 import { normaliseer, schrijf } from "./kassa.mjs";
-import { maakClient, haalStamdata, haalPakket, naarUtc } from "./untill.mjs";
+import { maakClient, haalStamdata, haalPakket, naarUtc, menuUitStamdata } from "./untill.mjs";
 
 const DAG = 24 * 3600 * 1000;
 export const MAX_DAGEN = 31, START_DAGEN = 14;
@@ -19,6 +19,12 @@ export async function syncKoppeling(rest, kop, geheim, { nu = new Date(), fetchI
   try {
     const client = maakClient({ ...geheim, fetchImpl });
     const sd = await haalStamdata(client);
+    // Het menu volgt de kassa: nieuwe artikelen komen er bij elke ophaalronde automatisch bij, bestaande blijven staan (kostprijs en koppelingen blijven behouden).
+    try {
+      const menu = menuUitStamdata(sd, ctx.klant_id);
+      for (let i = 0; i < menu.length; i += 500)
+        await rest("menu_items?on_conflict=klant_id,naam", { method: "POST", headers: { prefer: "resolution=ignore-duplicates,return=minimal" }, body: JSON.stringify(menu.slice(i, i + 500)) });
+    } catch (e) { console.warn(`untill ${kop.id}: menu bijwerken mislukt: ${e.message || e}`); }
     const einde = nu.getTime();
     const start = kop.sync_tot ? new Date(kop.sync_tot).getTime() - DAG : einde - START_DAGEN * DAG;
     const stop = Math.min(einde, start + MAX_DAGEN * DAG);

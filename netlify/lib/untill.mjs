@@ -83,12 +83,25 @@ export async function haalStamdata(client) {
   ]);
   const naamVan = (u) => u.name || [u.firstName, u.lastName].filter(Boolean).join(" ") || null;
   return {
+    artikelen,
     artikel: new Map([...opties.map((o) => [o.id, { id: o.id, name: o.name }]), ...artikelen.map((a) => [a.id, a])]),
     groep: new Map(groepen.map((g) => [g.id, g.name])),
     afdeling: new Map(afdelingen.map((d) => [d.id, d])),
     betaling: new Map(betalingen.map((b) => [b.id, b.name])),
     gebruiker: new Map(gebruikers.map((u) => [u.id, naamVan(u)])),
   };
+}
+
+/** Menu-regels uit de artikellijst van de kassa. Naam en groep komen rechtstreeks uit unTill, zodat verkopen altijd matchen. */
+export function menuUitStamdata(sd, klant_id) {
+  const uniek = new Map();
+  for (const a of sd.artikelen || []) {
+    const naam = String(a.name || "").trim();
+    if (!naam || uniek.has(naam.toLowerCase())) continue;
+    const groep = groepVan(a, sd);
+    uniek.set(naam.toLowerCase(), { klant_id, naam, groep: groep && groep !== "Overig" ? groep : null, bron: "kassa" });
+  }
+  return [...uniek.values()];
 }
 
 /** Groep van een artikel: artikel → afdeling → groep (bijvoorbeeld Food of Drinks). Valt terug op de afdelingsnaam. */
