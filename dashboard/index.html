@@ -576,7 +576,7 @@ V.financien=()=>{
   /* facturen */
   const dl=n=>{const d=new Date(TODAY);d.setDate(d.getDate()+n);return dateLbl(d)};
   const fm=all?1:.3;
-  const inv=[['Sligro','Voeding',6842*fm,3,'ok'],['Hanos','Droogwaren',4118*fm,5,'ok'],['Bidfood','Vlees & vis',2390*fm,6,'warn'],['Brouwerij','Bier & fris',3206*fm,9,'ok'],['Energie','Elektra & gas',1940*fm,12,'ok'],['Huur','Pand',(all?18200:4550),15,'ok']];
+    const inv=[['Sligro','Voeding',6842*fm,1,'ok',''],['Hanos','Droogwaren',4118*fm,2,'warn','Friet +12%, olie +6%'],['Bidfood','Vlees & vis',2390*fm,3,'warn','Rundvlees +5%, zalm +8%'],['Brouwerij','Bier & fris',3206*fm,4,'ok','']];
   const invTot=inv.reduce((a,x)=>a+x[2],0);
   /* btw */
   const btw=F.rev/pd()*91*.04;
@@ -606,13 +606,10 @@ V.financien=()=>{
     <div class="sec"><h2>Begroting &amp; geld</h2><small>Wat je verwachtte, wat er binnenkomt en wat eruit gaat</small></div>
     <div class="c span-6"><div class="ch"><div><h2>Begroting tegenover werkelijk</h2><p>Omzet · ${all?'per locatie, laatste 30 dagen':'per week, laatste 4 weken'}</p></div><div class="legend"><span><i class="sq" style="background:var(--ref)"></i>Begroting</span><span><i class="sq" style="background:var(--s1)"></i>Werkelijk</span></div></div><div class="cv short"><canvas id="c-bud" role="img" aria-label="Begroting tegenover werkelijke omzet"></canvas></div></div>
     <div class="c span-6"><div class="ch"><div><h2>Cashflow-forecast</h2><p>Verwacht banksaldo komende 8 weken · dip door btw en huur</p></div></div><div class="cv short"><canvas id="c-cf" role="img" aria-label="Cashflow forecast"></canvas></div></div>
-    <div class="c span-7"><div class="ch"><div><h2>Openstaande facturen</h2><p>${eur(invTot)} te betalen · gecontroleerd door je Controller</p></div></div><div class="tw"><table>
-      <thead><tr><th>Leverancier</th><th>Soort</th><th class="r">Bedrag</th><th class="r">Vervalt</th><th>Status</th></tr></thead><tbody>
-      ${inv.map(x=>`<tr><td><b>${x[0]}</b></td><td style="color:var(--fg-2)">${x[1]}</td><td class="r">${eur(x[2])}</td><td class="r">${dl(x[3])}</td><td>${x[4]==='ok'?tagC('good','✓ klaar voor betaling'):tagC('warn','△ 2 regels wijken af')}</td></tr>`).join('')}
-      </tbody></table></div></div>
-    <div class="c span-5"><div class="ch"><div><h2>Btw &amp; reserves</h2><p>Dit kwartaal, geschat</p></div></div>
-      ${tag('Btw te reserveren',eur(btw))}${tag('Af te dragen op','31 jan')}${tag('Huur komende maand',eur(all?18200:4550))}${tag('Loonbetaling 25e',eur(F.lab*(30/pd())))}${tag('Vrij besteedbaar',eur(cf[0]-btw*.4),'#7FE0AE')}
-    </div>
+    <div class="c span-12"><div class="ch"><div><h2>Ontvangen facturen</h2><p>${inv.length} facturen ontvangen · SERVAI vergelijkt de prijzen met je vorige inkoop</p></div></div><div class="tw"><table>
+      <thead><tr><th>Leverancier</th><th>Soort</th><th class="r">Bedrag</th><th class="r">Ontvangen</th><th>Prijscontrole</th></tr></thead><tbody>
+      ${inv.map(x=>`<tr><td><b>${x[0]}</b></td><td style="color:var(--fg-2)">${x[1]}</td><td class="r">${eur(x[2])}</td><td class="r">${dl(-x[3])}</td><td>${x[4]==='ok'?tagC('good','✓ prijzen kloppen'):tagC('warn','△ duurder: '+x[5])}</td></tr>`).join('')}
+      </tbody></table></div><p style="color:var(--mute);font-size:12.5px;margin-top:10px">Betalen en boekhouden doe je in je eigen boekhoudpakket. SERVAI let alleen op prijsverschillen.</p></div>
 
     <div class="sec"><h2>Vooruitblik &amp; afwijkingen</h2><small>Wat je team nu voor je ziet aankomen</small></div>
     <div class="c span-7"><div class="ch"><div><h2>Verwachte omzet, komende 7 dagen</h2><p>${locName()} · op basis van reserveringen, weer en eerdere weken</p></div></div><div class="cv short"><canvas id="c-fc" role="img" aria-label="Verwachte omzet komende 7 dagen"></canvas></div></div>
@@ -1562,6 +1559,37 @@ function advHtml(items,wacht,sub){
    (wacht&&wacht.length?`<div class="c span-12"><div class="ch"><div><h2>Nog niet beschikbaar</h2><p>Deze onderwerpen vullen zich zodra de koppeling actief is</p></div></div>${wacht.map(w=>`<p style="margin:6px 0"><b>${esc(w[0])}</b> <span style="color:var(--mute)">${esc(w[1])}</span></p>`).join('')}</div>`:'')+
    `<div class="c span-12"><p style="color:var(--mute);font-size:12.5px">SERVAI adviseert en signaleert. Prijzen, roosters en bestellingen pas je altijd zelf aan. Afvinken wordt in deze browser onthouden.</p></div></div>`;
 }
+
+/* ---------------- AI-advies bovenaan elke pagina (onder de hoofdcijfers) ---------------- */
+const ADVPG={overzicht:null,financien:['financien','loonkosten'],personeel:['loonkosten','personeel','rooster'],rooster:['rooster','loonkosten'],menu:['inkoop','menu'],inkoop:['inkoop','menu'],dranken:['dranken'],reserveringen:['reserveringen'],gasten:['gasten'],loonkosten:['loonkosten']};
+let ADVC=null,ADVMO=null;
+function advItems(){
+  const key=String(state.period)+'|'+(typeof VIEWAS!=='undefined'?VIEWAS:'')+'|'+(typeof state.loc!=='undefined'?state.loc:'');
+  if(ADVC&&ADVC.k===key&&Date.now()-ADVC.t<45000)return ADVC.p;
+  const p=REAL?advBouw().then(r=>r.it):Promise.resolve([]);ADVC={k:key,t:Date.now(),p};p.catch(()=>{ADVC=null});return p;
+}
+function advPlace(pg,html){
+  const v=document.getElementById('view');if(!v||state.view!==pg||v.querySelector('.adv-strip')||v.querySelector('#rp-wrap'))return;
+  const root=v.querySelector('.view > .grid');if(!root)return;
+  const first=root.querySelector('.kpi');let anchor=null;
+  if(first){const p=first.parentElement;if(p!==root)anchor=p;else{let e=first;while(e.nextElementSibling&&e.nextElementSibling.classList.contains('kpi'))e=e.nextElementSibling;anchor=e}}
+  const t=document.createElement('div');t.innerHTML=html;const el=t.firstElementChild;
+  if(anchor)anchor.after(el);else root.prepend(el);
+}
+async function advInject(pg){
+  if(ADVMO){ADVMO.disconnect();ADVMO=null}
+  const keys=ADVPG[pg];if(keys===undefined)return;
+  let items;try{items=await advItems()}catch(e){return}
+  if(!items||state.view!==pg)return;
+  const klaar=advKlaar(),ORD={warn:0,info:1,goed:2};
+  const l=items.filter(i=>!klaar.has(advId(i))&&(keys===null||keys.includes(i.v))).sort((x,y)=>ORD[x.t]-ORD[y.t]).slice(0,3);
+  if(!l.length)return;
+  const rij=i=>`<a href="#advies" style="display:flex;gap:10px;align-items:baseline;padding:6px 0;color:inherit;text-decoration:none"><span style="flex:none;width:8px;height:8px;border-radius:50%;background:${ADVK[i.t][0]}"></span><span style="flex:1;min-width:0"><b style="font-weight:600">${esc(i.h)}</b>${i.a?`<span style="color:var(--fg-2)"> · ${esc(i.a)}</span>`:''}</span></a>`;
+  const html=`<div class="c span-12 adv-strip" style="border:1px solid var(--line-2);border-left:4px solid #7C93FF;background:linear-gradient(90deg,rgba(124,147,255,.10),transparent 65%)"><div style="display:flex;align-items:center;gap:10px;margin-bottom:4px"><svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:#7C93FF;stroke-width:1.8"><use href="#i-spark"/></svg><b>AI-advies</b><span style="color:var(--mute);font-size:12.5px">${pg==='overzicht'?'het belangrijkste nu':'voor deze pagina'}</span><a href="#advies" style="margin-left:auto;font-size:13px">Alle adviezen ›</a></div>${l.map(rij).join('')}</div>`;
+  advPlace(pg,html);
+  const v=document.getElementById('view');
+  if(v&&!v.querySelector('.adv-strip')){ADVMO=new MutationObserver(()=>advPlace(pg,html));ADVMO.observe(v,{childList:true,subtree:true});setTimeout(()=>{if(ADVMO){ADVMO.disconnect();ADVMO=null}},20000)}
+}
 document.getElementById('view').addEventListener('click',e=>{
   const r=document.getElementById('adv-root');if(!r||!ADVS||!r.contains(e.target))return;
   const f=e.target.closest('[data-adf]');
@@ -1571,8 +1599,8 @@ document.getElementById('view').addEventListener('click',e=>{
   if(e.target.closest('a'))return;
   const t=e.target.closest('[data-adt]');if(t){const x=t.nextElementSibling;x.hidden=!x.hidden;t.querySelector('.chv').style.transform=x.hidden?'':'rotate(90deg)'}
 });
-async function advLoad(wrap){
-  const D=await rpHaal();if(document.getElementById('rp-wrap')!==wrap)return;
+async function advBouw(){
+  const D=await rpHaal();
   const it=[],pct=p=>(p>0?'+':'−')+nl1(Math.abs(p))+'%';
   const {R,cur,prv}=D;
   if(cur.length){
@@ -1607,7 +1635,11 @@ async function advLoad(wrap){
     const zk=menu.filter(m=>!(kost[m.id]&&kost[m.id].kostprijs>0)).length;
     if(menu.length&&zk)it.push({t:'info',c:'Menu',h:zk+' gerechten zonder kostprijs',x:'Zonder kostprijs kan SERVAI geen food cost en geen prijsstijgingen voor die gerechten laten zien.',a:'Vul de kostprijs in bij Menu & kostprijs.',v:'inkoop'});
   }catch(e){}
-  wrap.outerHTML=advHtml(it,[['Gasten & reviews','Koppel Google Business Profile voor review-inzichten.'],['Reserveringen','Koppel Zenchef voor no-shows en bezetting.'],['Weer & omgeving','Weer- en evenementadvies volgt zodra de locatie is ingesteld.']],perName());
+  return {it,wacht:[['Gasten & reviews','Koppel Google Business Profile voor review-inzichten.'],['Reserveringen','Koppel Zenchef voor no-shows en bezetting.'],['Weer & omgeving','Weer- en evenementadvies volgt zodra de locatie is ingesteld.']],sub:perName()};
+}
+async function advLoad(wrap){
+  const r=await advBouw();if(document.getElementById('rp-wrap')!==wrap)return;
+  wrap.outerHTML=advHtml(r.it,r.wacht,r.sub);
 }
 /* ---------------- Rooster: weekoverzicht (ma t/m zo) en maandoverzicht ---------------- */
 const ROO={v:'week',d:new Date()};
@@ -2043,7 +2075,7 @@ function render(){
   document.getElementById('subtitle').textContent=locName()+' · '+(state.view==='gebruikers'?'toegang & rollen':state.view==='koppelingen'?'systemen die data aanleveren':state.view==='meldingen'?'WhatsApp en mail, per persoon':state.view==='advies'?'wat opvalt en waar je iets mee kunt':state.view==='support'?'meld een bug of probleem':state.view==='kansen'?'markt, laatste 12 maanden':perName())+' · bijgewerkt '+String(new Date().getHours()).padStart(2,'0')+':'+String(new Date().getMinutes()).padStart(2,'0');
   document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===state.view));navSync();
   document.body.classList.toggle('on-assist',state.view==='assistent');
-  const out=V[state.view]();const el=document.getElementById('view');el.innerHTML=`<div class="view">${out.html}</div>`;out.after&&out.after();buildJump();
+  const out=V[state.view]();const el=document.getElementById('view');el.innerHTML=`<div class="view">${out.html}</div>`;out.after&&out.after();buildJump();advInject(state.view);
   document.querySelectorAll('#period button').forEach(b=>b.classList.toggle('on',+b.dataset.p===state.period));
 }
 document.getElementById('view').addEventListener('click',e=>{const b=e.target.closest('.act[data-done]');if(!b)return;b.textContent='✓ '+b.dataset.done;b.classList.add('done');b.removeAttribute('data-done')});
