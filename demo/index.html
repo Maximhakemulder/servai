@@ -1360,7 +1360,7 @@ const rpKpi=(t,val,d,cx)=>`<div class="c kpi span-3"><small>${t}</small><b>${val
 const rpTab=(rows,kop)=>rows.length?`<div class="tw"><table><thead><tr>${kop}</tr></thead><tbody>${rows.join('')}</tbody></table></div>`:'<p style="color:var(--mute)">Geen gegevens</p>';
 const rpBar=(v,max,col)=>`<div class="mbar"><span class="t"><i style="width:${Math.max(2,v/(max||1)*100)}%;background:${col||'#5E7BFF'}"></i></span><b class="num">${eur(v)}</b></div>`;
 const rpLeeg=()=>`<h2 style="margin-bottom:8px">Nog geen gegevens</h2><p style="color:var(--fg-2);max-width:620px">Voor ${perName()} is geen kassadata gevonden. Kies een langere periode, of wacht tot de kassa data heeft aangeleverd.</p>`;
-const rpPage=loader=>({html:`<div class="grid"><div class="c span-12" id="rp-wrap"><p style="color:var(--mute)">Gegevens laden…</p></div></div>`,after(){const w=document.getElementById('rp-wrap');if(w)loader(w).catch(e=>{if(document.getElementById('rp-wrap')===w)w.innerHTML='<p style="color:#FF8A8A">De gegevens konden niet worden geladen.</p>';console.error(e.message||e)})}});
+const rpPage=loader=>({html:`<div class="grid"><div class="c span-12" id="rp-wrap"><p style="color:var(--mute)">Gegevens laden…</p></div></div>`,after(){const w=document.getElementById('rp-wrap');if(w)loader(w).then(()=>{try{buildJump()}catch(e){}}).catch(e=>{if(document.getElementById('rp-wrap')===w)w.innerHTML='<p style="color:#FF8A8A">De gegevens konden niet worden geladen.</p>';console.error(e.message||e)})}});
 const rpWacht=(titel,sys,wat)=>({html:`<div class="grid"><div class="c span-12"><h2 style="margin-bottom:8px">${titel}: nog niet gekoppeld</h2><p style="color:var(--fg-2);max-width:620px">Hier verschijnt ${wat} zodra <b>${sys}</b> gekoppeld is. SERVAI regelt de koppeling voor je; neem contact op om dit te activeren. Elke nieuwe koppeling vult dit dashboard verder aan.</p></div></div>`});
 async function rpHaal(){
   const R=ovRange(state.period),van=R.pf&&R.pf<R.f?R.pf:R.f;
@@ -2284,7 +2284,7 @@ function render(){
   document.getElementById('subtitle').textContent=locName()+' · '+(state.view==='gebruikers'?'toegang & rollen':state.view==='koppelingen'?'systemen die data aanleveren':state.view==='meldingen'?'WhatsApp en mail, per persoon':state.view==='advies'?'wat opvalt en waar je iets mee kunt':state.view==='support'?'meld een bug of probleem':state.view==='kansen'?'markt, laatste 12 maanden':perName())+' · bijgewerkt '+String(new Date().getHours()).padStart(2,'0')+':'+String(new Date().getMinutes()).padStart(2,'0');
   document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===state.view));navSync();
   document.body.classList.toggle('on-assist',state.view==='assistent');
-  const out=V[state.view]();const el=document.getElementById('view');el.innerHTML=`<div class="view">${out.html}</div>`;out.after&&out.after();buildJump();advInject(state.view);omInject(state.view);aiEnhance();
+  const out=V[state.view]();const el=document.getElementById('view');el.innerHTML=`<div class="view">${out.html}</div>`;out.after&&out.after();omInject(state.view);buildJump();advInject(state.view);aiEnhance();
   document.querySelectorAll('#period button').forEach(b=>b.classList.toggle('on',+b.dataset.p===state.period));
 }
 document.getElementById('view').addEventListener('click',e=>{const b=e.target.closest('.act[data-done]');if(!b)return;b.textContent='✓ '+b.dataset.done;b.classList.add('done');b.removeAttribute('data-done')});
