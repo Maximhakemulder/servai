@@ -56,7 +56,7 @@ const betaalSoort = (naam) => {
 export function maakClient(cfg) {
   const f = cfg.fetchImpl || fetch;
   const base = String(cfg.host || "").replace(/\/+$/, "");
-  if (!/^https:\/\//i.test(base)) throw new Error("host moet met https:// beginnen");
+  if (!/^https?:\/\/[^/\s]+/i.test(base)) throw new Error("host moet met https:// (of http://) beginnen, bijvoorbeeld https://naam.nl:3063/shield/api");
   const auth = "Basic " + Buffer.from(`${cfg.user}:${cfg.password}`).toString("base64");
   const appToken = cfg.appToken || process.env.UNTILL_APP_TOKEN, appNaam = cfg.appNaam || process.env.UNTILL_APP_NAAM;
   if (!appToken) throw new Error("AppToken ontbreekt (zet UNTILL_APP_TOKEN in Netlify)");

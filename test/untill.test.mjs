@@ -70,7 +70,7 @@ test("client stuurt Basic + AppToken en leest tegen nep-server", async () => {
   assert.equal(calls[0].h.authorization, "Basic " + Buffer.from("u:p").toString("base64"));
   process.env.UNTILL_APP_TOKEN = "envtok";
   assert.equal(typeof maakClient({ host: "https://x.nl", dbname: "d", user: "u", password: "p" }).get, "function");
-  assert.throws(() => maakClient({ host: "http://x", dbname: "d", user: "u", password: "p", appToken: "t" }));
+  assert.throws(() => maakClient({ host: "ftp://x", dbname: "d", user: "u", password: "p", appToken: "t" }));
 });
 
 test("sync draait end-to-end met nep-Supabase en nep-unTill", async () => {
@@ -103,4 +103,9 @@ test("sync stopt netjes als de tijd op is en gaat later verder", async () => {
   assert.equal(res.ok, true);
   assert.equal(res.compleet, false);
   assert.equal(st.status, "ok");
+});
+
+test("maakClient: http://IP:poort wordt geaccepteerd, andere schema's niet", () => {
+  assert.equal(typeof maakClient({ host: "http://46.129.137.158:3063/shield/api", dbname: "d", user: "u", password: "p", appToken: "t" }).get, "function");
+  assert.throws(() => maakClient({ host: "ftp://x.nl", dbname: "d", user: "u", password: "p", appToken: "t" }), /https/);
 });
