@@ -1637,36 +1637,53 @@ async function dFetch(t,sel,van,tot){
 /* ---------------- Upselling: wat telt als upsell? (klant bevestigt, SERVAI stelt voor) ---------------- */
 const UP_RX=/dessert|nagerecht|koffie|thee|digestief|likeur|cocktail|wijn|bijgerecht|voorgerecht|borrel|snack|tapas|speciaalbier|speciaal bier|saus|sauzen|side|extra|topping|dip|friet/i;
 const upVoorstel=m=>UP_RX.test((m.groep||'')+' '+(m.naam||''));
-const upEff=m=>m.upsell===null||m.upsell===undefined?upVoorstel(m):m.upsell===true;
+const upNul=m=>m.upsell===null||m.upsell===undefined;
+const upEff=m=>upNul(m)?upVoorstel(m):m.upsell===true;
+const upGrp=m=>m.groep||'Zonder groep';
+const UPST={q:'',f:'alle',open:new Set(),meer:new Set()};
+const UPMAX=36;
 async function upSetup(){
   const w=document.getElementById('up-setup');if(!w)return;
-  let items;
-  try{items=await sbw(ikQ('menu_items','id,naam,groep,upsell').order('naam'))}catch(e){w.innerHTML='<p style="color:#FF8A8A">Instelling niet beschikbaar. Voer eerst de database-update (upsell-kolom) uit.</p>';return}
+  try{w._items=await sbw(ikQ('menu_items','id,naam,groep,upsell').order('naam'))}catch(e){w.innerHTML='<p style="color:#FF8A8A">Instelling niet beschikbaar. Voer eerst de database-update (upsell-kolom) uit.</p>';return}
   if(!document.getElementById('up-setup'))return;
-  const G=new Map();items.forEach(m=>{const g=m.groep||'Zonder groep';(G.get(g)||G.set(g,[]).get(g)).push(m)});
-  const open=new Set([...w.querySelectorAll('details[open]')].map(d=>d.dataset.g));
-  const nBev=items.filter(m=>m.upsell===true).length,nVoor=items.filter(m=>(m.upsell===null||m.upsell===undefined)&&upVoorstel(m)).length;
-  if(!items.length){w.innerHTML='<div class="ch"><div><h2>Wat telt als upsell?</h2><p>Haal eerst je menu op via Gerechten of Handmatig uploaden.</p></div></div>';return}
-  w.innerHTML=`<div class="ch"><div><h2>Wat telt als upsell?</h2><p>Hiermee berekent SERVAI de upselling-score per medewerker: extra verkocht bovenop het hoofdgerecht.</p></div></div>
-  ${nVoor?`<div class="co co-info" style="margin-bottom:12px"><span class="co-ic"><svg viewBox="0 0 24 24"><use href="#i-spark"/></svg></span><div style="flex:1"><b>AI-voorstel</b><span class="t">${nVoor} producten lijken upsell (dessert, koffie, wijn, bijgerecht)</span><small>Gebaseerd op groepsnamen in je menu. Pas aan waar nodig.</small></div><button class="act" data-upv="voorstel">Voorstel overnemen</button></div>`:''}
-  <p style="color:var(--fg-2);font-size:13px;margin-bottom:8px">${nBev} bevestigd als upsell · ${items.length} producten</p>
-  ${[...G.entries()].map(([g,a])=>{const n=a.filter(upEff).length;return `<details data-g="${esc(g)}" ${open.has(g)?'open':''} style="border-top:1px solid var(--line);padding:8px 0"><summary style="cursor:pointer;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b>${esc(g)}</b><span style="color:var(--mute);font-size:12.5px">${n} van ${a.length} upsell</span><span style="margin-left:auto;display:flex;gap:6px"><button class="act ghost" data-upg="1" data-g="${esc(g)}">Alles</button><button class="act ghost" data-upg="0" data-g="${esc(g)}">Geen</button></span></summary><div style="display:flex;flex-wrap:wrap;gap:6px 18px;padding:10px 0 2px">${a.map(m=>`<label style="display:flex;gap:6px;align-items:center;font-size:13.5px"><input type="checkbox" data-upi="${m.id}" ${upEff(m)?'checked':''}> ${esc(m.naam)}${m.upsell==null&&upVoorstel(m)?' <span style="color:var(--mute);font-size:11.5px">voorstel</span>':''}</label>`).join('')}</div></details>`}).join('')}`;
-  w._items=items;
+  if(!w._items.length){w.innerHTML='<div class="ch"><div><h2>Wat telt als upsell?</h2><p>Haal eerst je menu op via Gerechten of Handmatig uploaden.</p></div></div>';return}
+  w.innerHTML=`<div class="ch"><div><h2>Wat telt als upsell?</h2><p>Hiermee berekent SERVAI de upselling-score per medewerker: extra verkocht bovenop het hoofdgerecht.</p></div></div><div id="up-top"></div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:4px 0 12px"><input class="fld" data-upq placeholder="Zoek product of groep…" value="${esc(UPST.q)}" style="flex:1;min-width:200px;max-width:340px"><div id="up-f" style="display:flex;gap:6px;flex-wrap:wrap"></div></div><div id="up-list"></div>`;
+  upLijst();
 }
-document.getElementById('view').addEventListener('click',async e=>{
+function upLijst(){
+  const w=document.getElementById('up-setup'),I=w&&w._items;if(!I||!document.getElementById('up-list'))return;
+  const nJa=I.filter(m=>m.upsell===true).length,nVoor=I.filter(m=>upNul(m)&&upVoorstel(m)).length,nGeen=I.length-nJa-nVoor;
+  document.getElementById('up-top').innerHTML=nVoor?`<div class="co co-info" style="margin-bottom:12px"><span class="co-ic"><svg viewBox="0 0 24 24"><use href="#i-spark"/></svg></span><div style="flex:1"><b>AI-voorstel</b><span class="t">${nVoor} van ${I.length} producten lijken upsell (dessert, duurdere wijn, sauzen, sides, koffie)</span><small>Gebaseerd op groeps- en productnamen. Pas aan waar nodig.</small></div><button class="act" data-upv="1">Voorstel overnemen</button></div>`:'';
+  const F=[['alle','Alle',I.length],['ja','Upsell',nJa],['voor','Voorstel',nVoor],['geen','Geen upsell',nGeen]];
+  document.getElementById('up-f').innerHTML=F.map(([k,t,n])=>`<button type="button" class="act ${UPST.f===k?'':'ghost'}" data-upf="${k}">${t} <span style="opacity:.7">${n}</span></button>`).join('');
+  const st=m=>m.upsell===true?'ja':m.upsell===false?'geen':upVoorstel(m)?'voor':'geen';
+  const q=UPST.q.trim().toLowerCase();
+  const pas=m=>(UPST.f==='alle'||st(m)===UPST.f)&&(!q||(m.naam+' '+upGrp(m)).toLowerCase().includes(q));
+  const pil=m=>{const s=st(m);return `<button type="button" data-upp="${m.id}" title="${s==='ja'?'Upsell (klik om uit te zetten)':s==='voor'?'Voorstel (klik om te bevestigen)':'Geen upsell (klik om aan te zetten)'}" style="border:1px ${s==='voor'?'dashed':'solid'} ${s==='geen'?'var(--line)':'#4ADE9A'};background:${s==='ja'?'rgba(74,222,154,.16)':'transparent'};color:${s==='geen'?'var(--fg-2)':'var(--fg)'};padding:5px 11px;border-radius:999px;font-size:13px;cursor:pointer">${s==='ja'?'✓ ':s==='voor'?'+ ':''}${esc(m.naam)}</button>`};
+  const G=new Map();I.forEach(m=>{const g=upGrp(m);(G.get(g)||G.set(g,[]).get(g)).push(m)});
+  const zoek=q||UPST.f!=='alle';
+  let h='';
+  [...G.entries()].sort((a,b)=>b[1].length-a[1].length).forEach(([g,a])=>{
+    const sh=a.filter(pas);if(zoek&&!sh.length)return;
+    const n=a.filter(upEff).length,open=UPST.open.has(g)||(zoek&&sh.length<=UPMAX*2),lim=UPST.meer.has(g)?1e9:UPMAX,pct=Math.round(n/a.length*100);
+    h+=`<div style="border-top:1px solid var(--line);padding:10px 0"><div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><button type="button" data-upo="${esc(g)}" style="background:none;border:0;color:var(--fg);font:inherit;cursor:pointer;display:flex;gap:8px;align-items:center;padding:0"><span style="display:inline-block;transition:transform .15s;transform:rotate(${open?90:0}deg);color:var(--mute)">▸</span><b>${esc(g)}</b></button><span style="color:var(--mute);font-size:12.5px">${n} van ${a.length} upsell</span><span style="flex:0 0 90px;height:5px;border-radius:3px;background:var(--line);overflow:hidden"><i style="display:block;height:100%;width:${pct}%;background:#4ADE9A"></i></span><span style="margin-left:auto;display:flex;gap:6px"><button type="button" class="act ghost" data-upg="1" data-g="${esc(g)}">Alles</button><button type="button" class="act ghost" data-upg="0" data-g="${esc(g)}">Geen</button></span></div>${open?`<div style="display:flex;flex-wrap:wrap;gap:7px;padding:12px 0 2px">${sh.slice(0,lim).map(pil).join('')}${sh.length>lim?`<button type="button" class="act ghost" data-upm="${esc(g)}">Toon alle ${sh.length}</button>`:''}</div>`:''}</div>`});
+  document.getElementById('up-list').innerHTML=h||'<p style="color:var(--mute)">Geen producten gevonden</p>';
+}
+async function upSla(ids,v){const w=document.getElementById('up-setup');const set=new Set(ids);w._items.forEach(m=>{if(set.has(m.id))m.upsell=v});upLijst();
+  try{for(const c of chunk(ids,200))await sbw(DSB.from('menu_items').update({upsell:v}).in('id',c))}catch(x){flash(x.message||'Opslaan mislukt');upSetup()}}
+document.getElementById('view').addEventListener('click',e=>{
   const w=document.getElementById('up-setup');if(!w||!w._items)return;
-  const b=e.target.closest('[data-upg],[data-upv]');if(!b)return;e.preventDefault();
-  const set=async(ids,v)=>{for(const c of chunk(ids,200))await sbw(DSB.from('menu_items').update({upsell:v}).in('id',c))};
-  try{
-    if(b.dataset.upv){const ids=w._items.filter(m=>(m.upsell===null||m.upsell===undefined)&&upVoorstel(m)).map(m=>m.id);await set(ids,true);flash('Voorstel overgenomen')}
-    else{const g=b.dataset.g,v=b.dataset.upg==='1';await set(w._items.filter(m=>(m.groep||'Zonder groep')===g).map(m=>m.id),v)}
-    await upSetup();
-  }catch(x){flash(x.message||'Opslaan mislukt')}
+  const b=e.target.closest('[data-upg],[data-upv],[data-upp],[data-upo],[data-upm],[data-upf]');if(!b)return;e.preventDefault();
+  const I=w._items,d=b.dataset;
+  if(d.upf){UPST.f=d.upf;upLijst()}
+  else if(d.upo!==undefined){UPST.open.has(d.upo)?UPST.open.delete(d.upo):UPST.open.add(d.upo);upLijst()}
+  else if(d.upm!==undefined){UPST.meer.add(d.upm);upLijst()}
+  else if(d.upp){const m=I.find(x=>x.id===d.upp);if(m)upSla([m.id],!upEff(m))}
+  else if(d.upv){upSla(I.filter(m=>upNul(m)&&upVoorstel(m)).map(m=>m.id),true);flash('Voorstel overgenomen')}
+  else if(d.upg!==undefined){upSla(I.filter(m=>upGrp(m)===d.g).map(m=>m.id),d.upg==='1')}
 });
-document.getElementById('view').addEventListener('change',async e=>{
-  const c=e.target.closest('[data-upi]');if(!c)return;
-  try{await sbw(DSB.from('menu_items').update({upsell:c.checked}).eq('id',c.dataset.upi));await upSetup()}catch(x){flash(x.message||'Opslaan mislukt')}
-});
+document.getElementById('view').addEventListener('input',e=>{if(e.target.matches('[data-upq]')){UPST.q=e.target.value;upLijst()}});
 
 /* ---------------- AI-advies: inzichten en aandachtspunten uit je cijfers (geen chat) ---------------- */
 const ADVK={warn:['#FFB86B','Aandacht'],goed:['#4ADE9A','Goed nieuws'],info:['#7C93FF','Kans']};
