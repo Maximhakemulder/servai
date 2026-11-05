@@ -781,8 +781,8 @@ V.personeel=()=>{
     <div class="c span-5"><div class="ch"><div><h2>Upselling-score</h2><p>Voorgerecht, dessert, wijn of koffie extra · 0–100</p></div></div><div class="tw"><table><tbody>
       ${st.map((x,i)=>`<tr><td><span class="rank">${i+1}</span><b>${x[0]}</b> <span style="color:var(--mute);font-size:12px">${x[1]}</span></td><td style="width:55%"><div class="mbar"><span class="t"><i style="width:${x[2]}%;background:${i===0?'var(--good)':'var(--s1)'}"></i></span><span>${x[2]}</span></div></td></tr>`).join('')}
     </tbody></table></div></div>
-    <div class="c span-12"><div class="ch"><div><h2>Productiviteit per medewerker</h2><p>${perName()}</p></div></div><div class="tw"><table><thead><tr><th>Medewerker</th><th>Functie</th><th class="r">Uren</th><th class="r">Omzet / uur</th><th class="r">Desserts per 10 tafels</th><th>AI-coaching</th></tr></thead><tbody>
-      ${st.map((x,i)=>`<tr><td><b>${x[0]}</b></td><td>${x[1]}</td><td class="r">${nf((32-i*2)*pd()/7)}</td><td class="r">${eur(x[3],2)}</td><td class="r">${(x[2]/12).toLocaleString('nl-NL',{maximumFractionDigits:1})}</td><td>${(()=>{const nf1=n=>n.toLocaleString('nl-NL',{maximumFractionDigits:1}),des=x[2]/12,avg=st.reduce((a,r)=>a+r[2]/12,0)/st.length,dv=(des-avg)/avg*100,c=x[2]>80?['good','Leren','Laat collega\'s meelopen: topper in desserts']:x[2]>65?['info','Idee','Wijn per glas actiever aanraden']:['warn','Aandacht','Koffie en dessert standaard aanbieden'];return `<div class="co co-${c[0]}"><span class="co-ic"><svg viewBox="0 0 24 24"><use href="#i-spark"/></svg></span><div><b>${c[1]}</b><span class="t">${c[2]}</span><small>${nf1(des)} desserts per 10 tafels · <em>${dv>=0?'+':'−'}${Math.abs(dv).toFixed(0)}%</em> t.o.v. teamgemiddelde (${nf1(avg)})</small></div></div>`})()}</td></tr>`).join('')}
+    <div class="c span-12"><div class="ch"><div><h2>Productiviteit per medewerker</h2><p>${perName()}</p></div></div><div class="tw"><table><thead><tr><th>Medewerker</th><th>Functie</th><th class="r">Uren</th><th class="r">Omzet / uur</th><th class="r">Upsell per 10 tafels</th><th>AI-coaching</th></tr></thead><tbody>
+      ${st.map((x,i)=>`<tr><td><b>${x[0]}</b></td><td>${x[1]}</td><td class="r">${nf((32-i*2)*pd()/7)}</td><td class="r">${eur(x[3],2)}</td><td class="r">${(x[2]/12).toLocaleString('nl-NL',{maximumFractionDigits:1})}</td><td>${(()=>{const nf1=n=>n.toLocaleString('nl-NL',{maximumFractionDigits:1}),CT=[['Desserts','Dessert standaard aanbieden'],['Duurdere wijn','Duurdere wijn per glas actiever aanraden'],['Sauzen en side dishes','Sauzen en side dishes bij het hoofdgerecht voorstellen'],['Koffie en digestief','Koffie of digestief aanbieden bij de rekening']],rt=(y,j,k)=>{const w=[.3,.3,.25,.15].map((v,q)=>v+((k*3+q*5)%7-3)*.03),s=w.reduce((a,b)=>a+b,0);return y[2]/12*w[j]/s},k=st.indexOf(x),R=CT.map((c,j)=>rt(x,j,k)),A=CT.map((c,j)=>st.reduce((a,y,q)=>a+rt(y,j,q),0)/st.length),D=R.map((r,j)=>(r-A[j])/A[j]*100),top=x[2]>80,j=top?D.indexOf(Math.max(...D)):D.indexOf(Math.min(...D)),c=top?['good','Leren','Laat collega\'s meelopen: topper in '+CT[j][0].toLowerCase()]:D[j]<-15?['warn','Aandacht',CT[j][1]]:['info','Idee',CT[j][1]];return `<div class="co co-${c[0]}"><span class="co-ic"><svg viewBox="0 0 24 24"><use href="#i-spark"/></svg></span><div><b>${c[1]}</b><span class="t">${c[2]}</span><small>${CT[j][0]}: ${nf1(R[j])} per 10 tafels · <em>${D[j]>=0?'+':'−'}${Math.abs(D[j]).toFixed(0)}%</em> t.o.v. team (${nf1(A[j])})</small></div></div>`})()}</td></tr>`).join('')}
     </tbody></table></div></div>
   </div>`,after(){
     mk('c-ros',{type:'bar',data:{labels:H.map(h=>h+':00'),datasets:[{label:'Ingepland',data:plan,backgroundColor:'#6B7199',borderRadius:4,borderSkipped:'start',maxBarThickness:16},{label:'Advies SERVAI',data:adv,backgroundColor:'#3987e5',borderRadius:4,borderSkipped:'start',maxBarThickness:16}]},
@@ -1572,6 +1572,41 @@ document.getElementById('view').addEventListener('click',e=>{
   const a=b.dataset.ik,fail=x=>flash(x.message||String(x));
   if(a==='ing')ikIngModal(b.dataset.id);else if(a==='gerecht')ikGerechtModal();else if(a==='recept')ikRecept(b.dataset.id).catch(fail);else if(a==='import')ikImport().catch(fail)});
 
+
+/* ---------------- Upselling: wat telt als upsell? (klant bevestigt, SERVAI stelt voor) ---------------- */
+const UP_RX=/dessert|nagerecht|koffie|thee|digestief|likeur|cocktail|wijn|bijgerecht|voorgerecht|borrel|snack|tapas|speciaalbier|speciaal bier|saus|sauzen|side|extra|topping|dip|friet/i;
+const upVoorstel=m=>UP_RX.test((m.groep||'')+' '+(m.naam||''));
+const upEff=m=>m.upsell===null||m.upsell===undefined?upVoorstel(m):m.upsell===true;
+async function upSetup(){
+  const w=document.getElementById('up-setup');if(!w)return;
+  let items;
+  try{items=await sbw(ikQ('menu_items','id,naam,groep,upsell').order('naam'))}catch(e){w.innerHTML='<p style="color:#FF8A8A">Instelling niet beschikbaar. Voer eerst de database-update (upsell-kolom) uit.</p>';return}
+  if(!document.getElementById('up-setup'))return;
+  const G=new Map();items.forEach(m=>{const g=m.groep||'Zonder groep';(G.get(g)||G.set(g,[]).get(g)).push(m)});
+  const open=new Set([...w.querySelectorAll('details[open]')].map(d=>d.dataset.g));
+  const nBev=items.filter(m=>m.upsell===true).length,nVoor=items.filter(m=>(m.upsell===null||m.upsell===undefined)&&upVoorstel(m)).length;
+  if(!items.length){w.innerHTML='<div class="ch"><div><h2>Wat telt als upsell?</h2><p>Haal eerst je menu op via Gerechten of Handmatig uploaden.</p></div></div>';return}
+  w.innerHTML=`<div class="ch"><div><h2>Wat telt als upsell?</h2><p>Hiermee berekent SERVAI de upselling-score per medewerker: extra verkocht bovenop het hoofdgerecht.</p></div></div>
+  ${nVoor?`<div class="co co-info" style="margin-bottom:12px"><span class="co-ic"><svg viewBox="0 0 24 24"><use href="#i-spark"/></svg></span><div style="flex:1"><b>AI-voorstel</b><span class="t">${nVoor} producten lijken upsell (dessert, koffie, wijn, bijgerecht)</span><small>Gebaseerd op groepsnamen in je menu. Pas aan waar nodig.</small></div><button class="act" data-upv="voorstel">Voorstel overnemen</button></div>`:''}
+  <p style="color:var(--fg-2);font-size:13px;margin-bottom:8px">${nBev} bevestigd als upsell · ${items.length} producten</p>
+  ${[...G.entries()].map(([g,a])=>{const n=a.filter(upEff).length;return `<details data-g="${esc(g)}" ${open.has(g)?'open':''} style="border-top:1px solid var(--line);padding:8px 0"><summary style="cursor:pointer;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b>${esc(g)}</b><span style="color:var(--mute);font-size:12.5px">${n} van ${a.length} upsell</span><span style="margin-left:auto;display:flex;gap:6px"><button class="act ghost" data-upg="1" data-g="${esc(g)}">Alles</button><button class="act ghost" data-upg="0" data-g="${esc(g)}">Geen</button></span></summary><div style="display:flex;flex-wrap:wrap;gap:6px 18px;padding:10px 0 2px">${a.map(m=>`<label style="display:flex;gap:6px;align-items:center;font-size:13.5px"><input type="checkbox" data-upi="${m.id}" ${upEff(m)?'checked':''}> ${esc(m.naam)}${m.upsell==null&&upVoorstel(m)?' <span style="color:var(--mute);font-size:11.5px">voorstel</span>':''}</label>`).join('')}</div></details>`}).join('')}`;
+  w._items=items;
+}
+document.getElementById('view').addEventListener('click',async e=>{
+  const w=document.getElementById('up-setup');if(!w||!w._items)return;
+  const b=e.target.closest('[data-upg],[data-upv]');if(!b)return;e.preventDefault();
+  const set=async(ids,v)=>{for(const c of chunk(ids,200))await sbw(SB.from('menu_items').update({upsell:v}).in('id',c))};
+  try{
+    if(b.dataset.upv){const ids=w._items.filter(m=>(m.upsell===null||m.upsell===undefined)&&upVoorstel(m)).map(m=>m.id);await set(ids,true);flash('Voorstel overgenomen')}
+    else{const g=b.dataset.g,v=b.dataset.upg==='1';await set(w._items.filter(m=>(m.groep||'Zonder groep')===g).map(m=>m.id),v)}
+    await upSetup();
+  }catch(x){flash(x.message||'Opslaan mislukt')}
+});
+document.getElementById('view').addEventListener('change',async e=>{
+  const c=e.target.closest('[data-upi]');if(!c)return;
+  try{await sbw(SB.from('menu_items').update({upsell:c.checked}).eq('id',c.dataset.upi));await upSetup()}catch(x){flash(x.message||'Opslaan mislukt')}
+});
+
 /* ---------------- AI-advies: inzichten en aandachtspunten uit je cijfers (geen chat) ---------------- */
 const ADVK={warn:['#FFB86B','Aandacht'],goed:['#4ADE9A','Goed nieuws'],info:['#7C93FF','Kans']};
 const ADVP={social:'Social media',receptie:'AI-receptie',financien:'Financiën',loonkosten:'Loonkosten',personeel:'Personeel',rooster:'Rooster',inkoop:'Menu & kostprijs',menu:'Verkoop gerechten',gasten:'Gasten & reviews',reserveringen:'Reserveringen',kansen:'Markt & kansen',dranken:'Dranken',upselling:'Upselling'};
@@ -1899,7 +1934,7 @@ async function kopLoad(wrap){
 }
 (()=>{const d={kansen:V.kansen,upselling:V.upselling,assistent:V.assistent,meldingen:V.meldingen,advies:V.advies,koppelingen:V.koppelingen,gebruikers:V.gebruikers,support:V.support};
   V.kansen=()=>REAL?rpNog('Markt & kansen','Kansen worden berekend uit je kassadata in combinatie met weer, evenementen en reserveringen.'):d.kansen();
-  V.upselling=()=>REAL?rpNog('Upselling','Upselling-inzichten komen uit bonregels per medewerker, binnenkort op basis van je kassadata.'):d.upselling();
+  V.upselling=()=>REAL?{html:`<div class="grid"><div class="c span-12" id="up-setup"><p style="color:var(--mute)">Laden…</p></div>`+rpNog('Upselling','Upselling-inzichten komen uit bonregels per medewerker, zodra de kassa-koppeling actief is.').html.replace('<div class="grid">',''),after(){upSetup()}}:d.upselling();
   V.assistent=()=>REAL?rpNog('Assistent','De assistent beantwoordt vragen over je cijfers zodra er genoeg data is.'):d.assistent();
   V.meldingen=()=>REAL?rpNog('Meldingen','Hier stel je straks per persoon WhatsApp- en mailmeldingen in.'):d.meldingen();
   V.advies=()=>REAL?rpPage(advLoad):d.advies();

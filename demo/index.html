@@ -797,8 +797,8 @@ V.personeel=()=>{
     <div class="c span-5"><div class="ch"><div><h2>Upselling-score</h2><p>Voorgerecht, dessert, wijn of koffie extra · 0–100</p></div></div><div class="tw"><table><tbody>
       ${st.map((x,i)=>`<tr><td><span class="rank">${i+1}</span><b>${x[0]}</b> <span style="color:var(--mute);font-size:12px">${x[1]}</span></td><td style="width:55%"><div class="mbar"><span class="t"><i style="width:${x[2]}%;background:${i===0?'var(--good)':'var(--s1)'}"></i></span><span>${x[2]}</span></div></td></tr>`).join('')}
     </tbody></table></div></div>
-    <div class="c span-12"><div class="ch"><div><h2>Productiviteit per medewerker</h2><p>${perName()}</p></div></div><div class="tw"><table><thead><tr><th>Medewerker</th><th>Functie</th><th class="r">Uren</th><th class="r">Omzet / uur</th><th class="r">Desserts per 10 tafels</th><th>AI-coaching</th></tr></thead><tbody>
-      ${st.map((x,i)=>`<tr><td><b>${x[0]}</b></td><td>${x[1]}</td><td class="r">${nf((32-i*2)*pd()/7)}</td><td class="r">${eur(x[3],2)}</td><td class="r">${(x[2]/12).toLocaleString('nl-NL',{maximumFractionDigits:1})}</td><td>${(()=>{const nf1=n=>n.toLocaleString('nl-NL',{maximumFractionDigits:1}),des=x[2]/12,avg=st.reduce((a,r)=>a+r[2]/12,0)/st.length,dv=(des-avg)/avg*100,c=x[2]>80?['good','Leren','Laat collega\'s meelopen: topper in desserts']:x[2]>65?['info','Idee','Wijn per glas actiever aanraden']:['warn','Aandacht','Koffie en dessert standaard aanbieden'];return `<div class="co co-${c[0]}"><span class="co-ic"><svg viewBox="0 0 24 24"><use href="#i-spark"/></svg></span><div><b>${c[1]}</b><span class="t">${c[2]}</span><small>${nf1(des)} desserts per 10 tafels · <em>${dv>=0?'+':'−'}${Math.abs(dv).toFixed(0)}%</em> t.o.v. teamgemiddelde (${nf1(avg)})</small></div></div>`})()}</td></tr>`).join('')}
+    <div class="c span-12"><div class="ch"><div><h2>Productiviteit per medewerker</h2><p>${perName()}</p></div></div><div class="tw"><table><thead><tr><th>Medewerker</th><th>Functie</th><th class="r">Uren</th><th class="r">Omzet / uur</th><th class="r">Upsell per 10 tafels</th><th>AI-coaching</th></tr></thead><tbody>
+      ${st.map((x,i)=>`<tr><td><b>${x[0]}</b></td><td>${x[1]}</td><td class="r">${nf((32-i*2)*pd()/7)}</td><td class="r">${eur(x[3],2)}</td><td class="r">${(x[2]/12).toLocaleString('nl-NL',{maximumFractionDigits:1})}</td><td>${(()=>{const nf1=n=>n.toLocaleString('nl-NL',{maximumFractionDigits:1}),CT=[['Desserts','Dessert standaard aanbieden'],['Duurdere wijn','Duurdere wijn per glas actiever aanraden'],['Sauzen en side dishes','Sauzen en side dishes bij het hoofdgerecht voorstellen'],['Koffie en digestief','Koffie of digestief aanbieden bij de rekening']],rt=(y,j,k)=>{const w=[.3,.3,.25,.15].map((v,q)=>v+((k*3+q*5)%7-3)*.03),s=w.reduce((a,b)=>a+b,0);return y[2]/12*w[j]/s},k=st.indexOf(x),R=CT.map((c,j)=>rt(x,j,k)),A=CT.map((c,j)=>st.reduce((a,y,q)=>a+rt(y,j,q),0)/st.length),D=R.map((r,j)=>(r-A[j])/A[j]*100),top=x[2]>80,j=top?D.indexOf(Math.max(...D)):D.indexOf(Math.min(...D)),c=top?['good','Leren','Laat collega\'s meelopen: topper in '+CT[j][0].toLowerCase()]:D[j]<-15?['warn','Aandacht',CT[j][1]]:['info','Idee',CT[j][1]];return `<div class="co co-${c[0]}"><span class="co-ic"><svg viewBox="0 0 24 24"><use href="#i-spark"/></svg></span><div><b>${c[1]}</b><span class="t">${c[2]}</span><small>${CT[j][0]}: ${nf1(R[j])} per 10 tafels · <em>${D[j]>=0?'+':'−'}${Math.abs(D[j]).toFixed(0)}%</em> t.o.v. team (${nf1(A[j])})</small></div></div>`})()}</td></tr>`).join('')}
     </tbody></table></div></div>
   </div>`,after(){
     mk('c-ros',{type:'bar',data:{labels:H.map(h=>h+':00'),datasets:[{label:'Ingepland',data:plan,backgroundColor:'#6B7199',borderRadius:4,borderSkipped:'start',maxBarThickness:16},{label:'Advies SERVAI',data:adv,backgroundColor:'#3987e5',borderRadius:4,borderSkipped:'start',maxBarThickness:16}]},
@@ -1596,7 +1596,7 @@ function dSeed(){
   const ing=[['Friet','kg',2.0,2.24,'Hanos'],['Mayonaise','kg',8.6,8.6,'Sligro'],['Rundergehakt','kg',9.8,10.9,'Hanos'],['Broodje','stuk',0.32,0.32,'Bidfood'],['Sla','kg',3.1,3.1,'Groenteboer'],['Tomaat','kg',2.4,2.9,'Groenteboer'],['Kipfilet','kg',8.9,8.9,'Hanos'],['Kaas','kg',9.2,9.2,'Sligro'],['Cola 20cl','stuk',0.41,0.41,'Sligro'],['Pilsner fust','l',2.3,2.3,'Brouwerij']].map((x,i)=>({id:'i'+i,klant_id:'demo',naam:x[0],eenheid:x[1],leverancier:x[4],p0:x[2],p1:x[3]}));
   const prijzen=[];ing.forEach(i=>{prijzen.push({id:'p'+i.id+'a',klant_id:'demo',ingredient_id:i.id,datum:'2026-10-01',prijs_per_eenheid:i.p0,leverancier:i.leverancier});prijzen.push({id:'p'+i.id+'b',klant_id:'demo',ingredient_id:i.id,datum:'2026-11-02',prijs_per_eenheid:i.p1,leverancier:i.leverancier})});
   ing.forEach(i=>{delete i.p0;delete i.p1});
-  const menu=[['Friet speciaal','Food',5.5],['Hamburger','Food',13.5],['Kapsalon','Food',14.5],['Caesar salade','Food',12.5],['Tosti kaas','Food',6.5],['Kipsaté','Food',15.5],['Cola','Drinks',3.2],['Pilsner','Drinks',3.8],['Koffie','Drinks',2.9]].map((x,i)=>({id:'m'+i,klant_id:'demo',naam:x[0],groep:x[1],verkoopprijs:x[2],kostprijs:[1.1,4.1,4.6,3.2,1.5,null,0.45,0.9,0.25][i],bron:'kassa'}));
+  const menu=[['Friet speciaal','Food',5.5],['Hamburger','Food',13.5],['Kapsalon','Food',14.5],['Caesar salade','Food',12.5],['Tosti kaas','Food',6.5],['Kipsaté','Food',15.5],['Cola','Drinks',3.2],['Pilsner','Drinks',3.8],['Koffie','Drinks',2.9],['Tiramisu','Dessert',7.5],['Wijn per glas','Wijn',5.5]].map((x,i)=>({id:'m'+i,klant_id:'demo',naam:x[0],groep:x[1],verkoopprijs:x[2],kostprijs:[1.1,4.1,4.6,3.2,1.5,null,0.45,0.9,0.25][i]??null,bron:'kassa'}));
   const R=(m,i,h)=>({id:'r'+m+i,klant_id:'demo',menu_item_id:'m'+m,ingredient_id:'i'+i,hoeveelheid:null});
   const recept=[R(0,0),R(0,1),R(1,2),R(1,3),R(1,4),R(1,5),R(1,7),R(2,0),R(2,6),R(2,4),R(2,1),R(3,6),R(3,4),R(3,5),R(6,8),R(7,9)];
   return {menu_items:menu,ingredienten:ing,ingredient_prijzen:prijzen,recept_regels:recept};
@@ -1614,7 +1614,7 @@ const DSB={auth:{getSession:async()=>({data:{session:{access_token:'demo'}}})},f
   let rows=dView(t),del=false,upd=null;
   const b={select(){return b},order(c){rows=rows.slice().sort((x,y)=>String(x[c]).localeCompare(String(y[c])));return b},range(){return b},gte(){return b},lte(){return b},
     eq(c,v){if(upd){DDB[t].filter(r=>r[c]===v).forEach(r=>Object.assign(r,upd));dSave()}else if(del){DDB[t]=DDB[t].filter(r=>r[c]!==v);dSave()}else rows=rows.filter(r=>r[c]===v);return b},
-    in(c,vs){if(del){DDB[t]=DDB[t].filter(r=>!vs.includes(r[c]));dSave()}else rows=rows.filter(r=>vs.includes(r[c]));return b},
+    in(c,vs){if(upd){DDB[t].filter(r=>vs.includes(r[c])).forEach(r=>Object.assign(r,upd));dSave()}else if(del){DDB[t]=DDB[t].filter(r=>!vs.includes(r[c]));dSave()}else rows=rows.filter(r=>vs.includes(r[c]));return b},
     delete(){del=true;return b},update(p){upd=p;return b},
     insert(r){r=[].concat(r).map(x=>({id:dId(),...x}));DDB[t].push(...r);dSave();rows=r;return b},
     upsert(r,o){const keys=o.onConflict.split(',');[].concat(r).forEach(x=>{const e=DDB[t].find(y=>keys.every(k=>y[k]===x[k]));if(e){if(!o.ignoreDuplicates)Object.assign(e,x)}else DDB[t].push({id:dId(),...x})});dSave();rows=[];return b},
@@ -1632,6 +1632,41 @@ async function dFetch(t,sel,van,tot){
   const A=[['Friet speciaal','Food',5.5],['Hamburger','Food',13.5],['Kapsalon','Food',14.5],['Caesar salade','Food',12.5],['Tosti kaas','Food',6.5],['Kipsaté','Food',15.5],['Tiramisu','Food',7.5],['Cola','Drinks',3.2],['Pilsner','Drinks',3.8],['Koffie','Drinks',2.9],['Huiswijn wit','Drinks',5.2]];
   return A.map(x=>({locatie_id:'x',bedrijfsdag:'2026-11-01',artikel:x[0],groep:x[1],aantal:40,omzet:x[2]*40}));
 }
+
+
+/* ---------------- Upselling: wat telt als upsell? (klant bevestigt, SERVAI stelt voor) ---------------- */
+const UP_RX=/dessert|nagerecht|koffie|thee|digestief|likeur|cocktail|wijn|bijgerecht|voorgerecht|borrel|snack|tapas|speciaalbier|speciaal bier|saus|sauzen|side|extra|topping|dip|friet/i;
+const upVoorstel=m=>UP_RX.test((m.groep||'')+' '+(m.naam||''));
+const upEff=m=>m.upsell===null||m.upsell===undefined?upVoorstel(m):m.upsell===true;
+async function upSetup(){
+  const w=document.getElementById('up-setup');if(!w)return;
+  let items;
+  try{items=await sbw(ikQ('menu_items','id,naam,groep,upsell').order('naam'))}catch(e){w.innerHTML='<p style="color:#FF8A8A">Instelling niet beschikbaar. Voer eerst de database-update (upsell-kolom) uit.</p>';return}
+  if(!document.getElementById('up-setup'))return;
+  const G=new Map();items.forEach(m=>{const g=m.groep||'Zonder groep';(G.get(g)||G.set(g,[]).get(g)).push(m)});
+  const open=new Set([...w.querySelectorAll('details[open]')].map(d=>d.dataset.g));
+  const nBev=items.filter(m=>m.upsell===true).length,nVoor=items.filter(m=>(m.upsell===null||m.upsell===undefined)&&upVoorstel(m)).length;
+  if(!items.length){w.innerHTML='<div class="ch"><div><h2>Wat telt als upsell?</h2><p>Haal eerst je menu op via Gerechten of Handmatig uploaden.</p></div></div>';return}
+  w.innerHTML=`<div class="ch"><div><h2>Wat telt als upsell?</h2><p>Hiermee berekent SERVAI de upselling-score per medewerker: extra verkocht bovenop het hoofdgerecht.</p></div></div>
+  ${nVoor?`<div class="co co-info" style="margin-bottom:12px"><span class="co-ic"><svg viewBox="0 0 24 24"><use href="#i-spark"/></svg></span><div style="flex:1"><b>AI-voorstel</b><span class="t">${nVoor} producten lijken upsell (dessert, koffie, wijn, bijgerecht)</span><small>Gebaseerd op groepsnamen in je menu. Pas aan waar nodig.</small></div><button class="act" data-upv="voorstel">Voorstel overnemen</button></div>`:''}
+  <p style="color:var(--fg-2);font-size:13px;margin-bottom:8px">${nBev} bevestigd als upsell · ${items.length} producten</p>
+  ${[...G.entries()].map(([g,a])=>{const n=a.filter(upEff).length;return `<details data-g="${esc(g)}" ${open.has(g)?'open':''} style="border-top:1px solid var(--line);padding:8px 0"><summary style="cursor:pointer;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b>${esc(g)}</b><span style="color:var(--mute);font-size:12.5px">${n} van ${a.length} upsell</span><span style="margin-left:auto;display:flex;gap:6px"><button class="act ghost" data-upg="1" data-g="${esc(g)}">Alles</button><button class="act ghost" data-upg="0" data-g="${esc(g)}">Geen</button></span></summary><div style="display:flex;flex-wrap:wrap;gap:6px 18px;padding:10px 0 2px">${a.map(m=>`<label style="display:flex;gap:6px;align-items:center;font-size:13.5px"><input type="checkbox" data-upi="${m.id}" ${upEff(m)?'checked':''}> ${esc(m.naam)}${m.upsell==null&&upVoorstel(m)?' <span style="color:var(--mute);font-size:11.5px">voorstel</span>':''}</label>`).join('')}</div></details>`}).join('')}`;
+  w._items=items;
+}
+document.getElementById('view').addEventListener('click',async e=>{
+  const w=document.getElementById('up-setup');if(!w||!w._items)return;
+  const b=e.target.closest('[data-upg],[data-upv]');if(!b)return;e.preventDefault();
+  const set=async(ids,v)=>{for(const c of chunk(ids,200))await sbw(DSB.from('menu_items').update({upsell:v}).in('id',c))};
+  try{
+    if(b.dataset.upv){const ids=w._items.filter(m=>(m.upsell===null||m.upsell===undefined)&&upVoorstel(m)).map(m=>m.id);await set(ids,true);flash('Voorstel overgenomen')}
+    else{const g=b.dataset.g,v=b.dataset.upg==='1';await set(w._items.filter(m=>(m.groep||'Zonder groep')===g).map(m=>m.id),v)}
+    await upSetup();
+  }catch(x){flash(x.message||'Opslaan mislukt')}
+});
+document.getElementById('view').addEventListener('change',async e=>{
+  const c=e.target.closest('[data-upi]');if(!c)return;
+  try{await sbw(DSB.from('menu_items').update({upsell:c.checked}).eq('id',c.dataset.upi));await upSetup()}catch(x){flash(x.message||'Opslaan mislukt')}
+});
 
 /* ---------------- AI-advies: inzichten en aandachtspunten uit je cijfers (geen chat) ---------------- */
 const ADVK={warn:['#FFB86B','Aandacht'],goed:['#4ADE9A','Goed nieuws'],info:['#7C93FF','Kans']};
@@ -1975,7 +2010,7 @@ V.upselling=()=>{
   const gaps=UCAT.map((c,j)=>({n:c[0],t:catRate(top3,j),r:catRate(restA.length?restA:best,j)})).sort((a,b)=>(b.t/Math.max(.001,b.r))-(a.t/Math.max(.001,a.r)));
   const worst=[...cur].filter(x=>x.u[2]!=='Runner').sort((a,b)=>a.pt-b.pt)[0];
   const chips=[0,1,2,3,4,5,6,7,8,9,10,11,12,13].map(o=>`<button type="button" class="${o===upDaySel?'on':''}" data-ud="${o}">${o===0?'Vandaag':o===1?'Gisteren':dLbl(o)}</button>`).join('');
-  return{html:`<div class="grid">
+  return{html:`<div class="grid"><div class="c span-12" id="up-setup"></div>
     ${[['Extra omzet',eur(C.e),delta(C.e,P.e),perName()+' · door upselling'],['Upsell-score',pct(C.u/Math.max(1,C.T)*100,0),delta(C.u/Math.max(1,C.T),P.u/Math.max(1,P.T)),'extra item per tafel'],['Extra per tafel',eur(C.e/Math.max(1,C.T),2),delta(C.e/Math.max(1,C.T),P.e/Math.max(1,P.T)),'gemiddeld'],['Beste medewerker',best[0]?best[0].u[1]:'-',`<span class="delta up">${best[0]?eur(best[0].extra):''}</span>`,'meeste extra omzet · '+perName()]].map(k=>`<div class="c kpi span-3"><small>${k[0]}</small><b>${k[1]}</b>${k[2]}<span class="ctx">${k[3]}</span></div>`).join('')}
 
     <div class="sec"><h2>Ranglijst van de dag</h2><small>${locName()} · kies een dag</small></div>
@@ -2003,7 +2038,7 @@ V.upselling=()=>{
       ${worst?`<div class="in"><span class="st warn">△ Aandacht</span><div><h3>${worst.u[1]}: ${eur(worst.pt,2)} extra per tafel</h3><p>Laagste van het team. Gesprekje over ${gaps[0].n.toLowerCase()} en ${gaps[1].n.toLowerCase()} kan snel schelen.</p></div><button class="act" data-done="Coaching ingepland">Coaching plannen</button></div>`:''}
       <div class="in"><span class="st info">Idee</span><div><h3>Maak er een wedstrijd van</h3><p>Weekprijs voor de meeste extra omzet. Je Planner zet de dagwinnaar op de beste dienst.</p></div><button class="act" data-done="Actie ingepland">Inplannen</button></div>
     </div></div>
-  </div>`,after(){
+  </div>`,after(){upSetup();
     mk('c-up',{type:'bar',data:{labels:days14.map(x=>x.k===0?'vandaag':dLbl(x.k)),datasets:[{label:'Extra omzet',data:days14.map(x=>x.tot),backgroundColor:days14.map(x=>x.k===upDaySel?'#22B573':'rgba(57,135,229,.6)'),borderRadius:4,borderSkipped:'start',maxBarThickness:28}]},options:{scales:{y:yEur,x:{...xPlain,ticks:{maxRotation:0,autoSkip:true,maxTicksLimit:7}}},plugins:{tooltip:{...tip,callbacks:{label:c=>' '+eur(c.raw)}}}}});
   }}
 };
