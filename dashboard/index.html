@@ -1604,9 +1604,9 @@ async function ikLoad(wrap){
   const sim=ing.length?`<div class="c span-12"><div class="ch"><div><h2>Wat raakt een prijsstijging?</h2><p>Kies een ingrediënt en zie welke gerechten het betreft. Jij bepaalt wat je ermee doet, SERVAI past niets aan.</p></div></div><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px"><select class="fld" id="ik-sim-i" style="max-width:260px">${ing.map(i=>`<option value="${i.ingredient_id}">${esc(i.naam)}</option>`).join('')}</select><span style="color:var(--mute)">prijs</span><input class="fld" id="ik-sim-p" value="10" inputmode="decimal" style="width:80px"><span style="color:var(--mute)">% hoger</span></div><div id="ik-sim-o"></div></div>`:'';
   wrap.outerHTML=knop+kpis+
    `<div class="c span-12"><div class="ch"><div><h2>Prijswaarschuwingen</h2><p>Waar de inkoop duurder of goedkoper is geworden</p></div></div>${warn}</div>`+
-   sim+
    `<div class="c span-12"><div class="ch"><div><h2>Gerechten en kostprijs</h2><p>Kostprijs vul je zelf in; ingrediënten koppel je eraan</p></div></div>${gerechten}</div>`+
-   `<div class="c span-12"><div class="ch"><div><h2>Ingrediënten</h2><p>Komt vanzelf uit je gerechten; met een prijs krijg je prijswaarschuwingen</p></div></div>${ingr}</div>`;
+   `<div class="c span-12"><div class="ch"><div><h2>Ingrediënten</h2><p>Komt vanzelf uit je gerechten; met een prijs krijg je prijswaarschuwingen</p></div></div>${ingr}</div>`+
+   sim;
   const simU=()=>{const si=document.getElementById('ik-sim-i'),sp=document.getElementById('ik-sim-p'),o=document.getElementById('ik-sim-o');if(!si||!o)return;
     const i=ing.find(x=>x.ingredient_id===si.value),pc=parseFloat(String(sp.value).replace(',','.'))||0;
     const rs=regels.filter(r=>r.ingredient_id===si.value).map(r=>({r,m:menu.find(x=>x.id===r.menu_item_id)})).filter(x=>x.m);
