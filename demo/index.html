@@ -256,6 +256,14 @@ body.on-assist .fab{display:none}
 .ai-imp{display:inline-flex;align-items:baseline;gap:6px;margin-top:9px;padding:5px 10px;border-radius:10px;background:rgba(74,222,154,.10);border:1px solid rgba(74,222,154,.28);color:#7FE0AE;font-size:12.5px}
 .ai-imp b{font-size:14px}
 @media (max-width:600px){.ai-c .in{grid-template-columns:1fr}.ai-c .in>.act,.ai-c .in>span:last-child{grid-area:auto}}
+.co{display:flex;gap:11px;align-items:flex-start;padding:9px 12px;border-radius:12px;background:linear-gradient(100deg,rgba(255,255,255,.055),rgba(255,255,255,.02));border:1px solid var(--line);border-left:3px solid var(--c,#7C93FF);min-width:260px;white-space:normal}
+.co-good{--c:#4ADE9A}.co-warn{--c:#FFB86B}.co-info{--c:#7C93FF}
+.co-ic{flex:none;width:26px;height:26px;border-radius:9px;display:grid;place-items:center;background:linear-gradient(135deg,#3A4FB8,#E0568B)}
+.co-ic svg{width:14px;height:14px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.co b{display:block;font-size:11px;font-family:var(--f-m);letter-spacing:.07em;text-transform:uppercase;color:var(--c);margin-bottom:1px}
+.co span.t{display:block;font-size:13.5px;font-weight:600;line-height:1.35;color:var(--fg)}
+.co small{display:block;margin-top:3px;font-size:12px;color:var(--mute)}
+.co small em{font-style:normal;font-weight:600;color:var(--c)}
 .roo-t{display:block}.roo-l{display:none}
 .roo-m{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
 .roo-d{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:8px;min-height:78px;text-align:left;color:var(--fg);cursor:pointer;font:inherit;display:flex;flex-direction:column;gap:2px;font-size:12.5px}
@@ -783,14 +791,14 @@ V.personeel=()=>{
     <div class="c span-3 kpi"><small>Gewerkte uren</small><b>${nf(412*(state.loc==='all'?3.9:1)*pd()/7)}</b><span class="ctx">${perName()}</span></div>
     <div class="c span-3 kpi"><small>Omzet per gewerkt uur</small><b>€ 71,40</b><span class="delta up">▲ 4,2%</span></div>
     <div class="c span-3 kpi"><small>Te veel ingepland</small><b>23 uur</b><span class="ctx">≈ € 550 te besparen</span></div>
-    <div class="c span-3 kpi"><small>Arbeidstijdenwet</small><b>1 melding</b><span class="delta down">△ rusttijd Tim</span></div>
+    <div class="c span-3 kpi"><small>Loonkosten t.o.v. omzet</small><b>28,6%</b><span class="delta up">▼ 1,2 pt</span><span class="ctx">doel 30%</span></div>
     <div class="c span-7"><div class="ch"><div><h2>Zaterdag: ingepland vs. advies</h2><p>${state.loc==='all'?'Restaurant Demo':locName()} · mensen op de vloer per uur</p></div><div class="legend"><span><i class="sq" style="background:#6B7199"></i>Ingepland</span><span><i class="sq" style="background:var(--s1)"></i>Advies SERVAI</span></div></div><div class="cv"><canvas id="c-ros" role="img" aria-label="Ingeplande bezetting tegen advies per uur"></canvas></div>
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap"><p style="color:var(--fg-2);font-size:13.5px">Advies: 6 uur minder in de middag, 3 uur extra in de piek tussen 18:00 en 21:00.</p><button class="act" data-done="Rooster bijgewerkt in Shiftbase">Advies overnemen</button></div></div>
     <div class="c span-5"><div class="ch"><div><h2>Upselling-score</h2><p>Voorgerecht, dessert, wijn of koffie extra · 0–100</p></div></div><div class="tw"><table><tbody>
       ${st.map((x,i)=>`<tr><td><span class="rank">${i+1}</span><b>${x[0]}</b> <span style="color:var(--mute);font-size:12px">${x[1]}</span></td><td style="width:55%"><div class="mbar"><span class="t"><i style="width:${x[2]}%;background:${i===0?'var(--good)':'var(--s1)'}"></i></span><span>${x[2]}</span></div></td></tr>`).join('')}
     </tbody></table></div></div>
-    <div class="c span-12"><div class="ch"><div><h2>Productiviteit per medewerker</h2><p>${perName()}</p></div></div><div class="tw"><table><thead><tr><th>Medewerker</th><th>Functie</th><th class="r">Uren</th><th class="r">Omzet / uur</th><th class="r">Desserts per 10 tafels</th><th>Coaching-tip</th></tr></thead><tbody>
-      ${st.map((x,i)=>`<tr><td><b>${x[0]}</b></td><td>${x[1]}</td><td class="r">${nf((32-i*2)*pd()/7)}</td><td class="r">${eur(x[3],2)}</td><td class="r">${(x[2]/12).toLocaleString('nl-NL',{maximumFractionDigits:1})}</td><td style="color:var(--fg-2);white-space:normal;min-width:220px">${x[2]>80?'Laat collega\'s meelopen: topper in desserts':x[2]>65?'Wijn per glas actiever aanraden':'Koffie en dessert standaard aanbieden'}</td></tr>`).join('')}
+    <div class="c span-12"><div class="ch"><div><h2>Productiviteit per medewerker</h2><p>${perName()}</p></div></div><div class="tw"><table><thead><tr><th>Medewerker</th><th>Functie</th><th class="r">Uren</th><th class="r">Omzet / uur</th><th class="r">Desserts per 10 tafels</th><th>AI-coaching</th></tr></thead><tbody>
+      ${st.map((x,i)=>`<tr><td><b>${x[0]}</b></td><td>${x[1]}</td><td class="r">${nf((32-i*2)*pd()/7)}</td><td class="r">${eur(x[3],2)}</td><td class="r">${(x[2]/12).toLocaleString('nl-NL',{maximumFractionDigits:1})}</td><td>${(()=>{const nf1=n=>n.toLocaleString('nl-NL',{maximumFractionDigits:1}),des=x[2]/12,avg=st.reduce((a,r)=>a+r[2]/12,0)/st.length,dv=(des-avg)/avg*100,c=x[2]>80?['good','Leren','Laat collega\'s meelopen: topper in desserts']:x[2]>65?['info','Idee','Wijn per glas actiever aanraden']:['warn','Aandacht','Koffie en dessert standaard aanbieden'];return `<div class="co co-${c[0]}"><span class="co-ic"><svg viewBox="0 0 24 24"><use href="#i-spark"/></svg></span><div><b>${c[1]}</b><span class="t">${c[2]}</span><small>${nf1(des)} desserts per 10 tafels · <em>${dv>=0?'+':'−'}${Math.abs(dv).toFixed(0)}%</em> t.o.v. teamgemiddelde (${nf1(avg)})</small></div></div>`})()}</td></tr>`).join('')}
     </tbody></table></div></div>
   </div>`,after(){
     mk('c-ros',{type:'bar',data:{labels:H.map(h=>h+':00'),datasets:[{label:'Ingepland',data:plan,backgroundColor:'#6B7199',borderRadius:4,borderSkipped:'start',maxBarThickness:16},{label:'Advies SERVAI',data:adv,backgroundColor:'#3987e5',borderRadius:4,borderSkipped:'start',maxBarThickness:16}]},
