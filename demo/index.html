@@ -121,7 +121,7 @@ button{font:inherit;color:inherit}
 .nt .mini{min-width:150px}.nt input.th{width:64px}
 .chips{display:flex;gap:8px;flex-wrap:wrap}.chips .act{padding:8px 14px}
 .nch{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media (max-width:800px){.nch{grid-template-columns:1fr}}
-.nch .cc{min-height:0}
+.nch .cc{min-height:0}.nrl{display:flex;flex-direction:column;gap:6px}.nr{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid var(--line)}.nrn{flex:1;min-width:0}.nrn b{display:block;font-size:14px}.nrn small{display:block;color:var(--mute);font-size:12.5px;overflow:hidden;text-overflow:ellipsis}.nrb{border:1px solid var(--line-2);background:none;color:var(--fg-2);border-radius:9px;padding:5px 9px;font-size:12.5px;cursor:pointer}.nrb:hover{color:#fff;background:rgba(255,255,255,.08)}.nra{display:grid;grid-template-columns:1fr 1fr;gap:8px}.nra .act{grid-column:1/-1}@media (max-width:520px){.nra,.nra .act{grid-template-columns:1fr}}
 .wa{background:#0B141A;border-radius:16px;padding:16px;max-width:420px;border:1px solid var(--line)}
 .wa .bub{background:#005C4B;color:#E9EDEF;border-radius:10px 10px 10px 2px;padding:10px 12px;font-size:13.5px;line-height:1.5;white-space:pre-line}
 .wa .bub+.bub{margin-top:8px}.wa small{display:block;color:#8696A0;font-size:11px;margin-top:6px;text-align:right}
@@ -989,10 +989,13 @@ const NCATS=[
   ['s-nw','Nieuwe functies van SERVAI','Updates over wat er nieuw is',['Maandelijks'],0,0,1]]]
 ];
 const NALL=NCATS.flatMap(c=>c[2]);
+const NWAT=[['alles','Alle meldingen'],['dringend','Alleen dringend'],['rapporten','Alleen rapporten']];
 const nkey=()=>'servai-demo-notif-'+(state.uid||'x');
 function nDefault(){const u=cur()||{n:'',e:''};const r={};NALL.forEach(x=>{r[x[0]]={wa:!!x[5],mail:!!x[6],opt:x[4],th:x[7]?x[7][1]:null}});
-  return{wa:{num:u.id==='u1'?'+31 6 12 34 56 78':'',ok:u.id==='u1'},mail:{addr:u.e||''},quiet:{on:true,from:'00:30',to:'07:00',urgent:true},rows:r}}
-function nLoad(){let d=nDefault();try{const s=JSON.parse(localStorage.getItem(nkey())||'null');if(s&&s.rows){d={...d,...s,rows:{...d.rows,...s.rows}}}}catch(e){}return d}
+  return{wa:{list:u.id==='u1'?[{id:'w1',naam:u.n,num:'+31 6 12 34 56 78',wat:'alles'}]:[]},mail:{list:u.e?[{id:'m1',naam:u.n,addr:u.e,wat:'alles'}]:[]},quiet:{on:true,from:'00:30',to:'07:00',urgent:true},rows:r}}
+function nLoad(){let d=nDefault();try{const s=JSON.parse(localStorage.getItem(nkey())||'null');if(s&&s.rows){d={...d,...s,rows:{...d.rows,...s.rows}}}}catch(e){}
+  if(!d.wa||!Array.isArray(d.wa.list))d.wa={list:d.wa&&d.wa.num?[{id:'w1',naam:(cur()||{n:''}).n,num:d.wa.num,wat:'alles'}]:[]};
+  if(!d.mail||!Array.isArray(d.mail.list))d.mail={list:d.mail&&d.mail.addr?[{id:'m1',naam:(cur()||{n:''}).n,addr:d.mail.addr,wat:'alles'}]:[]};return d}
 function nSave(d){try{localStorage.setItem(nkey(),JSON.stringify(d))}catch(e){}}
 function nPreview(d){const R=d.rows,on=id=>R[id].wa;const first=(cur()||{n:'Eva'}).n.split(' ')[0];
   let l=['Goedemorgen '+first+'. Gisteren in het kort:','Omzet €16.526 (+3,1%)','Loonkosten 30,5% van omzet (norm 30%)'];
@@ -1010,17 +1013,13 @@ V.meldingen=()=>{
    ${c[2].map(x=>{const r=R[x[0]];return `<tr><td><b>${x[1]}</b><small>${x[2]}</small></td><td>${sw(r.wa,`data-nw="${x[0]}:wa"`)}</td><td>${sw(r.mail,`data-nw="${x[0]}:mail"`)}</td><td><select class="mini" data-no="${x[0]}">${x[3].map((o,i)=>`<option value="${i}"${r.opt===i?' selected':''}>${o}</option>`).join('')}</select></td><td>${x[7]?`<span style="display:flex;align-items:center;gap:6px"><input class="fld th" type="number" data-nt="${x[0]}" value="${r.th}"><small>${x[7][2]}</small></span>`:'<small>–</small>'}</td></tr>`}).join('')}
    </tbody></table></div></div>`;
   return{html:`<div class="grid">
-    ${[['WhatsApp',d.wa.ok?'Verbonden':'Niet gekoppeld',d.wa.ok?`<span class="delta up">${d.wa.num}</span>`:`<span class="delta down">voeg je nummer toe</span>`,'meldingen op je telefoon'],['E-mail',d.mail.addr?'Actief':'Niet ingesteld',`<span class="delta up">${d.mail.addr||'–'}</span>`,'rapporten en samenvattingen'],['Actieve meldingen',String(NALL.filter(x=>R[x[0]].wa||R[x[0]].mail).length),`<span class="delta flat">${wa} via WhatsApp · ${ml} via mail</span>`,'van '+NALL.length+' mogelijk'],['Stille uren',d.quiet.on?d.quiet.from+' – '+d.quiet.to:'Uit',`<span class="delta flat">${d.quiet.urgent?'dringend komt door':'alles wacht'}</span>`,'niet storen']].map(k=>`<div class="c kpi span-3"><small>${k[0]}</small><b style="font-size:${k[1].length>9?'22px':'inherit'}">${k[1]}</b>${k[2]}<span class="ctx">${k[3]}</span></div>`).join('')}
+    ${[['WhatsApp',d.wa.list.length?d.wa.list.length+(d.wa.list.length===1?' nummer':' nummers'):'Niet gekoppeld',d.wa.list.length?`<span class="delta up">${d.wa.list.map(x=>x.naam||x.num).slice(0,2).join(', ')}${d.wa.list.length>2?' +'+(d.wa.list.length-2):''}</span>`:`<span class="delta down">voeg een nummer toe</span>`,'meldingen op je telefoon'],['E-mail',d.mail.list.length?d.mail.list.length+(d.mail.list.length===1?' adres':' adressen'):'Niet ingesteld',d.mail.list.length?`<span class="delta up">${d.mail.list.map(x=>x.naam||x.addr).slice(0,2).join(', ')}${d.mail.list.length>2?' +'+(d.mail.list.length-2):''}</span>`:`<span class="delta down">voeg een adres toe</span>`,'rapporten en samenvattingen'],['Actieve meldingen',String(NALL.filter(x=>R[x[0]].wa||R[x[0]].mail).length),`<span class="delta flat">${wa} via WhatsApp · ${ml} via mail</span>`,'van '+NALL.length+' mogelijk'],['Stille uren',d.quiet.on?d.quiet.from+' – '+d.quiet.to:'Uit',`<span class="delta flat">${d.quiet.urgent?'dringend komt door':'alles wacht'}</span>`,'niet storen']].map(k=>`<div class="c kpi span-3"><small>${k[0]}</small><b style="font-size:${k[1].length>9?'22px':'inherit'}">${k[1]}</b>${k[2]}<span class="ctx">${k[3]}</span></div>`).join('')}
     <div class="sec" id="nc-kanalen"><h2>Kanalen</h2><small>Waar SERVAI je bereikt. Deze instellingen gelden voor ${cur()?cur().n:''}</small></div>
     <div class="c span-12"><div class="nch">
-      <div class="cc"><h3>${ico('i-chat')}WhatsApp <span class="pill ${d.wa.ok?'ok':'off'}" style="margin-left:auto"><i></i>${d.wa.ok?'Verbonden':'Niet gekoppeld'}</span></h3>
-        <div class="rd">Je krijgt meldingen en rapporten in een WhatsApp-gesprek met SERVAI. Je kunt er ook gewoon op antwoorden of een vraag stellen.</div>
-        <label for="n-num">Telefoonnummer</label><input class="fld" id="n-num" value="${d.wa.num}" placeholder="+31 6 12345678" inputmode="tel">
-        <div class="row"><button class="act" data-nac="wa">${d.wa.ok?'Nummer opslaan':'Verbind WhatsApp'}</button><button class="act ghost" data-nac="watest">Stuur testbericht</button></div></div>
-      <div class="cc"><h3>${ico('i-mail')}E-mail <span class="pill ${d.mail.addr?'ok':'off'}" style="margin-left:auto"><i></i>${d.mail.addr?'Actief':'Niet ingesteld'}</span></h3>
-        <div class="rd">Rapporten, samenvattingen en facturen komen in je inbox. Handig voor wat je later rustig wilt lezen of doorsturen.</div>
-        <label for="n-mail">E-mailadres</label><input class="fld" id="n-mail" type="email" value="${d.mail.addr}" placeholder="naam@bedrijf.nl">
-        <div class="row"><button class="act" data-nac="mail">Adres opslaan</button><button class="act ghost" data-nac="mailtest">Stuur testmail</button></div></div>
+      ${[['wa','i-chat','WhatsApp','nummers','Meldingen en rapporten komen in een WhatsApp-gesprek met SERVAI. Voeg collega\'s toe, zij kunnen er ook op antwoorden of een vraag stellen.',d.wa.list,'Telefoonnummer','+31 6 12345678','tel'],['mail','i-mail','E-mail','adressen','Rapporten, samenvattingen en facturen komen in de inbox. Handig voor je boekhouder, bedrijfsleider of wie het later rustig wil lezen.',d.mail.list,'E-mailadres','naam@bedrijf.nl','email']].map(([k,ic,t,mv,rd,L,lb,ph,it])=>`<div class="cc"><h3>${ico(ic)}${t} <span class="pill ${L.length?'ok':'off'}" style="margin-left:auto"><i></i>${L.length?L.length+' '+(L.length===1?mv.replace(/s$/,'').replace('adresse','adres'):mv):'Niet ingesteld'}</span></h3>
+        <div class="rd">${rd}</div>
+        ${L.length?`<div class="nrl">${L.map(x=>`<div class="nr"><div class="nrn"><b>${esc(x.naam||'Zonder naam')}</b><small>${esc(x.num||x.addr)}</small></div><select class="mini" data-nrw="${k}:${x.id}" aria-label="Wat ontvangt deze persoon">${NWAT.map(w=>`<option value="${w[0]}"${x.wat===w[0]?' selected':''}>${w[1]}</option>`).join('')}</select><button type="button" class="nrb" data-nrt="${k}:${x.id}" title="Stuur test" aria-label="Stuur test">Test</button><button type="button" class="nrb" data-nrd="${k}:${x.id}" title="Verwijderen" aria-label="Verwijderen">×</button></div>`).join('')}</div>`:''}
+        <div class="nra"><input class="fld" id="n-${k}-naam" placeholder="Naam (bijv. Bedrijfsleider)" autocomplete="off"><input class="fld" id="n-${k}-val" type="${it}" placeholder="${ph}" aria-label="${lb}" inputmode="${it==='tel'?'tel':'email'}"><select class="mini" id="n-${k}-wat" aria-label="Wat ontvangt deze persoon">${NWAT.map(w=>`<option value="${w[0]}">${w[1]}</option>`).join('')}</select><button type="button" class="act" data-nac="${k}-add">+ Toevoegen</button></div></div>`).join('')}
     </div></div>
     <div class="sec" id="nc-snel"><h2>Snel instellen</h2><small>Kies een startpunt en pas daarna aan</small></div>
     <div class="c span-12"><div class="chips"><button class="act ghost" data-npre="belangrijk">Alleen het belangrijkste</button><button class="act ghost" data-npre="alles">Alles aan</button><button class="act ghost" data-npre="mail">Alles via mail</button><button class="act ghost" data-npre="uit">Alles uit</button></div>
@@ -2449,14 +2448,18 @@ vw.addEventListener('click',e=>{
   const nq=e.target.closest('[data-nq]');if(nq){nEdit(d=>{d.quiet[nq.dataset.nq]=!d.quiet[nq.dataset.nq]});return}
   const nc=e.target.closest('[data-ncat]');if(nc){const on=nc.dataset.on==='1';const c=NCATS.find(x=>x[0]===nc.dataset.ncat);nEdit(d=>{c[2].forEach(x=>{d.rows[x[0]].wa=on;d.rows[x[0]].mail=on})});flash(on?'Alles aan voor '+c[0]:'Alles uit voor '+c[0]);return}
   const np=e.target.closest('[data-npre]');if(np){const m=np.dataset.npre,imp=['rap-och','p-loon','f-kas','i-prijs','m-tank','m-koel','s-kop','f-liq'];nEdit(d=>{NALL.forEach(x=>{const r=d.rows[x[0]];if(m==='alles'){r.wa=true;r.mail=true}else if(m==='uit'){r.wa=false;r.mail=false}else if(m==='mail'){r.wa=false;r.mail=true}else{r.wa=imp.includes(x[0]);r.mail=imp.includes(x[0])&&x[0]!=='p-loon'&&x[0]!=='m-tank'}})});flash('Instelling toegepast');return}
-  const na=e.target.closest('[data-nac]');if(na){const a=na.dataset.nac;
-    if(a==='wa'){const v=document.getElementById('n-num').value.trim();if(v.replace(/\D/g,'').length<9){flash('Vul een geldig telefoonnummer in');return}nEdit(d=>{d.wa.num=v;d.wa.ok=true});flash('WhatsApp gekoppeld (demo)')}
-    if(a==='mail'){const v=document.getElementById('n-mail').value.trim();if(!/^\S+@\S+\.\S+$/.test(v)){flash('Vul een geldig e-mailadres in');return}nEdit(d=>{d.mail.addr=v});flash('E-mailadres opgeslagen')}
-    if(a==='watest')flash('Testbericht verstuurd naar WhatsApp (demo)');
-    if(a==='mailtest')flash('Testmail verstuurd (demo)');return}
+  const nd=e.target.closest('[data-nrd]');if(nd){const [k,id]=nd.dataset.nrd.split(':');nEdit(d=>{d[k].list=d[k].list.filter(x=>x.id!==id)});flash('Verwijderd');return}
+  const nt=e.target.closest('[data-nrt]');if(nt){const [k,id]=nt.dataset.nrt.split(':'),x=nLoad()[k].list.find(y=>y.id===id);flash(k==='wa'?'Testbericht verstuurd naar '+(x&&x.num)+' (demo)':'Testmail verstuurd naar '+(x&&x.addr)+' (demo)');return}
+  const na=e.target.closest('[data-nac]');if(na){const k=na.dataset.nac.split('-')[0];
+    const nm=document.getElementById('n-'+k+'-naam').value.trim().replace(/[<>&]/g,''),v=document.getElementById('n-'+k+'-val').value.trim(),w=document.getElementById('n-'+k+'-wat').value;
+    if(k==='wa'&&v.replace(/\D/g,'').length<9){flash('Vul een geldig telefoonnummer in');return}
+    if(k==='mail'&&!/^\S+@\S+\.\S+$/.test(v)){flash('Vul een geldig e-mailadres in');return}
+    if(nLoad()[k].list.some(x=>(x.num||x.addr).toLowerCase()===v.toLowerCase())){flash('Deze staat er al');return}
+    nEdit(d=>{d[k].list.push(k==='wa'?{id:'w'+Date.now(),naam:nm,num:v,wat:w}:{id:'m'+Date.now(),naam:nm,addr:v,wat:w})});flash(k==='wa'?'Nummer toegevoegd':'Adres toegevoegd');return}
   const ap=e.target.closest('[data-ap]');if(ap){advPick=ap.dataset.ap;const y=scrollY;render();scrollTo(0,y)}
 });
 vw.addEventListener('change',e=>{
+  const rw=e.target.closest('[data-nrw]');if(rw){const [k,id]=rw.dataset.nrw.split(':');nEdit(d=>{const x=d[k].list.find(y=>y.id===id);if(x)x.wat=rw.value});return}
   const o=e.target.closest('[data-no]');if(o){nEdit(d=>{d.rows[o.dataset.no].opt=+o.value});return}
   const t=e.target.closest('[data-nt]');if(t){nEdit(d=>{d.rows[t.dataset.nt].th=+t.value});return}
   const q=e.target.closest('[data-nqt]');if(q){nEdit(d=>{d.quiet[q.dataset.nqt]=q.value});return}
