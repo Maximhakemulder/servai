@@ -431,7 +431,7 @@ td .co-s{padding:4px 10px;min-width:300px}td .co-s small{display:none}
       <div class="ng" data-g="dash"><button type="button" class="nh"><svg><use href="#i-chart"/></svg><span>Dashboard</span><svg class="chv" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button><div class="nb"><a href="#financien" data-v="financien" class="sub"><svg><use href="#i-euro"/></svg><span>Financiën</span></a><a href="#loonkosten" data-v="loonkosten" class="sub"><svg><use href="#i-staff"/></svg><span>Loonkosten</span></a><a href="#personeel" data-v="personeel" class="sub"><svg><use href="#i-staff"/></svg><span>Personeel</span></a>
       <a href="#rooster" data-v="rooster" class="sub"><svg><use href="#i-cal"/></svg><span>Rooster</span></a><a href="#reserveringen" data-v="reserveringen" class="sub"><svg><use href="#i-cal"/></svg><span>Reserveringen</span></a><a href="#gasten" data-v="gasten" class="sub"><svg><use href="#i-star"/></svg><span>Gasten &amp; reviews</span></a><a href="#menu" data-v="menu" class="sub"><svg><use href="#i-chef"/></svg><span>Verkoop gerechten</span></a><a href="#dranken" data-v="dranken" class="sub"><svg><use href="#i-drink"/></svg><span>Verkoop dranken</span></a></div></div>
       <div class="ng" data-g="kaart"><button type="button" class="nh"><svg><use href="#i-box"/></svg><span>Menukaart</span><svg class="chv" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button><div class="nb"><a href="#inkoop" data-v="inkoop" class="sub"><svg><use href="#i-box"/></svg><span>Menu &amp; kostprijs</span></a></div></div>
-      <div class="ng" data-g="inz"><button type="button" class="nh"><svg><use href="#i-up"/></svg><span>Inzichten</span><svg class="chv" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button><div class="nb"><a href="#upselling" data-v="upselling" class="sub"><svg><use href="#i-up"/></svg><span>Upselling</span></a><a href="#kansen" data-v="kansen" class="sub"><svg><use href="#i-spark"/></svg><span>Markt &amp; kansen</span></a><a href="#meldingen" data-v="meldingen" class="sub"><svg><use href="#i-bell"/></svg><span>Meldingen</span></a></div></div>
+      <div class="ng" data-g="inz"><button type="button" class="nh"><svg><use href="#i-up"/></svg><span>Inzichten</span><svg class="chv" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button><div class="nb"><a href="#upselling" data-v="upselling" class="sub"><svg><use href="#i-up"/></svg><span>Upselling</span></a><a href="#kansen" data-v="kansen" class="sub"><svg><use href="#i-spark"/></svg><span>Markt &amp; kansen</span></a><a href="#facturen" data-v="facturen" class="sub"><svg><use href="#i-mail"/></svg><span>Facturen</span></a><a href="#meldingen" data-v="meldingen" class="sub"><svg><use href="#i-bell"/></svg><span>Meldingen</span></a></div></div>
       <a href="#advies" data-v="advies"><svg><use href="#i-spark"/></svg><span>AI-advies</span></a>
       <div class="sep"></div>
       <div class="ng" data-g="rec"><button type="button" class="nh"><svg><use href="#i-mail"/></svg><span>Receptie</span><svg class="chv" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button><div class="nb"><a href="#receptie" data-v="receptie" class="sub"><svg><use href="#i-mail"/></svg><span>AI-receptie</span></a></div></div>
@@ -468,7 +468,7 @@ td .co-s{padding:4px 10px;min-width:300px}td .co-s small{display:none}
 <script>
 /* ---------------- data (seeded demo) ---------------- */
 let REAL=false,SB=null,KLANT='Struisenburg',KLANTNORM=30,KLANTID='';
-const REALPAGES=['overzicht','rooster','financien','menu','dranken','kansen','personeel','upselling','reserveringen','inkoop','gasten','assistent','meldingen','advies','koppelingen','gebruikers','support','loonkosten','social','receptie','uploaden'];
+const REALPAGES=['facturen','overzicht','rooster','financien','menu','dranken','kansen','personeel','upselling','reserveringen','inkoop','gasten','assistent','meldingen','advies','koppelingen','gebruikers','support','loonkosten','social','receptie','uploaden'];
 const RLAB={eigenaar:'Eigenaar',bedrijfsleider:'Bedrijfsleider',chef:'Chef-kok',boekhouder:'Boekhouder',bar:'Bar manager',gastvrouw:'Gastvrouw'};
 const LCOLS=['#3987e5','#d95926','#199e70','#c98500','#9b59b6','#16a085'];
 const LOCS=[
@@ -872,9 +872,9 @@ V.assistent=()=>({html:`<div class="c"><div class="chat">
 }});
 
 /* ---------------- account, gebruikers & toegang (demo) ---------------- */
-const PAGES=[['overzicht','Overzicht'],['financien','Financiën'],['menu','Gerechten'],['dranken','Verkoop dranken'],['kansen','Kansen'],['personeel','Personeel'],['rooster','Rooster'],['upselling','Upselling'],['reserveringen','Reserv.'],['inkoop','Inkoop'],['gasten','Gasten'],['assistent','Assistent'],['meldingen','Meldingen'],['advies','AI-advies'],['koppelingen','Koppelingen'],['gebruikers','Gebruikers'],['support','Support'],['uploaden','Uploaden'],['receptie','AI-receptie'],['social','Social media']];
+const PAGES=[['overzicht','Overzicht'],['financien','Financiën'],['menu','Gerechten'],['dranken','Verkoop dranken'],['kansen','Kansen'],['personeel','Personeel'],['rooster','Rooster'],['upselling','Upselling'],['reserveringen','Reserv.'],['inkoop','Inkoop'],['facturen','Facturen'],['gasten','Gasten'],['assistent','Assistent'],['meldingen','Meldingen'],['advies','AI-advies'],['koppelingen','Koppelingen'],['gebruikers','Gebruikers'],['support','Support'],['uploaden','Uploaden'],['receptie','AI-receptie'],['social','Social media']];
 const ALLP=PAGES.map(p=>p[0]);
-const PRESET={Eigenaar:ALLP,Bedrijfsleider:ALLP.filter(p=>p!=='gebruikers'&&p!=='koppelingen'),'Chef-kok':['overzicht','menu','dranken','kansen','inkoop','meldingen','support','assistent'],'Boekhouder':['overzicht','financien','inkoop','uploaden','meldingen','support'],'Bar manager':['overzicht','dranken','personeel','rooster','upselling','inkoop','meldingen','support','assistent'],'Gastvrouw':['overzicht','rooster','receptie','reserveringen','gasten','meldingen','support','assistent']};
+const PRESET={Eigenaar:ALLP,Bedrijfsleider:ALLP.filter(p=>p!=='gebruikers'&&p!=='koppelingen'),'Chef-kok':['overzicht','menu','dranken','kansen','inkoop','meldingen','support','assistent'],'Boekhouder':['overzicht','financien','inkoop','facturen','uploaden','meldingen','support'],'Bar manager':['overzicht','dranken','personeel','rooster','upselling','inkoop','meldingen','support','assistent'],'Gastvrouw':['overzicht','rooster','receptie','reserveringen','gasten','meldingen','support','assistent']};
 const USERS0=[
  {id:'u1',n:'Eva Bakker',e:'eva@struisenburg-demo.nl',r:'Eigenaar',locs:'all',st:'Actief',last:'Nu actief'},
  {id:'u2',n:'Mark de Wit',e:'mark@struisenburg-demo.nl',r:'Bedrijfsleider',locs:'cornelis',st:'Actief',last:'Vandaag 08:12'},
@@ -2116,6 +2116,28 @@ async function persLoad(wrap){
 })();
 
 const rpNog=(t,wat)=>({html:`<div class="grid"><div class="c span-12"><h2 style="margin-bottom:8px">${t}: nog geen data</h2><p style="color:var(--fg-2);max-width:620px">${wat} Zodra er meer koppelingen actief zijn, vult deze pagina zich vanzelf.</p></div></div>`});
+/* ---------------- Facturen: wat de finance-afdeling naar de SERVAI-factuurmailbox stuurt ---------------- */
+const FACST={ontvangen:['Ontvangen','flat'],verwerkt:['Verwerkt','up'],fout:['Fout','down'],niet_gekoppeld:['Niet gekoppeld','down']};
+function facRender(wrap,rows,adres){
+  const nu=new Date(),mnd=rows.filter(r=>{const d=new Date(r.ontvangen);return d.getMonth()===nu.getMonth()&&d.getFullYear()===nu.getFullYear()}).length;
+  const kpis=rpKpi('Ontvangen',nf(rows.length),'<span class="delta flat">laatste 12 maanden</span>','facturen in je overzicht')+rpKpi('Deze maand',nf(mnd),'<span class="delta flat">'+nu.toLocaleString('nl-NL',{month:'long'})+'</span>','nieuwe facturen')+rpKpi('Niet gekoppeld',nf(rows.filter(r=>r.status==='niet_gekoppeld').length),'<span class="delta flat">–</span>','afzender onbekend');
+  const f=t=>t?new Date(t).toLocaleDateString('nl-NL',{day:'numeric',month:'short',year:'numeric'}):'–';
+  const tab=rows.length?rpTab(rows.map(r=>{const s=FACST[r.status]||FACST.ontvangen;return `<tr data-zoek="${esc(((r.van||'')+' '+(r.onderwerp||'')+' '+(r.bestandsnaam||'')+' '+(r.leverancier||'')).toLowerCase())}"><td>${f(r.ontvangen)}</td><td>${esc(r.leverancier||r.van||'–')}<br><span style="color:var(--mute);font-size:12px">${esc(r.van&&r.leverancier?r.van:'')}</span></td><td style="white-space:normal">${esc(r.onderwerp||'–')}<br><span style="color:var(--mute);font-size:12px">${esc(r.bestandsnaam||'')}</span></td><td class="r">${r.bedrag!=null?eur(r.bedrag,2):'–'}</td><td><span class="delta ${s[1]}">${s[0]}</span></td><td class="r">${r.bijlage_pad?`<button type="button" class="act" data-fdl="${esc(r.bijlage_pad)}">PDF</button>`:'<span style="color:var(--mute);font-size:12px" title="Bestanden worden na 12 maanden gewist">–</span>'}</td></tr>`}),'<th>Ontvangen</th><th>Leverancier</th><th>Factuur</th><th class="r">Bedrag</th><th>Status</th><th></th>'):'<p style="color:var(--mute)">Nog geen facturen ontvangen. Laat je finance-afdeling ze naar het adres hierboven sturen.</p>';
+  wrap.outerHTML=`<div class="c span-12" style="display:flex;flex-direction:row;gap:12px;flex-wrap:wrap;align-items:center"><div style="flex:1;min-width:260px"><b>Facturen mailen naar</b><div style="color:var(--mute);font-size:13px;margin-top:2px">Laat je finance-afdeling alle inkoopfacturen naar dit adres sturen. SERVAI leest ze mee, jij houdt overzicht.</div></div><code style="padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid var(--line)">${esc(adres)}</code><button type="button" class="act" data-fcp="${esc(adres)}">Kopieer</button></div>`+kpis+`<div class="c span-12"><div class="ch"><div><h2>Ontvangen facturen</h2><p>PDF's blijven 12 maanden beschikbaar. Daarna bewaart SERVAI alleen de gegevens en prijswijzigingen.</p></div></div><div style="margin:0 0 10px"><input class="fld" id="fa-zoek" placeholder="Zoek op leverancier of onderwerp…" style="max-width:300px"></div>${tab}</div>`;
+  const z=document.getElementById('fa-zoek');if(z)z.addEventListener('input',()=>{const q=z.value.trim().toLowerCase();document.querySelectorAll('tr[data-zoek]').forEach(r=>{r.style.display=!q||r.dataset.zoek.includes(q)?'':'none'})});
+}
+document.getElementById('view').addEventListener('click',e=>{
+  const c=e.target.closest('[data-fcp]');if(c){try{navigator.clipboard.writeText(c.dataset.fcp);flash('Adres gekopieerd')}catch(x){flash(c.dataset.fcp)}return}
+  const b=e.target.closest('[data-fdl]');if(!b)return;FACDL(b.dataset.fdl)});
+const FACDL=async p=>{try{const {data,error}=await SB.storage.from('facturen').createSignedUrl(p,60);if(error||!data)throw error||new Error('x');window.open(data.signedUrl,'_blank','noopener')}catch(e){flash('Bestand niet beschikbaar')}};
+async function facLoad(wrap){
+  let q=SB.from('facturen').select('id,ontvangen,van,onderwerp,bestandsnaam,bijlage_pad,status,leverancier,bedrag').order('ontvangen',{ascending:false}).limit(300);
+  if(KLANTID)q=q.eq('klant_id',KLANTID);
+  const [r,k]=await Promise.all([q,SB.from('klanten').select('factuur_code').eq('id',KLANTID).maybeSingle()]);
+  if(document.getElementById('rp-wrap')!==wrap)return;
+  if(r.error)throw r.error;
+  facRender(wrap,r.data||[],'facturen'+(k.data&&k.data.factuur_code?'+'+k.data.factuur_code:'')+'@servai.nl');
+}
 async function kopLoad(wrap){
   let q=SB.from('koppelingen').select('systeem,soort,status,laatste_succes,laatste_fout,locatie_id');
   if(VIEWAS)q=q.eq('klant_id',VIEWAS);
@@ -2136,6 +2158,7 @@ async function kopLoad(wrap){
   V.advies=()=>REAL?rpPage(advLoad):d.advies();
   V.gebruikers=()=>REAL?rpNog('Gebruikers','Gebruikers en rollen beheert SERVAI voor je. Wil je iemand toevoegen? Mail naar hallo@servai.nl.'):d.gebruikers();
   V.koppelingen=()=>REAL?rpPage(kopLoad):d.koppelingen();
+  V.facturen=()=>rpPage(facLoad);
   V.support=()=>REAL?{html:`<div class="grid"><div class="c span-12"><h2 style="margin-bottom:8px">Support</h2><p style="color:var(--fg-2);max-width:620px">Vraag, probleem of storing? Mail naar <b>support@servai.nl</b> en noem de pagina, locatie en periode. We reageren zo snel mogelijk.</p></div></div>`}:d.support();
 })();
 
@@ -2340,7 +2363,7 @@ function jumpSpy(){
 }
 addEventListener('scroll',()=>{if(jumpNav)requestAnimationFrame(jumpSpy)},{passive:true});
 /* ---------------- router ---------------- */
-const TITLES={loonkosten:'Loonkosten',upselling:'Upselling',kansen:'Markt & kansen',gebruikers:'Gebruikers',koppelingen:'Koppelingen',meldingen:'Meldingen',advies:'AI-advies',support:'Support',dranken:'Verkoop dranken',overzicht:'Overzicht',financien:'Financiën',menu:'Verkoop gerechten',personeel:'Personeel',reserveringen:'Reserveringen',inkoop:'Menu & kostprijs',gasten:'Gasten & reviews',assistent:'Vraag SERVAI',social:'Social media',receptie:'AI-receptie',uploaden:'Handmatig uploaden'};
+const TITLES={facturen:'Facturen',loonkosten:'Loonkosten',upselling:'Upselling',kansen:'Markt & kansen',gebruikers:'Gebruikers',koppelingen:'Koppelingen',meldingen:'Meldingen',advies:'AI-advies',support:'Support',dranken:'Verkoop dranken',overzicht:'Overzicht',financien:'Financiën',menu:'Verkoop gerechten',personeel:'Personeel',reserveringen:'Reserveringen',inkoop:'Menu & kostprijs',gasten:'Gasten & reviews',assistent:'Vraag SERVAI',social:'Social media',receptie:'AI-receptie',uploaden:'Handmatig uploaden'};
 function navSync(){
   document.querySelectorAll('#nav .ng').forEach(g=>{g.hidden=![...g.querySelectorAll('a[data-v]')].some(a=>!a.hidden)});
   const act=document.querySelector('#nav a.on'),grp=act&&act.closest('.ng');
@@ -2365,7 +2388,7 @@ function render(){
   let v=(location.hash||'#overzicht').slice(1);if(!V[v]||!can(v))v=firstAllowed();state.view=v;killCharts();
   const h=new Date().getHours();const greet=h<12?'Goedemorgen':h<18?'Goedemiddag':'Goedenavond';
   document.getElementById('title').textContent=state.view==='overzicht'?greet+', '+cur().n.split(' ')[0]:TITLES[state.view];
-  document.getElementById('period').style.display=['kansen','gebruikers','koppelingen','meldingen','support','assistent','rooster','social','receptie','uploaden'].includes(state.view)?'none':'';
+  document.getElementById('period').style.display=['facturen','kansen','gebruikers','koppelingen','meldingen','support','assistent','rooster','social','receptie','uploaden'].includes(state.view)?'none':'';
   document.getElementById('subtitle').textContent=locName()+' · '+(state.view==='gebruikers'?'toegang & rollen':state.view==='koppelingen'?'systemen die data aanleveren':state.view==='meldingen'?'WhatsApp en mail, per persoon':state.view==='advies'?'wat opvalt en waar je iets mee kunt':state.view==='support'?'meld een bug of probleem':state.view==='kansen'?'markt, laatste 12 maanden':perName())+' · bijgewerkt '+String(new Date().getHours()).padStart(2,'0')+':'+String(new Date().getMinutes()).padStart(2,'0');
   document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===state.view));navSync();
   document.body.classList.toggle('on-assist',state.view==='assistent');
