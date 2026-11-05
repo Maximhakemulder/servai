@@ -602,7 +602,7 @@ V.financien=()=>{
   const T=todayCalc(state.loc),p=state.period,F=fin(state.loc,p),Fp=fin(state.loc,p,p||1);
   const s=series(state.loc,30),all=state.loc==='all',fx=all?LOCS.reduce((a,l)=>a+l.f,0)/1.15:LOCS.find(l=>l.id===state.loc).f/1.15;
   const wd=WDN[dayIdx(TODAY)];
-  const r=rng(7+state.loc.length);let bal=86000;const cf=[];for(let i=0;i<8;i++){bal+=(i%4===3?-38000:12500)*(0.8+r()*.4);cf.push(Math.round(bal))}
+  const r=rng(7+state.loc.length);
   /* begroting vs werkelijk */
   const bud=all?LOCS.map(L=>{const a=agg(L.id,30).rev;return{n:L.name,a,b:a*(.93+((L.seed*3)%11)/60)}}):[3,2,1,0].map(w=>{const a=agg(state.loc,7,w*7).rev;return{n:'wk '+(4-w),a,b:a*(.95+((w*5)%7)/50)}});
   /* facturen */
@@ -635,8 +635,7 @@ V.financien=()=>{
     <div class="c span-12"><div class="ch"><div><h2>Loonkosten als % van omzet</h2><p>${locName()} · laatste 30 dagen</p></div><div class="legend"><span><i class="sq" style="background:var(--s1)"></i>Loonkosten %</span><span><i class="dash"></i>Doel 30%</span></div></div><div class="cv"><canvas id="c-lab" role="img" aria-label="Loonkosten percentage per dag"></canvas></div></div>
 
     <div class="sec"><h2>Begroting &amp; geld</h2><small>Wat je verwachtte, wat er binnenkomt en wat eruit gaat</small></div>
-    <div class="c span-6"><div class="ch"><div><h2>Begroting tegenover werkelijk</h2><p>Omzet · ${all?'per locatie, laatste 30 dagen':'per week, laatste 4 weken'}</p></div><div class="legend"><span><i class="sq" style="background:var(--ref)"></i>Begroting</span><span><i class="sq" style="background:var(--s1)"></i>Werkelijk</span></div></div><div class="cv short"><canvas id="c-bud" role="img" aria-label="Begroting tegenover werkelijke omzet"></canvas></div></div>
-    <div class="c span-6"><div class="ch"><div><h2>Cashflow-forecast</h2><p>Verwacht banksaldo komende 8 weken · dip door btw en huur</p></div></div><div class="cv short"><canvas id="c-cf" role="img" aria-label="Cashflow forecast"></canvas></div></div>
+    <div class="c span-12"><div class="ch"><div><h2>Begroting tegenover werkelijk</h2><p>Omzet · ${all?'per locatie, laatste 30 dagen':'per week, laatste 4 weken'}</p></div><div class="legend"><span><i class="sq" style="background:var(--ref)"></i>Begroting</span><span><i class="sq" style="background:var(--s1)"></i>Werkelijk</span></div></div><div class="cv short"><canvas id="c-bud" role="img" aria-label="Begroting tegenover werkelijke omzet"></canvas></div></div>
     <div class="c span-12"><div class="ch"><div><h2>Ontvangen facturen</h2><p>${inv.length} facturen ontvangen · SERVAI vergelijkt de prijzen met je vorige inkoop</p></div></div><div class="tw"><table>
       <thead><tr><th>Leverancier</th><th>Soort</th><th class="r">Bedrag</th><th class="r">Ontvangen</th><th>Prijscontrole</th></tr></thead><tbody>
       ${inv.map(x=>`<tr><td><b>${x[0]}</b></td><td style="color:var(--fg-2)">${x[1]}</td><td class="r">${eur(x[2])}</td><td class="r">${dl(-x[3])}</td><td>${x[4]==='ok'?tagC('good','✓ prijzen kloppen'):tagC('warn','△ duurder: '+x[5])}</td></tr>`).join('')}
@@ -647,7 +646,6 @@ V.financien=()=>{
     <div class="c span-5"><div class="ch"><div><h2>Afwijkingen</h2><p>Automatisch gesignaleerd</p></div></div><div class="ins">
       ${worst.labp>30?`<div class="in"><span class="st crit">! Actie</span><div><h3>Loonkosten ${worst.L.name} op ${pct(worst.labp)}</h3><p>Boven je doel van 30% op dit tijdstip. Rooster voor het late deel bijsturen kan ± € ${nf(worst.labDay*.08)} schelen.</p></div><button class="act" data-done="Rooster aangepast">Rooster aanpassen</button></div>`:`<div class="in"><span class="st good">✓ Op koers</span><div><h3>Loonkosten binnen doel</h3><p>Restaurant Demo zit nu onder de 30% van omzet.</p></div><span></span></div>`}
       <div class="in"><span class="st warn">△ Let op</span><div><h3>Factuur Bidfood wijkt af</h3><p>2 regels zijn 11% duurder dan de afgesproken prijs. Controller heeft de factuur klaargezet om te reclameren.</p></div><button class="act" data-done="Reclamatie verstuurd">Reclameren</button></div>
-      <div class="in"><span class="st good">✓ Op koers</span><div><h3>Cashflow blijft positief</h3><p>Ook na btw en huur blijft het saldo boven € ${nf(Math.min(...cf)/1000)}k. Geen actie nodig.</p></div><span></span></div>
     </div></div>
     ${all?`<div class="c span-12"><div class="ch"><div><h2>Locaties vergeleken</h2><p>${perName()} · gesorteerd op bedrijfsresultaat</p></div></div><div class="tw"><table>
       <thead><tr><th>Locatie</th><th>Omzet</th><th class="r">Food cost</th><th class="r">Drank</th><th class="r">Loon</th><th class="r">Prime cost</th><th class="r">Resultaat</th><th class="r">Δ</th></tr></thead><tbody>
@@ -659,7 +657,6 @@ V.financien=()=>{
     mk('c-lab',{type:'bar',data:{labels:s.map(x=>x.d.getDate()+'/'+(x.d.getMonth()+1)),datasets:[{type:'line',label:'Doel',data:s.map(()=>30),borderColor:'#6B7199',borderDash:[5,4],borderWidth:2,pointRadius:0},{label:'Loonkosten',data:s.map(x=>x.labp),backgroundColor:s.map(x=>x.labp>32?'#e04848':'#3987e5'),borderRadius:4,borderSkipped:'start',maxBarThickness:18}]},
       options:{scales:{y:{min:15,ticks:{callback:v=>v+'%'},grid:{color:'rgba(170,180,255,.07)'},border:{display:false}},x:{...xPlain,ticks:{maxRotation:0,autoSkip:true,maxTicksLimit:10}}},plugins:{tooltip:{...tip,callbacks:{label:c=>' '+c.dataset.label+': '+pct(c.raw)}}}}});
     mk('c-bud',{type:'bar',data:{labels:bud.map(x=>x.n),datasets:[{label:'Begroting',data:bud.map(x=>x.b),backgroundColor:'#6B7199',borderRadius:4,borderSkipped:'start',maxBarThickness:26},{label:'Werkelijk',data:bud.map(x=>x.a),backgroundColor:'#3987e5',borderRadius:4,borderSkipped:'start',maxBarThickness:26}]},options:{scales:{y:yEur,x:xPlain},plugins:{tooltip:{...tip,callbacks:{label:c=>' '+c.dataset.label+': '+eur(c.raw)}}}}});
-    mk('c-cf',{type:'line',data:{labels:['wk 45','wk 46','wk 47','wk 48','wk 49','wk 50','wk 51','wk 52'],datasets:[{label:'Saldo',data:cf,borderColor:'#199e70',backgroundColor:'rgba(25,158,112,.12)',fill:true,tension:.3,borderWidth:2,pointRadius:3,pointBackgroundColor:'#199e70',pointBorderColor:'#10132A',pointBorderWidth:2}]},options:{scales:{y:{...yEur,beginAtZero:true},x:xPlain},plugins:{tooltip:{...tip,callbacks:{label:c=>' '+eur(c.raw)}}}}});
     mk('c-fc',{type:'bar',data:{labels:fc.map((x,i)=>i===0?'vandaag':DAYS[dayIdx(x.d)]+' '+x.d.getDate()),datasets:[{label:'Verwacht',data:fc.map(x=>x.v),backgroundColor:fc.map((x,i)=>i===0?'#5aa0f0':[4,5].includes(dayIdx(x.d))?'#3987e5':'rgba(57,135,229,.55)'),borderRadius:4,borderSkipped:'start',maxBarThickness:34}]},options:{scales:{y:yEur,x:xPlain},plugins:{tooltip:{...tip,callbacks:{label:c=>' '+eur(c.raw)}}}}});
   }}
 };
@@ -916,7 +913,7 @@ V.gebruikers=()=>{
       <div class="fe"><time>08:12</time><span class="who">${ico('i-euro')}</span><div><b>Mark de Wit</b> <span>bekeek Financiën</span></div></div>
       <div class="fe"><time>07:05</time><span class="who">${ico('i-chef')}</span><div><b>Tom Smit</b> <span>nam 2 prijsvoorstellen op in de kaartreview</span></div></div>
       <div class="fe"><time>gist.</time><span class="who">${ico('i-staff')}</span><div><b>Eva Bakker</b> <span>gaf Daan Visser toegang tot Personeel</span></div></div>
-      <div class="fe"><time>vrij.</time><span class="who">${ico('i-box')}</span><div><b>Lisa Mulder</b> <span>exporteerde het btw-overzicht van het kwartaal</span></div></div>
+      <div class="fe"><time>vrij.</time><span class="who">${ico('i-box')}</span><div><b>Lisa Mulder</b> <span>exporteerde het inkoopoverzicht van de week</span></div></div>
     </div></div>
   </div>`,after(){}}
 };
@@ -940,7 +937,6 @@ const NCATS=[
  ['Financiën','i-euro',[
   ['f-omz','Omzet onder verwachting','Als een dag of dienst achterblijft op de voorspelling',['Direct','Dagelijks samengevat'],1,1,1,['Achterstand',10,'%']],
   ['f-kas','Kasverschil','Verschil tussen kassa en geteld geld',['Direct'],0,1,1,['Vanaf',50,'€']],
-  ['f-liq','Liquiditeit en btw','Waarschuwing als je geld voor btw of loon niet gedekt is',['Direct','Wekelijks'],0,1,1],
   ['f-fact','Facturen om te betalen','Binnenkomende facturen en vervaldata',['Dagelijks samengevat','Wekelijks'],1,0,1],
   ['f-beg','Begroting overschreden','Als een kostenpost boven het plan komt',['Direct','Wekelijks'],1,0,1,['Overschrijding',5,'%']]]],
  ['Inkoop','i-box',[
