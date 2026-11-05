@@ -256,6 +256,7 @@ body.on-assist .fab{display:none}
 .ai-imp{display:inline-flex;align-items:baseline;gap:6px;margin-top:9px;padding:5px 10px;border-radius:10px;background:rgba(74,222,154,.10);border:1px solid rgba(74,222,154,.28);color:#7FE0AE;font-size:12.5px}
 .ai-imp b{font-size:14px}
 @media (max-width:600px){.ai-c .in{grid-template-columns:1fr}.ai-c .in>.act,.ai-c .in>span:last-child{grid-area:auto}}
+.srt{cursor:pointer;user-select:none}.srt:hover{color:var(--fg)}
 .co{display:flex;gap:11px;align-items:flex-start;padding:9px 12px;border-radius:12px;background:linear-gradient(100deg,rgba(255,255,255,.055),rgba(255,255,255,.02));border:1px solid var(--line);border-left:3px solid var(--c,#7C93FF);min-width:260px;white-space:normal}
 .co-good{--c:#4ADE9A}.co-warn{--c:#FFB86B}.co-info{--c:#7C93FF}
 .co-ic{flex:none;width:26px;height:26px;border-radius:9px;display:grid;place-items:center;background:linear-gradient(135deg,#3A4FB8,#E0568B)}
@@ -690,8 +691,8 @@ V.menu=()=>{
       <div class="in"><span class="st warn">Puzzel</span><div><h3>Hoge marge, weinig verkocht</h3><p>Laat bediening het aanraden, betere plek op de kaart.</p></div><span></span></div>
       <div class="in"><span class="st crit">Twijfel</span><div><h3>Weinig verkocht, lage marge</h3><p>Vervangen of herzien bij de volgende kaartwissel.</p></div><span></span></div>
     </div></div>
-    <div class="c span-12"><div class="ch"><div><h2>Gerechten</h2><p>${perName()} · gesorteerd op aantal verkocht</p></div></div><div class="tw"><table><thead><tr><th>Gerecht</th><th>Kwadrant</th><th class="r">Verkocht</th><th class="r">Prijs</th><th class="r">Kostprijs</th><th>Marge</th><th class="r">Bijdrage</th><th>Advies voor de review</th></tr></thead><tbody>
-      ${d.sort((a,b)=>b.q-a.q).map(x=>{const c=cat(x);return`<tr><td><b>${x.n}</b>${x.n==='Zalmschotel'?' <span class="chip" style="margin-left:6px;color:#FFD27A;border-color:rgba(250,178,25,.35)">△ inkoop +9% · in review</span>':''}</td><td><span class="chip"><i style="background:${c[1]}"></i>${c[0]}</span></td><td class="r">${nf(x.q)}</td><td class="r">${eur(x.p,2)}</td><td class="r">${eur(x.k,2)}</td><td><div class="mbar"><span class="t"><i style="width:${x.m}%"></i></span><span>${Math.round(x.m)}%</span></div></td><td class="r"><b>${eur(x.q*(x.p/1.09-x.k))}</b></td><td style="color:var(--fg-2);white-space:normal;min-width:200px">${adv(x)}</td></tr>`}).join('')}
+    <div class="c span-12"><div class="ch"><div><h2>Gerechten</h2><p>${perName()} · klik op een kolomkop om te sorteren</p></div></div><div class="tw"><table><thead><tr><th class="srt" data-drs="n">Gerecht${drA('n')}</th><th>Kwadrant</th><th class="r srt" data-drs="q">Verkocht${drA('q')}</th><th class="r srt" data-drs="o">Omzet${drA('o')}</th><th class="r srt" data-drs="p">Prijs${drA('p')}</th><th class="r">Kostprijs</th><th class="srt" data-drs="m">Marge${drA('m')}</th><th class="r">Bijdrage</th><th>Advies voor de review</th></tr></thead><tbody>
+      ${[...d].sort(drCmp).map(x=>{const c=cat(x);return`<tr><td><b>${x.n}</b>${x.n==='Zalmschotel'?' <span class="chip" style="margin-left:6px;color:#FFD27A;border-color:rgba(250,178,25,.35)">△ inkoop +9% · in review</span>':''}</td><td><span class="chip"><i style="background:${c[1]}"></i>${c[0]}</span></td><td class="r">${nf(x.q)}</td><td class="r"><b>${eur(x.q*x.p)}</b></td><td class="r">${eur(x.p,2)}</td><td class="r">${eur(x.k,2)}</td><td><div class="mbar"><span class="t"><i style="width:${x.m}%"></i></span><span>${Math.round(x.m)}%</span></div></td><td class="r"><b>${eur(x.q*(x.p/1.09-x.k))}</b></td><td style="color:var(--fg-2);white-space:normal;min-width:200px">${adv(x)}</td></tr>`}).join('')}
     </tbody></table></div><p class="ctx" style="color:var(--mute);font-size:12px;margin-top:10px">Bijdrage = aantal × (prijs excl. 9% btw − kostprijs)</p></div>
   </div>`,after(){
     const quad={id:'quad',afterDraw(c){const{ctx,chartArea:a,scales:{x,y}}=c;const X=x.getPixelForValue(aq),Y=y.getPixelForValue(am);ctx.save();ctx.strokeStyle='rgba(170,180,255,.25)';ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(X,a.top);ctx.lineTo(X,a.bottom);ctx.moveTo(a.left,Y);ctx.lineTo(a.right,Y);ctx.stroke();ctx.setLineDash([]);
@@ -736,8 +737,8 @@ V.dranken=()=>{
       <div class="in"><span class="st warn">Puzzel</span><div><h3>Goede marge, weinig verkocht</h3><p>Laat bediening ze aanraden bij de eerste ronde.</p></div><span></span></div>
       <div class="in"><span class="st crit">Twijfel</span><div><h3>Weinig verkocht, lage marge</h3><p>Schrappen of seizoensgebonden maken. Let op restvoorraad.</p></div><span></span></div>
     </div></div>
-    <div class="c span-12"><div class="tw"><table><thead><tr><th>Drank</th><th>Kwadrant</th><th class="r">Verkocht</th><th class="r">Prijs</th><th class="r">Kostprijs</th><th>Marge</th><th>Basis &amp; garnering</th><th>Advies</th></tr></thead><tbody>
-      ${[...d].sort((a,b)=>b.q-a.q).map(x=>{const c=cat(x);return`<tr><td><b>${x.n}</b><br><span style="color:var(--mute);font-size:12px">${x.t}</span></td><td><span class="chip"><i style="background:${c[1]}"></i>${c[0]}</span></td><td class="r">${nf(x.q)}</td><td class="r">${eur(x.p,2)}</td><td class="r">${eur(x.k,2)}</td><td><div class="mbar"><span class="t"><i style="width:${x.m}%"></i></span><span>${Math.round(x.m)}%</span></div></td><td style="color:var(--fg-2);white-space:normal;min-width:230px">${x.b||'–'}</td><td style="color:var(--fg-2);white-space:normal;min-width:200px">${adv(x)}</td></tr>`}).join('')}
+    <div class="c span-12"><div class="tw"><table><thead><tr><th class="srt" data-drs="n">Drank${drA('n')}</th><th>Kwadrant</th><th class="r srt" data-drs="q">Verkocht${drA('q')}</th><th class="r srt" data-drs="o">Omzet${drA('o')}</th><th class="r srt" data-drs="p">Prijs${drA('p')}</th><th class="r">Kostprijs</th><th class="srt" data-drs="m">Marge${drA('m')}</th><th>Basis &amp; garnering</th><th>Advies</th></tr></thead><tbody>
+      ${[...d].sort(drCmp).map(x=>{const c=cat(x);return`<tr><td><b>${x.n}</b><br><span style="color:var(--mute);font-size:12px">${x.t}</span></td><td><span class="chip"><i style="background:${c[1]}"></i>${c[0]}</span></td><td class="r">${nf(x.q)}</td><td class="r"><b>${eur(x.q*x.p)}</b></td><td class="r">${eur(x.p,2)}</td><td class="r">${eur(x.k,2)}</td><td><div class="mbar"><span class="t"><i style="width:${x.m}%"></i></span><span>${Math.round(x.m)}%</span></div></td><td style="color:var(--fg-2);white-space:normal;min-width:230px">${x.b||'–'}</td><td style="color:var(--fg-2);white-space:normal;min-width:200px">${adv(x)}</td></tr>`}).join('')}
     </tbody></table></div></div>
 
     <div class="sec"><h2>Bier &amp; tanks</h2><span class="chip"><i style="background:var(--good)"></i>live via tanksensor</span><small>Vulling per tank · bijgewerkt 2 minuten geleden</small></div>
@@ -1624,8 +1625,13 @@ document.getElementById('view').addEventListener('click',e=>{
 });
 document.getElementById('view').addEventListener('input',e=>{if(e.target.matches('[data-upq]')){UPST.q=e.target.value;upLijst()}});
 
+const DRS={k:'q',dir:-1};
+const drVal=(x,k)=>k==='o'?x.q*x.p:x[k];
+const drCmp=(a,b)=>{const k=DRS.k,u=drVal(a,k),v=drVal(b,k);return (k==='n'?String(u).localeCompare(String(v),'nl'):u-v)*DRS.dir};
+const drA=k=>DRS.k===k?(DRS.dir>0?' ▲':' ▼'):'';
+document.getElementById('view').addEventListener('click',e=>{const h=e.target.closest('[data-drs]');if(!h)return;const k=h.dataset.drs;if(DRS.k===k)DRS.dir*=-1;else{DRS.k=k;DRS.dir=k==='n'?1:-1}render()});
 /* ---------------- Omzet per medewerker en per product, over een zelf gekozen periode ---------------- */
-const OM={pre:'30',van:null,tot:null,gran:'dag',q:'',sort:'omzet',meer:false};
+const OM={pre:'30',van:null,tot:null,gran:'dag',q:'',sort:'omzet',dir:1,meer:false};
 const OMKIND={personeel:'med',menu:'food',dranken:'drink'};
 const OMTIT={med:['Omzet per medewerker','Wat elke medewerker heeft verkocht, per dag, week, maand of jaar'],food:['Omzet per gerecht','Alle gerechten die in de gekozen periode zijn verkocht'],drink:['Omzet per drank','Alle dranken die in de gekozen periode zijn verkocht']};
 const OMPRE=[['0','Vandaag'],['1','Gisteren'],['7','7 dagen'],['30','30 dagen'],['mnd','Deze maand'],['vmnd','Vorige maand'],['jaar','Dit jaar']];
@@ -1673,7 +1679,7 @@ function omInject(pg){
 function omCtl(){
   const w=document.getElementById('om-panel');if(!w)return;const [a,b]=omBereik(),k=w.dataset.k;
   w.querySelector('#om-ctl').innerHTML=`<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:2px 0 8px">${OMPRE.map(([p,t])=>`<button type="button" class="act ${OM.pre===p?'':'ghost'}" data-omp="${p}">${t}</button>`).join('')}<span style="display:flex;gap:6px;align-items:center;margin-left:6px;color:var(--mute);font-size:13px"><input type="date" class="fld" data-omd="van" value="${a}" style="width:150px"> t/m <input type="date" class="fld" data-omd="tot" value="${b}" style="width:150px"></span></div>
-  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:0 0 12px">${k==='med'?`<span style="color:var(--mute);font-size:13px">Verdeling per</span>${['dag','week','maand','jaar'].map(g=>`<button type="button" class="act ${OM.gran===g?'':'ghost'}" data-omg="${g}">${g[0].toUpperCase()+g.slice(1)}</button>`).join('')}`:`<input class="fld" data-omq placeholder="Zoek product of groep…" value="${esc(OM.q)}" style="min-width:220px;max-width:320px"><span style="color:var(--mute);font-size:13px;margin-left:6px">Sorteer</span>${[['omzet','Omzet'],['aantal','Aantal'],['naam','A–Z']].map(([s,t])=>`<button type="button" class="act ${OM.sort===s?'':'ghost'}" data-oms="${s}">${t}</button>`).join('')}<button type="button" class="act ghost" data-omc="1" style="margin-left:auto">Download CSV</button>`}</div>`;
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:0 0 12px">${k==='med'?`<span style="color:var(--mute);font-size:13px">Verdeling per</span>${['dag','week','maand','jaar'].map(g=>`<button type="button" class="act ${OM.gran===g?'':'ghost'}" data-omg="${g}">${g[0].toUpperCase()+g.slice(1)}</button>`).join('')}`:`<input class="fld" data-omq placeholder="Zoek product of groep…" value="${esc(OM.q)}" style="min-width:220px;max-width:320px"><span style="color:var(--mute);font-size:13px;margin-left:6px">Sorteer</span>${[['omzet','Omzet'],['aantal','Aantal'],['naam','A–Z']].map(([s,t])=>`<button type="button" class="act ${OM.sort===s?'':'ghost'}" data-oms="${s}">${t}${OM.sort===s?(OM.dir*(s==='naam'?-1:1)>0?' ▼':' ▲'):''}</button>`).join('')}<button type="button" class="act ghost" data-omc="1" style="margin-left:auto">Download CSV</button>`}</div>`;
 }
 let omTok=0;
 async function omLaad(){
@@ -1701,7 +1707,7 @@ function omRender(){
   const P=new Map();R.forEach(r=>{const p=P.get(r.artikel)||P.set(r.artikel,{g:r.groep,o:0,n:0}).get(r.artikel);p.o+=+r.omzet||0;p.n+=+r.aantal||0});
   const q=OM.q.trim().toLowerCase();let L=[...P.entries()];const tot=L.reduce((t,x)=>t+x[1].o,0),totN=L.reduce((t,x)=>t+x[1].n,0);
   if(q)L=L.filter(([n,p])=>(n+' '+(p.g||'')).toLowerCase().includes(q));
-  L.sort(OM.sort==='naam'?(x,y)=>x[0].localeCompare(y[0],'nl'):OM.sort==='aantal'?(x,y)=>y[1].n-x[1].n:(x,y)=>y[1].o-x[1].o);
+  L.sort(OM.sort==='naam'?(x,y)=>x[0].localeCompare(y[0],'nl')*OM.dir:OM.sort==='aantal'?(x,y)=>(y[1].n-x[1].n)*OM.dir:(x,y)=>(y[1].o-x[1].o)*OM.dir);
   w._csv=L;const mx=Math.max(1,...L.map(x=>x[1].o)),lim=OM.meer?1e9:50;
   body.innerHTML=`<div style="display:flex;gap:26px;flex-wrap:wrap;margin-bottom:10px"><div><small style="color:var(--mute)">Totale omzet</small><div style="font-size:22px;font-weight:700">${eur(tot)}</div></div><div><small style="color:var(--mute)">Verkocht</small><div style="font-size:22px;font-weight:700">${nf(totN)}×</div></div><div><small style="color:var(--mute)">Verschillende producten</small><div style="font-size:22px;font-weight:700">${P.size}</div></div></div>
   ${L.length?`<div class="tw"><table><thead><tr><th>Product</th><th>Omzet</th><th class="r">Aantal</th><th class="r">Gem. prijs</th><th class="r">% van totaal</th></tr></thead><tbody>${L.slice(0,lim).map(([n,p])=>`<tr><td>${esc(n)}<br><span style="color:var(--mute);font-size:12px">${esc(p.g||'Overig')}</span></td><td style="min-width:200px"><div class="mbar"><span class="t"><i style="width:${p.o/mx*100}%"></i></span><span style="min-width:78px">${eur(p.o,2)}</span></div></td><td class="r">${nf(p.n)}×</td><td class="r">${p.n?eur(p.o/p.n,2):'–'}</td><td class="r">${tot?(p.o/tot*100).toFixed(1).replace('.',','):'0'}%</td></tr>`).join('')}</tbody></table></div>${L.length>lim?`<div style="margin-top:10px"><button type="button" class="act ghost" data-omm="1">Toon alle ${L.length} producten</button></div>`:''}`:'<p style="color:var(--mute)">Geen producten gevonden</p>'}`;
@@ -1710,7 +1716,7 @@ document.getElementById('view').addEventListener('click',e=>{
   const w=document.getElementById('om-panel');if(!w)return;const b=e.target.closest('[data-omp],[data-omg],[data-oms],[data-omm],[data-omc]');if(!b||!w.contains(b))return;const d=b.dataset;
   if(d.omp!==undefined){OM.pre=d.omp;omCtl();omLaad()}
   else if(d.omg){OM.gran=d.omg;omCtl();omRender()}
-  else if(d.oms){OM.sort=d.oms;omCtl();omRender()}
+  else if(d.oms){if(OM.sort===d.oms)OM.dir*=-1;else{OM.sort=d.oms;OM.dir=1}omCtl();omRender()}
   else if(d.omm){OM.meer=true;omRender()}
   else if(d.omc&&w._csv){const f=n=>String(n).replace('.',','),c=['Product;Groep;Aantal;Omzet',...w._csv.map(([n,p])=>`"${n.replace(/"/g,'""')}";"${(p.g||'').replace(/"/g,'""')}";${f(p.n)};${f(p.o.toFixed(2))}`)].join('\r\n');
     const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+c],{type:'text/csv'}));a.download='omzet-'+w._range[0]+'-'+w._range[1]+'.csv';document.body.appendChild(a);a.click();a.remove()}
