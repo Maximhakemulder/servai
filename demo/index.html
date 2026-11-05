@@ -429,7 +429,7 @@ body.on-assist .fab{display:none}
       <div class="sep"></div>
       <a href="#assistent" data-v="assistent" class="ai"><svg><use href="#i-chat"/></svg><span>Vraag SERVAI</span></a>
       <div class="sep"></div>
-      <div class="ng" data-g="beheer"><button type="button" class="nh"><svg><use href="#i-key"/></svg><span>Beheer</span><svg class="chv" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button><div class="nb"><a href="#koppelingen" data-v="koppelingen" class="sub"><svg><use href="#i-link"/></svg><span>Koppelingen</span></a><a href="#gebruikers" data-v="gebruikers" class="sub"><svg><use href="#i-key"/></svg><span>Gebruikers</span></a><a href="#support" data-v="support" class="sub"><svg><use href="#i-help"/></svg><span>Support</span></a></div></div>
+      <div class="ng" data-g="beheer"><button type="button" class="nh"><svg><use href="#i-key"/></svg><span>Beheer</span><svg class="chv" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button><div class="nb"><a href="#koppelingen" data-v="koppelingen" class="sub"><svg><use href="#i-link"/></svg><span>Koppelingen</span></a><a href="#gebruikers" data-v="gebruikers" class="sub"><svg><use href="#i-key"/></svg><span>Gebruikers</span></a><a href="#uploaden" data-v="uploaden" class="sub"><svg><use href="#i-up"/></svg><span>Handmatig uploaden</span></a><a href="#support" data-v="support" class="sub"><svg><use href="#i-help"/></svg><span>Support</span></a></div></div>
     </nav>
     <div class="side-foot mx"><img src="/assets/maxim.webp" alt="Maxim Hakemulder" width="64" height="64" loading="lazy"><b>Maxim Hakemulder</b>Founder &amp; CEO SERVAI<br>06 19 92 12 22<div class="cbtns"><a class="cb" href="tel:+31619921222" data-ct="bel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>Bel me</a><a class="cb wa" href="https://wa.me/31619921222?text=Hoi%20Maxim%2C%20ik%20heb%20de%20SERVAI-demo%20bekeken%20en%20wil%20graag%20een%20demo%20voor%20mijn%20zaak." target="_blank" rel="noopener" data-ct="whatsapp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21l1.6-4.7A8.5 8.5 0 1 1 8 19.6z"/><path d="M9 9.5c.3 2 2.5 4.3 4.6 4.6l1.2-1.2 1.7.8c-.2 1-1 1.8-2 1.8-3.5 0-6.6-3.1-6.6-6.6 0-1 .8-1.8 1.8-2l.8 1.7z"/></svg>WhatsApp</a><a class="cb main" href="/#demo" data-ct="plan">Plan een demo</a></div></div>
   </aside>
@@ -860,9 +860,9 @@ V.assistent=()=>({html:`<div class="c"><div class="chat">
 }});
 
 /* ---------------- account, gebruikers & toegang (demo) ---------------- */
-const PAGES=[['overzicht','Overzicht'],['financien','Financiën'],['menu','Gerechten'],['dranken','Dranken'],['kansen','Kansen'],['personeel','Personeel'],['rooster','Rooster'],['upselling','Upselling'],['reserveringen','Reserv.'],['inkoop','Inkoop'],['gasten','Gasten'],['assistent','Assistent'],['meldingen','Meldingen'],['advies','AI-advies'],['koppelingen','Koppelingen'],['gebruikers','Gebruikers'],['support','Support'],['social','Social media'],['receptie','AI-receptie']];
+const PAGES=[['overzicht','Overzicht'],['financien','Financiën'],['menu','Gerechten'],['dranken','Dranken'],['kansen','Kansen'],['personeel','Personeel'],['rooster','Rooster'],['upselling','Upselling'],['reserveringen','Reserv.'],['inkoop','Inkoop'],['gasten','Gasten'],['assistent','Assistent'],['meldingen','Meldingen'],['advies','AI-advies'],['koppelingen','Koppelingen'],['gebruikers','Gebruikers'],['support','Support'],['uploaden','Uploaden'],['social','Social media'],['receptie','AI-receptie']];
 const ALLP=PAGES.map(p=>p[0]);
-const PRESET={Eigenaar:ALLP,Bedrijfsleider:ALLP.filter(p=>p!=='gebruikers'&&p!=='koppelingen'),'Chef-kok':['overzicht','menu','dranken','kansen','inkoop','meldingen','support','assistent'],'Boekhouder':['overzicht','financien','inkoop','meldingen','support'],'Bar manager':['overzicht','dranken','personeel','rooster','upselling','inkoop','meldingen','support','assistent'],'Gastvrouw':['overzicht','rooster','reserveringen','gasten','meldingen','support','assistent']};
+const PRESET={Eigenaar:ALLP,Bedrijfsleider:ALLP.filter(p=>p!=='gebruikers'&&p!=='koppelingen'),'Chef-kok':['overzicht','menu','dranken','kansen','inkoop','meldingen','support','assistent'],'Boekhouder':['overzicht','financien','inkoop','uploaden','meldingen','support'],'Bar manager':['overzicht','dranken','personeel','rooster','upselling','inkoop','meldingen','support','assistent'],'Gastvrouw':['overzicht','rooster','reserveringen','gasten','meldingen','support','assistent']};
 const USERS0=[
  {id:'u1',n:'Eva Bakker',e:'eva@restaurant-demo.nl',r:'Eigenaar',locs:'rdemo',st:'Actief',last:'Nu actief'},
  {id:'u2',n:'Mark de Wit',e:'mark@restaurant-demo.nl',r:'Bedrijfsleider',locs:'rdemo',st:'Actief',last:'Vandaag 08:12'},
@@ -1351,6 +1351,13 @@ const nl1=n=>n.toFixed(1).replace('.',',');
 /* ---------------- uploaden door de klant zelf (uren, rooster, inkoop) ---------------- */
 const kanUpload=()=>{const u=cur();return !!u&&['Eigenaar','Bedrijfsleider'].includes(u.r)};
 const upKnoppen=soorten=>kanUpload()?`<div class="c span-12" style="display:flex;flex-direction:row;gap:10px;flex-wrap:wrap;align-items:center">${soorten.filter(s=>cur().r!=='Boekhouder'||s==='inkoop').map(s=>`<button class="act" data-up="${s}">${{rooster:'Rooster uploaden',inkoop:'Inkoop uploaden'}[s]}</button>`).join('')}<small style="color:var(--mute)">Excel of CSV, de kolommen worden automatisch herkend</small></div>`:'';
+
+/* ---------------- Handmatig uploaden: één plek voor alle uploads ---------------- */
+V.uploaden=()=>{
+  const k=kanUpload(),r=cur()&&cur().r;
+  const kaart=(s,t,x,b)=>`<div class="c span-4" style="display:flex;flex-direction:column;gap:8px"><h3 style="font-size:16px">${t}</h3><p style="color:var(--fg-2);font-size:13.5px;flex:1">${x}</p><div><button class="act" data-up="${s}">${b}</button></div></div>`;
+  const alle=[['rooster','Rooster','Upload je rooster als Excel of CSV. Een nieuw rooster vervangt de geplande diensten van dezelfde dagen en vult nieuwe diensten aan.','Rooster uploaden'],['inkoop','Inkoop en facturen','Een overzicht van je inkoop of facturen. SERVAI gebruikt het voor de prijscontrole.','Inkoop uploaden'],['menu','Menu','Je gerechten met verkoopprijzen.','Menu uploaden'],['prijzen','Ingrediënten','Je ingrediënten met inkoopprijzen.','Prijzen uploaden'],['recept','Recepten','Welke ingrediënten bij welk gerecht horen.','Recepten uploaden']].filter(a=>r!=='Boekhouder'||a[0]==='inkoop');
+  return{html:`<div class="grid"><div class="c span-12"><p style="color:var(--fg-2);max-width:700px">Geen koppeling met je systeem, of wil je iets eenmalig aanvullen? Upload het hier als Excel of CSV. De kolommen worden automatisch herkend en je ziet eerst een voorbeeld voordat er iets wordt opgeslagen. Met een actieve koppeling heb je dit niet nodig.</p></div>${k?alle.map(a=>kaart(...a)).join(''):'<div class="c span-12"><p style="color:var(--fg-2)">Alleen de eigenaar en de bedrijfsleider kunnen gegevens uploaden.</p></div>'}</div>`}};
 async function upModal(preset){
   const K=await import('/assets/upload-kolommen.mjs');
   const SO={rooster:'rooster',gewerkt:'uren',gepland:'uren',inkoop:'inkoop',menu:'menu',prijzen:'prijzen',recept:'recept'};
@@ -1531,7 +1538,7 @@ async function ikLoad(wrap){
   const wijz=ing.filter(i=>i.vorige_prijs>0&&i.prijs>0).map(i=>({i,p:(i.prijs-i.vorige_prijs)/i.vorige_prijs*100})).filter(x=>Math.abs(x.p)>=3).sort((a,b)=>Math.abs(b.p)-Math.abs(a.p));
   const pct=p=>(p>0?'+':'−')+nl1(Math.abs(p))+'%';
   const e4=n=>eur(n,2);
-  const knop=k?`<div class="c span-12" style="display:flex;flex-direction:row;gap:10px;flex-wrap:wrap;align-items:center"><button class="act" data-ik="ing">+ Ingrediënt</button><button class="act ghost" data-ik="gerecht">+ Gerecht</button><button class="act ghost" data-ik="import">Menu uit kassa halen</button><button class="act ghost" data-up="menu">CSV: menu</button><button class="act ghost" data-up="prijzen">CSV: prijzen</button><button class="act ghost" data-up="recept">CSV: recepten</button></div>`:'';
+  const knop=k?`<div class="c span-12" style="display:flex;flex-direction:row;gap:10px;flex-wrap:wrap;align-items:center"><button class="act" data-ik="ing">+ Ingrediënt</button><button class="act ghost" data-ik="gerecht">+ Gerecht</button><button class="act ghost" data-ik="import">Menu uit kassa halen</button></div>`:'';
   const zonderRecept=menu.filter(m=>!(kost[m.id]&&kost[m.id].regels>0)).length;
   const kpis=rpKpi('Gerechten',nf(menu.length),'<span class="delta flat">'+(menu.length-zonderRecept)+' met ingrediënten</span>',zonderRecept?zonderRecept+' nog zonder ingrediënten':'alle gerechten hebben ingrediënten')+
    rpKpi('Ingrediënten',nf(ing.length),'<span class="delta flat">'+ing.filter(i=>i.prijs>0).length+' met prijs</span>','prijs is optioneel')+
@@ -1707,7 +1714,7 @@ async function rooLoad(wrap){
   const perDag={};rows.forEach(r=>{(perDag[r.datum]||(perDag[r.datum]=[])).push(r)});
   const vandaagS=ymd(new Date()),k=kanUpload();
   const titel=maand?MND[a.getMonth()]+' '+a.getFullYear():'Week '+rWk(a)+' · '+rKort(van)+' t/m '+rKort(tot)+' '+tot.getFullYear();
-  const bar=`<div class="c span-12" style="display:flex;flex-direction:row;gap:8px;flex-wrap:wrap;align-items:center"><button class="act ghost" data-roo="prev" aria-label="Vorige">‹</button><button class="act ghost" data-roo="today">Vandaag</button><button class="act ghost" data-roo="next" aria-label="Volgende">›</button><b style="margin:0 8px;font-size:16px">${titel}</b><span style="display:flex;gap:6px;margin-left:auto"><button class="act${maand?' ghost':''}" data-roo="week">Week</button><button class="act${maand?'':' ghost'}" data-roo="maand">Maand</button>${k?'<button class="act ghost" data-up="rooster">Rooster uploaden</button>':''}</span></div>`;
+  const bar=`<div class="c span-12" style="display:flex;flex-direction:row;gap:8px;flex-wrap:wrap;align-items:center"><button class="act ghost" data-roo="prev" aria-label="Vorige">‹</button><button class="act ghost" data-roo="today">Vandaag</button><button class="act ghost" data-roo="next" aria-label="Volgende">›</button><b style="margin:0 8px;font-size:16px">${titel}</b><span style="display:flex;gap:6px;margin-left:auto"><button class="act${maand?' ghost':''}" data-roo="week">Week</button><button class="act${maand?'':' ghost'}" data-roo="maand">Maand</button>${k?'<a class="act ghost" href="#uploaden">Rooster uploaden</a>':''}</span></div>`;
   const sel=maand?rows.filter(r=>r.datum.slice(0,7)===ymd(a).slice(0,7)):rows;
   const mw=new Set(sel.map(r=>r.medewerker.toLowerCase())),tu=rpSum(sel,'uren');
   const dagU=Object.entries(perDag).filter(([d])=>!maand||d.slice(0,7)===ymd(a).slice(0,7)).map(([d,l])=>[d,rpSum(l,'uren')]).sort((x,y)=>y[1]-x[1])[0];
@@ -1775,7 +1782,6 @@ V.receptie=()=>{
    <div class="c span-12"><p style="color:var(--mute);font-size:12.5px">Er wordt nooit iets verstuurd zonder jouw goedkeuring.</p></div></div>`,after(){}}
 };
 V.inkoop=()=>rpPage(ikLoad);
-(()=>{const p=V.personeel;V.personeel=()=>{const o=p();o.html=o.html.replace('<div class="grid">','<div class="grid">'+upKnoppen(['rooster']));return o}})();
 
 /* ---------------- koppelingen (demo, geen echte verbindingen) ---------------- */
 const CKINDS=[
@@ -1978,7 +1984,7 @@ function jumpSpy(){
 }
 addEventListener('scroll',()=>{if(jumpNav)requestAnimationFrame(jumpSpy)},{passive:true});
 /* ---------------- router ---------------- */
-const TITLES={loonkosten:'Loonkosten',upselling:'Upselling',kansen:'Markt & kansen',gebruikers:'Gebruikers',koppelingen:'Koppelingen',meldingen:'Meldingen',advies:'AI-advies',support:'Support',dranken:'Dranken',overzicht:'Overzicht',financien:'Financiën',menu:'Verkoop gerechten',personeel:'Personeel',reserveringen:'Reserveringen',inkoop:'Menu & kostprijs',gasten:'Gasten & reviews',assistent:'Vraag SERVAI'};
+const TITLES={loonkosten:'Loonkosten',upselling:'Upselling',kansen:'Markt & kansen',gebruikers:'Gebruikers',koppelingen:'Koppelingen',meldingen:'Meldingen',advies:'AI-advies',support:'Support',dranken:'Dranken',overzicht:'Overzicht',financien:'Financiën',menu:'Verkoop gerechten',personeel:'Personeel',reserveringen:'Reserveringen',inkoop:'Menu & kostprijs',gasten:'Gasten & reviews',assistent:'Vraag SERVAI',uploaden:'Handmatig uploaden'};
 function navSync(){
   document.querySelectorAll('#nav .ng').forEach(g=>{g.hidden=![...g.querySelectorAll('a[data-v]')].some(a=>!a.hidden)});
   const act=document.querySelector('#nav a.on'),grp=act&&act.closest('.ng');
@@ -2003,7 +2009,7 @@ function render(){
   let v=(location.hash||'#overzicht').slice(1);if(!V[v]||!can(v))v=firstAllowed();state.view=v;killCharts();
   const h=new Date().getHours();const greet=h<12?'Goedemorgen':h<18?'Goedemiddag':'Goedenavond';
   document.getElementById('title').textContent=state.view==='overzicht'?greet+', '+cur().n.split(' ')[0]:TITLES[state.view];
-  document.getElementById('period').style.display=['kansen','gebruikers','koppelingen','meldingen','support','assistent','rooster','social','receptie'].includes(state.view)?'none':'';
+  document.getElementById('period').style.display=['kansen','gebruikers','koppelingen','meldingen','support','assistent','rooster','social','receptie','uploaden'].includes(state.view)?'none':'';
   document.getElementById('subtitle').textContent=locName()+' · '+(state.view==='gebruikers'?'toegang & rollen':state.view==='koppelingen'?'systemen die data aanleveren':state.view==='meldingen'?'WhatsApp en mail, per persoon':state.view==='advies'?'wat opvalt en waar je iets mee kunt':state.view==='support'?'meld een bug of probleem':state.view==='kansen'?'markt, laatste 12 maanden':perName())+' · bijgewerkt '+String(new Date().getHours()).padStart(2,'0')+':'+String(new Date().getMinutes()).padStart(2,'0');
   document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===state.view));navSync();
   document.body.classList.toggle('on-assist',state.view==='assistent');
