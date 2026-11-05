@@ -394,7 +394,8 @@ td .co-s{padding:4px 10px;min-width:300px}td .co-s small{display:none}
 .gk{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:12px;margin-bottom:12px}.gk small{display:block;color:var(--mute);font-size:12px}.gk b{display:block;font:600 20px var(--f-d);margin:2px 0}
 @media (max-width:560px){.tr{grid-template-columns:minmax(0,1fr) 56px auto}.tr .spk{display:none}}
 
-.cbar{display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:16px;margin-bottom:20px;background:linear-gradient(100deg,rgba(94,123,255,.16),rgba(155,89,182,.12) 55%,rgba(255,122,89,.12));border:1px solid rgba(170,180,255,.22)}
+.cbar{position:relative;display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:16px;margin-bottom:20px;background:linear-gradient(100deg,rgba(94,123,255,.16),rgba(155,89,182,.12) 55%,rgba(255,122,89,.12));border:1px solid rgba(170,180,255,.22)}
+.cbar .cx{position:absolute;top:6px;right:8px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(255,255,255,.08);color:var(--fg-2);font-size:16px;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0}.cbar .cx:hover{background:rgba(255,255,255,.18);color:#fff}.cbar{padding-right:42px}
 .cbar img{width:52px;height:52px;border-radius:50%;object-fit:cover;flex:none;border:2px solid rgba(255,255,255,.7)}
 .cbar .tx{flex:1;min-width:0}.cbar .tx b{display:block;font:600 15px var(--f-d);color:var(--fg)}.cbar .tx span{display:block;font-size:13px;color:var(--fg-2);margin-top:2px}
 .cbtns{display:flex;gap:8px;flex-wrap:wrap}
@@ -472,7 +473,7 @@ td .co-s{padding:4px 10px;min-width:300px}td .co-s small{display:none}
         <div class="seg" id="period" role="group" aria-label="Periode"></div>
       </div>
     </div>
-    <div class="cbar"><img src="/assets/maxim.webp" alt="Maxim Hakemulder" width="52" height="52"><a class="tx" href="/#demo" data-ct="plan" style="text-decoration:none"><b><i>Dit kan jouw AI dashboard zijn. </i><em>Plan een demo met mij.</em></b><small>Dit is een voorbeeld met fictieve cijfers van een restaurant</small><span>Voorbeeld met nepcijfers van een restaurant (± 100 couverts per avond, ± € 2,5 mln per jaar). Bel of WhatsApp me, dan laat ik zien wat SERVAI met jouw cijfers doet.</span></a><div class="cbtns"><a class="cb" href="tel:+31619921222" data-ct="bel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>Bel me</a><a class="cb wa" href="https://wa.me/31619921222?text=Hoi%20Maxim%2C%20ik%20heb%20de%20SERVAI-demo%20bekeken%20en%20wil%20graag%20een%20demo%20voor%20mijn%20zaak." target="_blank" rel="noopener" data-ct="whatsapp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21l1.6-4.7A8.5 8.5 0 1 1 8 19.6z"/><path d="M9 9.5c.3 2 2.5 4.3 4.6 4.6l1.2-1.2 1.7.8c-.2 1-1 1.8-2 1.8-3.5 0-6.6-3.1-6.6-6.6 0-1 .8-1.8 1.8-2l.8 1.7z"/></svg>WhatsApp</a><a class="cb main" href="/#demo" data-ct="plan">Plan een demo</a></div></div>
+    <div class="cbar"><img src="/assets/maxim.webp" alt="Maxim Hakemulder" width="52" height="52"><a class="tx" href="/#demo" data-ct="plan" style="text-decoration:none"><b><i>Dit kan jouw AI dashboard zijn. </i><em>Plan een demo met mij.</em></b><small>Dit is een voorbeeld met fictieve cijfers van een restaurant</small><span>Voorbeeld met nepcijfers van een restaurant (± 100 couverts per avond, ± € 2,5 mln per jaar). Bel of WhatsApp me, dan laat ik zien wat SERVAI met jouw cijfers doet.</span></a><div class="cbtns"><a class="cb" href="tel:+31619921222" data-ct="bel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>Bel me</a><a class="cb wa" href="https://wa.me/31619921222?text=Hoi%20Maxim%2C%20ik%20heb%20de%20SERVAI-demo%20bekeken%20en%20wil%20graag%20een%20demo%20voor%20mijn%20zaak." target="_blank" rel="noopener" data-ct="whatsapp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21l1.6-4.7A8.5 8.5 0 1 1 8 19.6z"/><path d="M9 9.5c.3 2 2.5 4.3 4.6 4.6l1.2-1.2 1.7.8c-.2 1-1 1.8-2 1.8-3.5 0-6.6-3.1-6.6-6.6 0-1 .8-1.8 1.8-2l.8 1.7z"/></svg>WhatsApp</a><a class="cb main" href="/#demo" data-ct="plan">Plan een demo</a><button type="button" class="cx" id="cbar-x" aria-label="Sluiten" title="Sluiten">×</button></div></div>
     <div id="view"></div>
   </main>
 </div>
@@ -2565,5 +2566,5 @@ document.getElementById('pwform').addEventListener('submit',async e=>{
   document.addEventListener('click',e=>{const a=e.target.closest('[data-ct]');if(a)c.hidden=true});
 })();
 </script>
-</body>
+<script>(function(){var b=document.querySelector('.cbar'),x=document.getElementById('cbar-x');if(!b||!x)return;try{if(sessionStorage.getItem('cbar-x'))b.style.display='none'}catch(e){}x.addEventListener('click',function(){b.style.display='none';try{sessionStorage.setItem('cbar-x','1')}catch(e){}})})();</script></body>
 </html>
