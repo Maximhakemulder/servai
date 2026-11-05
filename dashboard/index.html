@@ -256,6 +256,8 @@ body.on-assist .fab{display:none}
 .ai-imp{display:inline-flex;align-items:baseline;gap:6px;margin-top:9px;padding:5px 10px;border-radius:10px;background:rgba(74,222,154,.10);border:1px solid rgba(74,222,154,.28);color:#7FE0AE;font-size:12.5px}
 .ai-imp b{font-size:14px}
 @media (max-width:600px){.ai-c .in{grid-template-columns:1fr}.ai-c .in>.act,.ai-c .in>span:last-child{grid-area:auto}}
+td .co{padding:5px 10px;gap:9px;align-items:center;border-radius:10px;min-width:250px}td .co-ic{width:20px;height:20px;border-radius:7px}td .co-ic svg{width:11px;height:11px}td .co b{display:inline;margin:0 7px 0 0;font-size:10px}td .co span.t{display:inline;font-size:13px;font-weight:500}td .co small{margin-top:1px;font-size:11.5px;line-height:1.25}
+td .co-s{padding:4px 10px;min-width:300px}td .co-s small{display:none}
 .srt{cursor:pointer;user-select:none}.srt:hover{color:var(--fg)}
 .co{display:flex;gap:11px;align-items:flex-start;padding:9px 12px;border-radius:12px;background:linear-gradient(100deg,rgba(255,255,255,.055),rgba(255,255,255,.02));border:1px solid var(--line);border-left:3px solid var(--c,#7C93FF);min-width:260px;white-space:normal}
 .co-crit{--c:#FF7A7A}.co-good{--c:#4ADE9A}.co-warn{--c:#FFB86B}.co-info{--c:#7C93FF}
@@ -1631,7 +1633,7 @@ const drCmp=(a,b)=>{const k=DRS.k,u=drVal(a,k),v=drVal(b,k);return (k==='n'?Stri
 const drA=k=>DRS.k===k?(DRS.dir>0?' ▲':' ▼'):'';
 document.getElementById('view').addEventListener('click',e=>{const h=e.target.closest('[data-drs]');if(!h)return;const k=h.dataset.drs;if(DRS.k===k)DRS.dir*=-1;else{DRS.k=k;DRS.dir=k==='n'?1:-1}render()});
 const advKaart=(x,c,aq,am,t)=>{const K={Ster:['good','Behouden',`Marge ${Math.round(x.m)}% en ${nf(x.q)} verkocht: beide boven gemiddeld`],Trekpaard:['info','Prijs',`Verkoopt goed (${nf(x.q)}×), marge ${Math.round(x.m)}% onder gemiddeld (${Math.round(am)}%)`],Puzzel:['warn','Meer aanraden',`Marge ${Math.round(x.m)}%, maar ${nf(x.q)} verkocht tegen gemiddeld ${nf(aq)}`],Twijfelgeval:['crit','Herzien',`${nf(x.q)} verkocht en marge ${Math.round(x.m)}%: beide onder gemiddeld`]}[c];
-  return `<div class="co co-${K[0]}"><span class="co-ic"><svg viewBox="0 0 24 24"><use href="#i-spark"/></svg></span><div><b>${K[1]}</b><span class="t">${t}</span><small>${K[2]}</small></div></div>`};
+  return `<div class="co co-s co-${K[0]}" title="${K[2]}"><span class="co-ic"><svg viewBox="0 0 24 24"><use href="#i-spark"/></svg></span><div><b>${K[1]}</b><span class="t">${t}</span><small>${K[2]}</small></div></div>`};
 /* ---------------- Omzet per medewerker en per product, over een zelf gekozen periode ---------------- */
 const OM={pre:'30',van:null,tot:null,gran:'dag',q:'',sort:'omzet',dir:1,meer:false};
 const OMKIND={personeel:'med',menu:'food',dranken:'drink'};
