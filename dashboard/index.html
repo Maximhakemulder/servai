@@ -280,7 +280,7 @@ td .co-s{padding:4px 10px;min-width:300px}td .co-s small{display:none}
 /* phone */
 @media (max-width:900px){
   .app{grid-template-columns:1fr}
-  .side{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;height:auto;flex-direction:row;align-items:center;padding:10px 12px;padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));border-right:0;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+  .side{position:sticky;top:0;z-index:30;height:auto;flex-direction:row;align-items:center;background:#0A0D1C;padding:calc(10px + env(safe-area-inset-top,0px)) 12px 10px;padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));border-right:0;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
   .side::-webkit-scrollbar{display:none}
   .brand{padding:0 10px 0 4px}
   .brand .beta{display:none}
@@ -333,7 +333,7 @@ td .co-s{padding:4px 10px;min-width:300px}td .co-s small{display:none}
 .jump button:hover{color:var(--fg);background:rgba(255,255,255,.05)}
 .jump button.on{color:#fff;background:var(--panel-2);border-color:transparent;box-shadow:0 0 0 1px rgba(138,68,130,.7),0 0 18px rgba(138,68,130,.25)}
 .jt{scroll-margin-top:calc(var(--stk,0px) + 64px)}
-@media (max-width:1180px){:root{--stk:calc(56px + env(safe-area-inset-top,0px))}.jump{margin:0 -16px 14px;padding:9px 16px}}
+@media (max-width:1180px){.jump{margin:0 -16px 14px;padding:9px 16px;background:rgba(8,10,22,.97)}}
 .acct-w{position:relative}
 .acct{display:flex;align-items:center;gap:10px;cursor:pointer;background:var(--panel);border:1px solid var(--line-2);border-radius:99px;padding:4px 14px 4px 4px;color:var(--fg);font:500 13.5px var(--f-b)}
 .acct:hover{background:var(--panel-2)}
@@ -2409,8 +2409,8 @@ document.getElementById('nav').addEventListener('click',e=>{if(e.target.closest(
 addEventListener('hashchange',()=>navTog(false));
 addEventListener('keydown',e=>{if(e.key==='Escape')navTog(false)});
 addEventListener('resize',navSync);
-const sideH=()=>{const sd=document.querySelector('.side');if(sd)document.documentElement.style.setProperty('--sideh',sd.getBoundingClientRect().height+'px')};
-if(window.ResizeObserver)new ResizeObserver(sideH).observe(document.querySelector('.side'));addEventListener('load',sideH);sideH();
+const sideH=()=>{const sd=document.querySelector('.side');if(!sd)return;const r=document.documentElement.style,h=sd.getBoundingClientRect().height,sb=document.getElementById('subbar'),b=sb&&getComputedStyle(sb).display!=='none'?sb.getBoundingClientRect().height:0;r.setProperty('--sideh',h+'px');r.setProperty('--stk',matchMedia('(max-width:1180px)').matches?(h+b)+'px':'0px')};
+if(window.ResizeObserver){const ro=new ResizeObserver(sideH);ro.observe(document.querySelector('.side'));const sbx=document.getElementById('subbar');if(sbx)ro.observe(sbx)}addEventListener('resize',sideH);addEventListener('load',sideH);sideH();
 function render(){
   if(!state.uid||!cur())return;
   let v=(location.hash||'#overzicht').slice(1);if(!V[v]||!can(v))v=firstAllowed();state.view=v;killCharts();
