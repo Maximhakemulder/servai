@@ -1624,6 +1624,102 @@ document.getElementById('view').addEventListener('click',e=>{
 });
 document.getElementById('view').addEventListener('input',e=>{if(e.target.matches('[data-upq]')){UPST.q=e.target.value;upLijst()}});
 
+/* ---------------- Omzet per medewerker en per product, over een zelf gekozen periode ---------------- */
+const OM={pre:'30',van:null,tot:null,gran:'dag',q:'',sort:'omzet',meer:false};
+const OMKIND={personeel:'med',menu:'food',dranken:'drink'};
+const OMTIT={med:['Omzet per medewerker','Wat elke medewerker heeft verkocht, per dag, week, maand of jaar'],food:['Omzet per gerecht','Alle gerechten die in de gekozen periode zijn verkocht'],drink:['Omzet per drank','Alle dranken die in de gekozen periode zijn verkocht']};
+const OMPRE=[['0','Vandaag'],['1','Gisteren'],['7','7 dagen'],['30','30 dagen'],['mnd','Deze maand'],['vmnd','Vorige maand'],['jaar','Dit jaar']];
+const OMMND=['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+const omH=s=>{let x=7;for(let i=0;i<s.length;i++)x=(x*31+s.charCodeAt(i))>>>0;return x};
+function omBereik(){
+  const t=dayAgo(0);let v,u=t;
+  switch(OM.pre){case '0':v=t;break;case '1':v=u=dayAgo(1);break;case '7':v=dayAgo(6);break;case '30':v=dayAgo(29);break;
+    case 'mnd':v=new Date(t.getFullYear(),t.getMonth(),1,12);break;
+    case 'vmnd':v=new Date(t.getFullYear(),t.getMonth()-1,1,12);u=new Date(t.getFullYear(),t.getMonth(),0,12);break;
+    case 'jaar':v=new Date(t.getFullYear(),0,1,12);break;
+    default:{let a=OM.van||ymd(dayAgo(29)),b=OM.tot||ymd(t);if(a>b)[a,b]=[b,a];return [a,b]}}
+  return [ymd(v),ymd(u)];
+}
+const omMenuF=()=>[['Friet speciaal',5.5,38,'Voorgerechten'],['Caesar salade',12.5,14,'Voorgerechten'],['Kipsaté',15.5,16,'Voorgerechten'],['Hamburger',13.5,34,'Hoofdgerechten'],['Kapsalon',14.5,22,'Hoofdgerechten'],['Tosti kaas',6.5,18,'Lunch'],['Biefstuk',24.5,12,'Hoofdgerechten'],['Zalmfilet',22,9,'Hoofdgerechten'],['Vegetarische bowl',16.5,10,'Hoofdgerechten'],['Tiramisu',7.5,12,'Desserts'],['Dame blanche',7,9,'Desserts'],['Friet los',4,26,'Bijgerechten'],['Gebakken groenten',4.5,11,'Bijgerechten'],['Pepersaus',1.5,15,'Sauzen'],['Mayonaise',1,30,'Sauzen']];
+const omMenuD=()=>[...COCK.map(x=>[x[0],x[1],x[3]/30,'Cocktails']),...OTHERD.map(x=>[x[0],x[1],x[3]/30,x[4]])];
+function omFake(k,van,tot){
+  const rows=[],d=new Date(van+'T12:00:00'),e=new Date(tot+'T12:00:00');
+  for(let n=0;d<=e&&n<800;d.setDate(d.getDate()+1),n++){
+    const ds=ymd(d),wd=(d.getDay()+6)%7,wk=[.7,.75,.85,1,1.35,1.6,1.1][wd];
+    if(k==='med')STAFF.forEach((s,i)=>{if((i+d.getDate()+wd)%7>4)return;const u=5+omH(ds+s[0])%4;rows.push({bedrijfsdag:ds,medewerker:s[0],omzet:u*s[3]*(.85+omH(s[0]+ds)%30/100),bonnen:Math.round(u*3.2),couverts:Math.round(u*6.5)})});
+    else(k==='food'?omMenuF():omMenuD()).forEach(x=>{const q=Math.round(x[2]*wk*(.7+omH(ds+x[0])%60/100));if(q>0)rows.push({bedrijfsdag:ds,artikel:x[0],groep:x[3],aantal:q,omzet:q*x[1]})});
+  }
+  return rows;
+}
+async function omHaal(k,van,tot){
+  if(!(typeof REAL!=='undefined'&&REAL&&typeof RGX!=='undefined'&&SB))return omFake(k,van,tot);
+  if(k==='med')return ovFetch('omzet_per_medewerker_dag','bedrijfsdag,medewerker,omzet,bonnen,couverts',van,tot,['bedrijfsdag','medewerker']);
+  const r=await ovFetch('verkoop_per_artikel_dag','bedrijfsdag,artikel,groep,aantal,omzet',van,tot,['bedrijfsdag','artikel']);
+  return r.filter(x=>RGX[k].test(x.groep||''));
+}
+function omBucket(ds,g){
+  if(g==='dag')return [ds,ds.slice(8)+'-'+ds.slice(5,7)];
+  if(g==='week'){const d=new Date(ds+'T12:00:00');d.setDate(d.getDate()-(d.getDay()+6)%7);const k=ymd(d);return [k,'wk '+k.slice(8)+'-'+k.slice(5,7)]}
+  if(g==='maand')return [ds.slice(0,7),OMMND[+ds.slice(5,7)-1]+' '+ds.slice(2,4)];
+  return [ds.slice(0,4),ds.slice(0,4)];
+}
+function omInject(pg){
+  const k=OMKIND[pg],old=document.getElementById('om-panel');if(old)old.remove();
+  const g=document.querySelector('#view .grid');if(!k||!g)return;
+  const w=document.createElement('div');w.className='c span-12';w.id='om-panel';w.dataset.k=k;
+  w.innerHTML=`<div class="ch"><div><h2>${OMTIT[k][0]}</h2><p>${OMTIT[k][1]}</p></div></div><div id="om-ctl"></div><div id="om-body"><p style="color:var(--mute)">Laden…</p></div>`;
+  g.appendChild(w);omCtl();omLaad();
+}
+function omCtl(){
+  const w=document.getElementById('om-panel');if(!w)return;const [a,b]=omBereik(),k=w.dataset.k;
+  w.querySelector('#om-ctl').innerHTML=`<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:2px 0 8px">${OMPRE.map(([p,t])=>`<button type="button" class="act ${OM.pre===p?'':'ghost'}" data-omp="${p}">${t}</button>`).join('')}<span style="display:flex;gap:6px;align-items:center;margin-left:6px;color:var(--mute);font-size:13px"><input type="date" class="fld" data-omd="van" value="${a}" style="width:150px"> t/m <input type="date" class="fld" data-omd="tot" value="${b}" style="width:150px"></span></div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:0 0 12px">${k==='med'?`<span style="color:var(--mute);font-size:13px">Verdeling per</span>${['dag','week','maand','jaar'].map(g=>`<button type="button" class="act ${OM.gran===g?'':'ghost'}" data-omg="${g}">${g[0].toUpperCase()+g.slice(1)}</button>`).join('')}`:`<input class="fld" data-omq placeholder="Zoek product of groep…" value="${esc(OM.q)}" style="min-width:220px;max-width:320px"><span style="color:var(--mute);font-size:13px;margin-left:6px">Sorteer</span>${[['omzet','Omzet'],['aantal','Aantal'],['naam','A–Z']].map(([s,t])=>`<button type="button" class="act ${OM.sort===s?'':'ghost'}" data-oms="${s}">${t}</button>`).join('')}<button type="button" class="act ghost" data-omc="1" style="margin-left:auto">Download CSV</button>`}</div>`;
+}
+let omTok=0;
+async function omLaad(){
+  const w=document.getElementById('om-panel');if(!w)return;const k=w.dataset.k,[a,b]=omBereik(),t=++omTok;
+  document.getElementById('om-body').innerHTML='<p style="color:var(--mute)">Laden…</p>';
+  try{const r=await omHaal(k,a,b);if(t!==omTok||!document.getElementById('om-panel'))return;w._rows=r;w._range=[a,b];omRender()}
+  catch(e){if(t===omTok&&document.getElementById('om-body'))document.getElementById('om-body').innerHTML='<p style="color:#FF8A8A">De gegevens konden niet worden geladen.</p>';console.error(e.message||e)}
+}
+function omRender(){
+  const w=document.getElementById('om-panel'),R=w&&w._rows;if(!R||!document.getElementById('om-body'))return;
+  const k=w.dataset.k,body=document.getElementById('om-body'),sum=(a,f)=>a.reduce((t,r)=>t+(+r[f]||0),0);
+  if(!R.length){body.innerHTML='<p style="color:var(--mute)">Geen verkopen in deze periode.</p>';return}
+  if(k==='med'){
+    const M=new Map(),B=new Map();
+    R.forEach(r=>{const [bk,bl]=omBucket(r.bedrijfsdag,OM.gran);B.set(bk,bl);const m=M.get(r.medewerker)||M.set(r.medewerker,{o:0,n:0,c:0,b:{}}).get(r.medewerker);m.o+=+r.omzet||0;m.n+=+r.bonnen||0;m.c+=+r.couverts||0;m.b[bk]=(m.b[bk]||0)+(+r.omzet||0)});
+    let bk=[...B.keys()].sort(),note='';if(bk.length>60){note=`<p style="color:var(--mute);font-size:12.5px;margin-top:8px">Alleen de laatste 60 ${OM.gran==='dag'?'dagen':'perioden'} getoond. Kies week of maand voor het hele overzicht.</p>`;bk=bk.slice(-60)}
+    const L=[...M.entries()].sort((x,y)=>y[1].o-x[1].o),tot=L.reduce((t,x)=>t+x[1].o,0),mx=L[0][1].o||1;
+    const bt={};bk.forEach(x=>bt[x]=L.reduce((t,[,m])=>t+(m.b[x]||0),0));
+    body.innerHTML=`<div style="display:flex;gap:26px;flex-wrap:wrap;margin-bottom:10px"><div><small style="color:var(--mute)">Totale omzet</small><div style="font-size:22px;font-weight:700">${eur(tot)}</div></div><div><small style="color:var(--mute)">Medewerkers</small><div style="font-size:22px;font-weight:700">${L.length}</div></div><div><small style="color:var(--mute)">Gem. per medewerker</small><div style="font-size:22px;font-weight:700">${eur(tot/L.length)}</div></div></div>
+    <div class="tw"><table><thead><tr><th>Medewerker</th><th>Omzet</th><th class="r">Bonnen</th><th class="r">Gem. bon</th>${bk.map(x=>`<th class="r">${B.get(x)}</th>`).join('')}</tr></thead><tbody>
+    ${L.map(([n,m])=>`<tr><td><b>${esc(n)}</b></td><td style="min-width:170px"><div class="mbar"><span class="t"><i style="width:${m.o/mx*100}%"></i></span><span style="min-width:70px">${eur(m.o)}</span></div></td><td class="r">${nf(m.n)}</td><td class="r">${m.n?eur(m.o/m.n,2):'–'}</td>${bk.map(x=>`<td class="r">${m.b[x]?eur(m.b[x]):'<span style="color:var(--mute)">–</span>'}</td>`).join('')}</tr>`).join('')}
+    <tr><td><b>Totaal</b></td><td><b>${eur(tot)}</b></td><td class="r">${nf(sum(L.map(x=>x[1]),'n'))}</td><td></td>${bk.map(x=>`<td class="r"><b>${eur(bt[x])}</b></td>`).join('')}</tr></tbody></table></div>${note}`;
+    return;
+  }
+  const P=new Map();R.forEach(r=>{const p=P.get(r.artikel)||P.set(r.artikel,{g:r.groep,o:0,n:0}).get(r.artikel);p.o+=+r.omzet||0;p.n+=+r.aantal||0});
+  const q=OM.q.trim().toLowerCase();let L=[...P.entries()];const tot=L.reduce((t,x)=>t+x[1].o,0),totN=L.reduce((t,x)=>t+x[1].n,0);
+  if(q)L=L.filter(([n,p])=>(n+' '+(p.g||'')).toLowerCase().includes(q));
+  L.sort(OM.sort==='naam'?(x,y)=>x[0].localeCompare(y[0],'nl'):OM.sort==='aantal'?(x,y)=>y[1].n-x[1].n:(x,y)=>y[1].o-x[1].o);
+  w._csv=L;const mx=Math.max(1,...L.map(x=>x[1].o)),lim=OM.meer?1e9:50;
+  body.innerHTML=`<div style="display:flex;gap:26px;flex-wrap:wrap;margin-bottom:10px"><div><small style="color:var(--mute)">Totale omzet</small><div style="font-size:22px;font-weight:700">${eur(tot)}</div></div><div><small style="color:var(--mute)">Verkocht</small><div style="font-size:22px;font-weight:700">${nf(totN)}×</div></div><div><small style="color:var(--mute)">Verschillende producten</small><div style="font-size:22px;font-weight:700">${P.size}</div></div></div>
+  ${L.length?`<div class="tw"><table><thead><tr><th>Product</th><th>Omzet</th><th class="r">Aantal</th><th class="r">Gem. prijs</th><th class="r">% van totaal</th></tr></thead><tbody>${L.slice(0,lim).map(([n,p])=>`<tr><td>${esc(n)}<br><span style="color:var(--mute);font-size:12px">${esc(p.g||'Overig')}</span></td><td style="min-width:200px"><div class="mbar"><span class="t"><i style="width:${p.o/mx*100}%"></i></span><span style="min-width:78px">${eur(p.o,2)}</span></div></td><td class="r">${nf(p.n)}×</td><td class="r">${p.n?eur(p.o/p.n,2):'–'}</td><td class="r">${tot?(p.o/tot*100).toFixed(1).replace('.',','):'0'}%</td></tr>`).join('')}</tbody></table></div>${L.length>lim?`<div style="margin-top:10px"><button type="button" class="act ghost" data-omm="1">Toon alle ${L.length} producten</button></div>`:''}`:'<p style="color:var(--mute)">Geen producten gevonden</p>'}`;
+}
+document.getElementById('view').addEventListener('click',e=>{
+  const w=document.getElementById('om-panel');if(!w)return;const b=e.target.closest('[data-omp],[data-omg],[data-oms],[data-omm],[data-omc]');if(!b||!w.contains(b))return;const d=b.dataset;
+  if(d.omp!==undefined){OM.pre=d.omp;omCtl();omLaad()}
+  else if(d.omg){OM.gran=d.omg;omCtl();omRender()}
+  else if(d.oms){OM.sort=d.oms;omCtl();omRender()}
+  else if(d.omm){OM.meer=true;omRender()}
+  else if(d.omc&&w._csv){const f=n=>String(n).replace('.',','),c=['Product;Groep;Aantal;Omzet',...w._csv.map(([n,p])=>`"${n.replace(/"/g,'""')}";"${(p.g||'').replace(/"/g,'""')}";${f(p.n)};${f(p.o.toFixed(2))}`)].join('\r\n');
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+c],{type:'text/csv'}));a.download='omzet-'+w._range[0]+'-'+w._range[1]+'.csv';document.body.appendChild(a);a.click();a.remove()}
+});
+document.getElementById('view').addEventListener('change',e=>{const i=e.target.closest('[data-omd]');if(!i||!i.value)return;if(i.dataset.omd==='van')OM.van=i.value;else OM.tot=i.value;
+  if(OM.pre!=='eigen'){const [a,b]=omBereik();OM.van=i.dataset.omd==='van'?i.value:a;OM.tot=i.dataset.omd==='tot'?i.value:b}
+  OM.pre='eigen';omCtl();omLaad()});
+document.getElementById('view').addEventListener('input',e=>{if(e.target.matches('[data-omq]')){OM.q=e.target.value;omRender()}});
+
 /* ---------------- AI-advies: inzichten en aandachtspunten uit je cijfers (geen chat) ---------------- */
 const ADVK={warn:['#FFB86B','Aandacht'],goed:['#4ADE9A','Goed nieuws'],info:['#7C93FF','Kans']};
 const ADVP={social:'Social media',receptie:'AI-receptie',financien:'Financiën',loonkosten:'Loonkosten',personeel:'Personeel',rooster:'Rooster',inkoop:'Menu & kostprijs',menu:'Verkoop gerechten',gasten:'Gasten & reviews',reserveringen:'Reserveringen',kansen:'Markt & kansen',dranken:'Dranken',upselling:'Upselling'};
@@ -2190,7 +2286,7 @@ function render(){
   document.getElementById('subtitle').textContent=locName()+' · '+(state.view==='gebruikers'?'toegang & rollen':state.view==='koppelingen'?'systemen die data aanleveren':state.view==='meldingen'?'WhatsApp en mail, per persoon':state.view==='advies'?'wat opvalt en waar je iets mee kunt':state.view==='support'?'meld een bug of probleem':state.view==='kansen'?'markt, laatste 12 maanden':perName())+' · bijgewerkt '+String(new Date().getHours()).padStart(2,'0')+':'+String(new Date().getMinutes()).padStart(2,'0');
   document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===state.view));navSync();
   document.body.classList.toggle('on-assist',state.view==='assistent');
-  const out=V[state.view]();const el=document.getElementById('view');el.innerHTML=`<div class="view">${out.html}</div>`;out.after&&out.after();buildJump();advInject(state.view);aiEnhance();
+  const out=V[state.view]();const el=document.getElementById('view');el.innerHTML=`<div class="view">${out.html}</div>`;out.after&&out.after();buildJump();advInject(state.view);omInject(state.view);aiEnhance();
   document.querySelectorAll('#period button').forEach(b=>b.classList.toggle('on',+b.dataset.p===state.period));
 }
 document.getElementById('view').addEventListener('click',e=>{const b=e.target.closest('.act[data-done]');if(!b)return;b.textContent='✓ '+b.dataset.done;b.classList.add('done');b.removeAttribute('data-done')});
