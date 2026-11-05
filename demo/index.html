@@ -446,7 +446,7 @@ td .co-s{padding:4px 10px;min-width:300px}td .co-s small{display:none}
       <button type="button" class="navx" id="navx" aria-label="Menu sluiten">✕ Sluiten</button>
       <a href="#overzicht" data-v="overzicht"><svg><use href="#i-home"/></svg><span>Home</span></a>
       <div class="ng" data-g="dash"><button type="button" class="nh"><svg><use href="#i-chart"/></svg><span>Dashboard</span><svg class="chv" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button><div class="nb"><a href="#financien" data-v="financien" class="sub"><svg><use href="#i-euro"/></svg><span>Financiën</span></a><a href="#loonkosten" data-v="loonkosten" class="sub"><svg><use href="#i-staff"/></svg><span>Loonkosten</span></a><a href="#personeel" data-v="personeel" class="sub"><svg><use href="#i-staff"/></svg><span>Personeel</span></a>
-      <a href="#rooster" data-v="rooster" class="sub"><svg><use href="#i-cal"/></svg><span>Rooster</span></a><a href="#reserveringen" data-v="reserveringen" class="sub"><svg><use href="#i-cal"/></svg><span>Reserveringen</span></a><a href="#gasten" data-v="gasten" class="sub"><svg><use href="#i-star"/></svg><span>Gasten &amp; reviews</span></a><a href="#menu" data-v="menu" class="sub"><svg><use href="#i-chef"/></svg><span>Verkoop gerechten</span></a><a href="#dranken" data-v="dranken" class="sub"><svg><use href="#i-drink"/></svg><span>Dranken</span></a></div></div>
+      <a href="#rooster" data-v="rooster" class="sub"><svg><use href="#i-cal"/></svg><span>Rooster</span></a><a href="#reserveringen" data-v="reserveringen" class="sub"><svg><use href="#i-cal"/></svg><span>Reserveringen</span></a><a href="#gasten" data-v="gasten" class="sub"><svg><use href="#i-star"/></svg><span>Gasten &amp; reviews</span></a><a href="#menu" data-v="menu" class="sub"><svg><use href="#i-chef"/></svg><span>Verkoop gerechten</span></a><a href="#dranken" data-v="dranken" class="sub"><svg><use href="#i-drink"/></svg><span>Verkoop dranken</span></a></div></div>
       <div class="ng" data-g="kaart"><button type="button" class="nh"><svg><use href="#i-box"/></svg><span>Menukaart</span><svg class="chv" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button><div class="nb"><a href="#inkoop" data-v="inkoop" class="sub"><svg><use href="#i-box"/></svg><span>Menu &amp; kostprijs</span></a></div></div>
       <div class="ng" data-g="inz"><button type="button" class="nh"><svg><use href="#i-up"/></svg><span>Inzichten</span><svg class="chv" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button><div class="nb"><a href="#upselling" data-v="upselling" class="sub"><svg><use href="#i-up"/></svg><span>Upselling</span></a><a href="#kansen" data-v="kansen" class="sub"><svg><use href="#i-spark"/></svg><span>Markt &amp; kansen</span></a><a href="#meldingen" data-v="meldingen" class="sub"><svg><use href="#i-bell"/></svg><span>Meldingen</span></a></div></div>
       <a href="#advies" data-v="advies"><svg><use href="#i-spark"/></svg><span>AI-advies</span></a>
@@ -887,7 +887,7 @@ V.assistent=()=>({html:`<div class="c"><div class="chat">
 }});
 
 /* ---------------- account, gebruikers & toegang (demo) ---------------- */
-const PAGES=[['overzicht','Overzicht'],['financien','Financiën'],['menu','Gerechten'],['dranken','Dranken'],['kansen','Kansen'],['personeel','Personeel'],['rooster','Rooster'],['upselling','Upselling'],['reserveringen','Reserv.'],['inkoop','Inkoop'],['gasten','Gasten'],['assistent','Assistent'],['meldingen','Meldingen'],['advies','AI-advies'],['koppelingen','Koppelingen'],['gebruikers','Gebruikers'],['support','Support'],['uploaden','Uploaden'],['social','Social media'],['receptie','AI-receptie']];
+const PAGES=[['overzicht','Overzicht'],['financien','Financiën'],['menu','Gerechten'],['dranken','Verkoop dranken'],['kansen','Kansen'],['personeel','Personeel'],['rooster','Rooster'],['upselling','Upselling'],['reserveringen','Reserv.'],['inkoop','Inkoop'],['gasten','Gasten'],['assistent','Assistent'],['meldingen','Meldingen'],['advies','AI-advies'],['koppelingen','Koppelingen'],['gebruikers','Gebruikers'],['support','Support'],['uploaden','Uploaden'],['social','Social media'],['receptie','AI-receptie']];
 const ALLP=PAGES.map(p=>p[0]);
 const PRESET={Eigenaar:ALLP,Bedrijfsleider:ALLP.filter(p=>p!=='gebruikers'&&p!=='koppelingen'),'Chef-kok':['overzicht','menu','dranken','kansen','inkoop','meldingen','support','assistent'],'Boekhouder':['overzicht','financien','inkoop','uploaden','meldingen','support'],'Bar manager':['overzicht','dranken','personeel','rooster','upselling','inkoop','meldingen','support','assistent'],'Gastvrouw':['overzicht','rooster','reserveringen','gasten','meldingen','support','assistent']};
 const USERS0=[
@@ -1793,7 +1793,7 @@ document.getElementById('view').addEventListener('input',e=>{if(e.target.matches
 
 /* ---------------- AI-advies: inzichten en aandachtspunten uit je cijfers (geen chat) ---------------- */
 const ADVK={warn:['#FFB86B','Aandacht'],goed:['#4ADE9A','Goed nieuws'],info:['#7C93FF','Kans']};
-const ADVP={financien:'Financiën',loonkosten:'Loonkosten',personeel:'Personeel',rooster:'Rooster',social:'Social media',receptie:'AI-receptie',inkoop:'Menu & kostprijs',menu:'Verkoop gerechten',gasten:'Gasten & reviews',reserveringen:'Reserveringen',kansen:'Markt & kansen',dranken:'Dranken',upselling:'Upselling'};
+const ADVP={financien:'Financiën',loonkosten:'Loonkosten',personeel:'Personeel',rooster:'Rooster',social:'Social media',receptie:'AI-receptie',inkoop:'Menu & kostprijs',menu:'Verkoop gerechten',gasten:'Gasten & reviews',reserveringen:'Reserveringen',kansen:'Markt & kansen',dranken:'Verkoop dranken',upselling:'Upselling'};
 const advKey='servai-adv-klaar-'+(typeof KLANTID!=='undefined'&&KLANTID?KLANTID:'x');
 const advKlaar=()=>{try{return new Set(JSON.parse(localStorage.getItem(advKey)||'[]'))}catch(e){return new Set()}};
 const advSave=s=>{try{localStorage.setItem(advKey,JSON.stringify([...s].slice(-300)))}catch(e){}};
@@ -1862,12 +1862,12 @@ async function advInject(pg){
   let items;try{items=await advItems()}catch(e){return}
   if(!items||state.view!==pg)return;
   const klaar=advKlaar(),ORD={warn:0,info:1,goed:2};
-  const l=items.filter(i=>!klaar.has(advId(i))&&(keys===null||keys.includes(i.v))).sort((x,y)=>ORD[x.t]-ORD[y.t]).slice(0,3);
+  const alle=items.filter(i=>!klaar.has(advId(i))&&(keys===null||keys.includes(i.v))).sort((x,y)=>ORD[x.t]-ORD[y.t]),l=alle.slice(0,3);
   if(!l.length)return;
   const lab={warn:'Aandacht',info:'Kans',goed:'Goed nieuws'},cnt=t=>l.filter(i=>i.t===t).length;
   const kaart=i=>`<a class="adv-k" href="#advies" style="--c:${ADVK[i.t][0]}"><small>${esc(i.c)} · ${lab[i.t]}</small><b>${esc(i.h)}</b>${i.a?`<p>${esc(i.a)}</p>`:i.x?`<p>${esc(i.x)}</p>`:''}<em>Bekijk advies ›</em></a>`;
   const chips=['warn','info','goed'].filter(t=>cnt(t)).map(t=>`<i style="--c:${ADVK[t][0]}">${cnt(t)} ${lab[t].toLowerCase()}</i>`).join('');
-  const html=`<div class="c span-12 adv-strip"><div class="adv-h"><span class="adv-ic"><svg viewBox="0 0 24 24"><use href="#i-spark"/></svg></span><div class="adv-t"><b>AI-advies</b><span>${pg==='overzicht'?'Het belangrijkste voor je zaak nu':'Wat SERVAI opvalt op deze pagina'}</span></div><div class="adv-chips">${chips}</div><a class="adv-all" href="#advies">Alle adviezen ›</a></div><div class="adv-g">${l.map(kaart).join('')}</div></div>`;
+  const html=`<div class="c span-12 adv-strip"><div class="adv-h"><span class="adv-ic"><svg viewBox="0 0 24 24"><use href="#i-spark"/></svg></span><div class="adv-t"><b>AI-advies</b><span>${pg==='overzicht'?'Het belangrijkste voor je zaak nu':'Wat SERVAI opvalt op deze pagina'}</span></div><div class="adv-chips">${chips}</div><a class="adv-all" href="#advies">${alle.length>3?'Alle '+alle.length+' adviezen':'Alle adviezen'} ›</a></div><div class="adv-g">${l.map(kaart).join('')}</div></div>`;
   advPlace(pg,html);
   const v=document.getElementById('view');
   if(v&&!v.querySelector('.adv-strip')){ADVMO=new MutationObserver(()=>advPlace(pg,html));ADVMO.observe(v,{childList:true,subtree:true});setTimeout(()=>{if(ADVMO){ADVMO.disconnect();ADVMO=null}},20000)}
@@ -1890,6 +1890,9 @@ const ADEMO=[
  {t:'warn',c:'Inkoop',h:'Friet +12,0% bij Hanos',x:'Van € 2,00 naar € 2,24 per kg. Raakt: Friet speciaal, Kapsalon.',a:'Kijk of je verkoopprijs of leverancier nog klopt.',v:'inkoop'},
  {t:'warn',c:'Menu',h:'Hamburger: food cost 36,3%',x:'Kostprijs € 4,10 bij verkoopprijs € 13,50.',a:'Boven 35% blijft er weinig marge over.',v:'inkoop'},
  {t:'info',c:'Menu',h:'3 gerechten zonder kostprijs',x:'Zonder kostprijs kan SERVAI geen food cost en geen prijsstijgingen voor die gerechten laten zien.',a:'Vul de kostprijs in bij Menu & kostprijs.',v:'inkoop'},
+ {t:'warn',c:'Inkoop',h:'Bierfust Pilsner +4,3% bij Brouwerij',x:'Van € 2,30 naar € 2,40 per liter. Raakt: Pilsner 0,3, Witbier.',a:'Kijk of je verkoopprijs nog klopt, marge staat nu op 76%.',v:'dranken'},
+ {t:'info',c:'Menu',h:'Piña Colada is een slow mover',x:'38 verkocht in 90 dagen, kokoscrème is bijna over de datum.',a:'Schrappen of seizoensdrank maken.',v:'dranken'},
+ {t:'info',c:'Menu',h:'Huiswijn en prosecco: marge onder gemiddeld',x:'Veel verkocht, maar 66 tot 71% marge tegen gemiddeld 77%.',a:'Glasprijs € 0,25 omhoog levert ca. € 1.400 per jaar.',v:'dranken'},
  {t:'info',c:'Weer',h:'Zaterdag 24° en zonnig',x:'Op zonnige zaterdagen is je terras gemiddeld 35% drukker.',a:'Zet extra bediening en drank klaar voor het terras.',v:'kansen'},
  {t:'info',c:'Evenement',h:'Zondag voetbalwedstrijd in de buurt',x:'Eerdere wedstrijddagen gaven +15% omzet aan de bar.',a:'Plan een extra barmedewerker in.',v:'kansen'},
  {t:'warn',c:'Reserveringen',h:'No-shows op vrijdag: 9%',x:'Dat zijn gemiddeld 14 couverts per vrijdag.',a:'Stuur een bevestiging of herinnering een dag van tevoren.',v:'reserveringen'},
@@ -2187,7 +2190,7 @@ function jumpSpy(){
 }
 addEventListener('scroll',()=>{if(jumpNav)requestAnimationFrame(jumpSpy)},{passive:true});
 /* ---------------- router ---------------- */
-const TITLES={loonkosten:'Loonkosten',upselling:'Upselling',kansen:'Markt & kansen',gebruikers:'Gebruikers',koppelingen:'Koppelingen',meldingen:'Meldingen',advies:'AI-advies',support:'Support',dranken:'Dranken',overzicht:'Overzicht',financien:'Financiën',menu:'Verkoop gerechten',personeel:'Personeel',reserveringen:'Reserveringen',inkoop:'Menu & kostprijs',gasten:'Gasten & reviews',assistent:'Vraag SERVAI',uploaden:'Handmatig uploaden'};
+const TITLES={loonkosten:'Loonkosten',upselling:'Upselling',kansen:'Markt & kansen',gebruikers:'Gebruikers',koppelingen:'Koppelingen',meldingen:'Meldingen',advies:'AI-advies',support:'Support',dranken:'Verkoop dranken',overzicht:'Overzicht',financien:'Financiën',menu:'Verkoop gerechten',personeel:'Personeel',reserveringen:'Reserveringen',inkoop:'Menu & kostprijs',gasten:'Gasten & reviews',assistent:'Vraag SERVAI',uploaden:'Handmatig uploaden'};
 function navSync(){
   document.querySelectorAll('#nav .ng').forEach(g=>{g.hidden=![...g.querySelectorAll('a[data-v]')].some(a=>!a.hidden)});
   const act=document.querySelector('#nav a.on'),grp=act&&act.closest('.ng');
