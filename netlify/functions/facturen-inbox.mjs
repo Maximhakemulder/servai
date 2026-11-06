@@ -32,7 +32,7 @@ export default async () => {
   const klanten = await get("klanten?select=id,factuur_code"), afzenders = await get("factuur_afzenders?select=klant_id,email");
   const { ImapFlow } = await import("imapflow"), { simpleParser } = await import("mailparser");
   const client = new ImapFlow({ host: k.host, port: k.port, secure: true, auth: { user, pass }, logger: false, socketTimeout: 30000 });
-  let nieuw = 0;
+  let nieuw = 0, fouten = 0, gezien = 0;
   try {
     await client.connect();
     const lock = await client.getMailboxLock("INBOX");
@@ -46,10 +46,11 @@ export default async () => {
       let hoogste = vanaf; const start = Date.now();
       for await (const m of client.fetch(uids, { source: { maxLength: 15e6 } }, { uid: true })) {
         if (Date.now() - start > 22000) break;   // blijf onder de tijdslimiet; de rest volgt
-        hoogste = Math.max(hoogste, m.uid);
+        if (fouten) break;               // niet verder: de bladwijzer blijft vóór de mislukte mail, zodat die de volgende run opnieuw wordt geprobeerd
+        gezien++;
         const p = await simpleParser(m.source);
         const mid = String(p.messageId || "").slice(0, 200) || `uid-${m.uid}`;
-        if ((await get(`facturen?message_id=eq.${encodeURIComponent(mid)}&select=id&limit=1`)).length) continue;
+        if ((await get(`facturen?message_id=eq.${encodeURIComponent(mid)}&select=id&limit=1`)).length) { hoogste = Math.max(hoogste, m.uid); continue; }
         const van = (p.from && p.from.value[0] && p.from.value[0].address || "").toLowerCase();
         const aan = [].concat(p.to || [], p.cc || []).flatMap((x) => x.value.map((v) => v.address));
         const klant = kiesKlant({ aan, van }, klanten, afzenders);
@@ -61,14 +62,18 @@ export default async () => {
             const r = await fetch(`${URL_}/storage/v1/object/facturen/${pad}`, { method: "POST", headers: { ...H, "content-type": a.contentType || "application/octet-stream" }, body: a.content });
             if (!r.ok) pad = null;
           }
-          await rest("facturen", { method: "POST", body: JSON.stringify({ klant_id: klant, ontvangen: (p.date || new Date()).toISOString(), van, onderwerp: String(p.subject || "").slice(0, 200), bestandsnaam: a ? veilig(a.filename) : null, bijlage_pad: pad, grootte: a ? a.size : null, message_id: bijl.length > 1 ? `${mid}#${i}` : mid, status: klant ? "ontvangen" : "niet_gekoppeld" }) });
+          const ins = await rest("facturen", { method: "POST", body: JSON.stringify({ klant_id: klant, ontvangen: (p.date || new Date()).toISOString(), van, onderwerp: String(p.subject || "").slice(0, 200), bestandsnaam: a ? veilig(a.filename) : null, bijlage_pad: pad, grootte: a ? a.size : null, message_id: bijl.length > 1 ? `${mid}#${i}` : mid, status: klant ? "ontvangen" : "niet_gekoppeld" }) });
+          if (!ins.ok) { fouten++; console.error("facturen-inbox opslaan mislukt", ins.status, (await ins.text()).slice(0, 300)); continue; }
+          console.log("factuur ontvangen", JSON.stringify({ van, klant: klant || null, bijlage: !!pad, onderwerp: String(p.subject || "").slice(0, 60) }));
           nieuw++;
         }
+        if (!fouten) hoogste = Math.max(hoogste, m.uid);
       }
       await rest("factuur_mailstatus?id=eq.1", { method: "PATCH", body: JSON.stringify({ uidvalidity: uv, laatste_uid: hoogste, bijgewerkt: new Date().toISOString() }) });
     } finally { lock.release(); }
     await client.logout();
   } catch (e) { try { await client.logout(); } catch {} return new Response("fout: " + (e.code || e.message || "verbinding"), { status: 500 }); }
-  return new Response(JSON.stringify({ nieuw }));
+  console.log("facturen-inbox", JSON.stringify({ gezien, nieuw, fouten }));
+  return new Response(JSON.stringify({ gezien, nieuw, fouten }));
 };
 export const config = { schedule: "*/5 * * * *" };
