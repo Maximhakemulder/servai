@@ -6,9 +6,9 @@ export const kostenEur = (model, tin, tuit) => {
   const [pi, po] = prijzen()[model] || prijzen()["claude-sonnet-5-5"];          // onbekend model: reken voorzichtig met Sonnet-prijs
   return ((tin * pi + tuit * po) / 1e6) * (Number(process.env.AI_USD_EUR) || 0.92);
 };
-export const registreer = (rest, { klant_id, soort, model }, usage) => {
+export const registreer = (rest, { klant_id, locatie_id = null, soort, model }, usage) => {
   const tin = (usage && usage.input_tokens) || 0, tuit = (usage && usage.output_tokens) || 0;
-  return rest("ai_gebruik", { method: "POST", body: JSON.stringify({ klant_id, soort, model, tokens_in: tin, tokens_uit: tuit, kosten_eur: Math.round(kostenEur(model, tin, tuit) * 1e5) / 1e5 }) });
+  return rest("ai_gebruik", { method: "POST", body: JSON.stringify({ klant_id, locatie_id, soort, model, tokens_in: tin, tokens_uit: tuit, kosten_eur: Math.round(kostenEur(model, tin, tuit) * 1e5) / 1e5 }) });
 };
 /** Kosten van deze maand voor een klant, voor het maandbudget. */
 export const maandKosten = async (get, klant_id) => {

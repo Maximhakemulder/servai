@@ -30,7 +30,7 @@ export const trendPer = (rijen, key, nu, max) => {
   return [...m.values()].filter((o) => o.omzet > 0 || o.vorig > 0).sort((a, b) => b.omzet - a.omzet).slice(0, max).map((o) => ({ naam: o.naam, omzet: Math.round(o.omzet), aantal: Math.round(o.aantal), vorige_28_dagen: Math.round(o.vorig), verschil_pct: o.vorig > 0 ? r1(((o.omzet - o.vorig) / o.vorig) * 100) : null }));
 };
 
-export function samenvatFeiten({ klant, omzet, loon, reserv, rooster, weer, evenementen, prijzen, gerechten, uren, groepen, artikelen }) {
+export function samenvatFeiten({ klant, zaak, omzet, loon, reserv, rooster, weer, evenementen, prijzen, gerechten, uren, groepen, artikelen }) {
   const omz = perDag(omzet, "bedrijfsdag", ["omzet", "bonnen", "couverts"]).map((o) => ({ ...o, omzet: Math.round(o.omzet) }));
   const lk = perDag(loon, "datum", ["omzet", "loonkosten", "gewerkt_uren"]).filter((o) => o.loonkosten > 0).map((o) => ({ d: o.d, wd: o.wd, omzet: Math.round(o.omzet), loonkosten: Math.round(o.loonkosten), pct: o.omzet > 0 ? r1((o.loonkosten / o.omzet) * 100) : null }));
   const res = perDag((reserv || []).map((r) => ({ d: String(r.tijdstip).slice(0, 10), personen: r.personen, aantal: 1 })), "d", ["personen", "aantal"]);
@@ -41,7 +41,7 @@ export function samenvatFeiten({ klant, omzet, loon, reserv, rooster, weer, even
   const gemWd = Object.entries(wk).map(([w, a]) => ({ wd: w, dagen: a.length, gem_omzet: Math.round(som(a.map((x) => ({ x })), "x") / a.length), laagste: Math.min(...a), hoogste: Math.max(...a) }));
   const maandOmzet = Math.round(som(omz.slice(-28), "omzet"));
   return {
-    omzet_laatste_28_dagen: maandOmzet, bagatelgrens_eur_per_maand: Math.max(75, Math.round(maandOmzet * 0.005)),
+    zaak: zaak || null, omzet_laatste_28_dagen: maandOmzet, bagatelgrens_eur_per_maand: Math.max(75, Math.round(maandOmzet * 0.005)),
     gemiddelde_per_weekdag: gemWd,
     vandaag: new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Amsterdam" }),
     loonnorm_pct: Number(klant && klant.loonnorm_pct) || 30,
@@ -95,6 +95,7 @@ Wat je niet doet:
 - Niets verzinnen. Gebruik uitsluitend de aangeleverde cijfers. Weinig data betekent: zeg dat in 'x' of laat het advies weg.
 - SERVAI adviseert alleen. Zeg nooit dat SERVAI prijzen, roosters of bestellingen aanpast; de ondernemer beslist.
 - Geen gastgegevens noemen.
+- Het advies gaat over de zaak in `zaak`. Inkoopprijzen en menu gelden voor de hele organisatie; zeg dat erbij als een advies daarop steunt.
 
 Kwaliteit boven kwantiteit: 3 sterke adviezen zijn beter dan 8 matige. Zijn er geen echt waardevolle adviezen, geef er dan weinig of geen. Belangrijkste eerst.`;
 

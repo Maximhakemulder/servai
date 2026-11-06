@@ -104,6 +104,7 @@ textarea{resize:vertical;min-height:70px}select{appearance:none;-webkit-appearan
       <a href="#agenda" data-p="agenda"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Agenda</a>
       <a href="#aanvragen" data-p="aanvragen"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z"/></svg>Aanvragen<span class="n" id="n-aanv" hidden></span></a>
       <a href="#verkoop" data-p="verkoop"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3 8l9 6 9-6"/></svg>B2B verkoop</a>
+      <a href="#aikosten" data-p="aikosten"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 4.7L18.5 9l-4.7 1.8L12 15.5l-1.8-4.7L5.5 9l4.7-1.3z"/><path d="M18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8z"/></svg>AI-kosten</a>
       <a href="#tickets" data-p="tickets"><svg viewBox="0 0 24 24"><path d="M3 9a2 2 0 0 0 0 6v3h18v-3a2 2 0 0 1 0-6V6H3z"/><path d="M14 6v12" stroke-dasharray="2 2.5"/></svg>Tickets<span class="n" id="n-tick" hidden></span></a>
     </nav>
     <div class="sfoot"><span>Ingelogd als</span><b id="me"></b><a class="btn ghost sm" href="../dashboard/">Naar dashboard</a><button class="btn ghost sm" id="out">Uitloggen</button></div>
@@ -174,11 +175,44 @@ const klant=id=>D.klanten.find(k=>k.id===id);
 const planNaam=id=>{const p=D.plannen.find(x=>x.id===id);return p?p.naam:'–'};
 const mrr=()=>D.klanten.reduce((s,k)=>s+(k.ab&&k.ab.status==='actief'?+k.ab.prijs_maand:0),0);
 
+/* ===== AI-kosten per zaak (wat wij aan API betalen, per dag en per maand, om door te rekenen) ===== */
+const AIS={m:(()=>{const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')})(),z:'alle',op:(()=>{try{return +localStorage.getItem('servai-ai-opslag')||0}catch(e){return 0}})(),rows:[]};
+const aiE=n=>'€ '+(+n||0).toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2});
+const aiNaam=(kid,lid)=>{const k=klant(kid);if(!k)return 'Onbekend';const l=lid&&(k.locaties||[]).find(x=>x.id===lid);return l?k.naam+' · '+l.naam:k.naam+(lid?'':' (klantbreed)')};
+async function vAiKosten(){
+  const [y,m]=AIS.m.split('-').map(Number),van=new Date(y,m-1,1),tot=new Date(y,m,1);
+  let rows=[],from=0;
+  for(let i=0;i<30;i++){const r=await SB.from('ai_gebruik').select('klant_id,locatie_id,gemaakt,soort,kosten_eur').gte('gemaakt',van.toISOString()).lt('gemaakt',tot.toISOString()).order('gemaakt').range(from,from+999);if(r.error)throw r.error;rows=rows.concat(r.data||[]);if(!r.data||r.data.length<1000)break;from+=1000}
+  AIS.rows=rows;
+  const zk=r=>r.klant_id+'|'+(r.locatie_id||''),dagKey=r=>new Date(r.gemaakt).toLocaleDateString('sv-SE',{timeZone:'Europe/Amsterdam'});
+  const nul=()=>({advies:0,factuur:0,assistent:0,t:0}),add=(o,r)=>{const v=+r.kosten_eur||0;o[r.soort==='advies'?'advies':r.soort==='factuur'?'factuur':'assistent']+=v;o.t+=v};
+  const zaken=new Map();rows.forEach(r=>{const k=zk(r);if(!zaken.has(k))zaken.set(k,{k,naam:aiNaam(r.klant_id,r.locatie_id),...nul()});add(zaken.get(k),r)});
+  const lijst=[...zaken.values()].sort((a,b)=>b.t-a.t),tot_=lijst.reduce((a,x)=>a+x.t,0),f=1+AIS.op/100;
+  const sel=AIS.z==='alle'?rows:rows.filter(r=>zk(r)===AIS.z),dagen=new Map();
+  sel.forEach(r=>{const d=dagKey(r);if(!dagen.has(d))dagen.set(d,{d,...nul()});add(dagen.get(d),r)});
+  const dl=[...dagen.values()].sort((a,b)=>b.d.localeCompare(a.d)),dmax=Math.max(0.0001,...dl.map(x=>x.t));
+  const mnd=[];for(let i=0;i<12;i++){const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-i);const v=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');mnd.push(`<option value="${v}"${v===AIS.m?' selected':''}>${d.toLocaleDateString('nl-NL',{month:'long',year:'numeric'})}</option>`)}
+  const tab=lijst.length?`<table><thead><tr><th>Zaak</th><th class="r">Adviezen</th><th class="r">Facturen</th><th class="r">Assistent</th><th class="r">Onze kosten</th><th class="r">Te factureren</th></tr></thead><tbody>${lijst.map(x=>`<tr data-aiz="${esc(x.k)}" style="cursor:pointer${AIS.z===x.k?';background:rgba(124,147,255,.10)':''}"><td>${esc(x.naam)}</td><td class="r">${aiE(x.advies)}</td><td class="r">${aiE(x.factuur)}</td><td class="r">${aiE(x.assistent)}</td><td class="r"><b>${aiE(x.t)}</b></td><td class="r"><b>${aiE(x.t*f)}</b></td></tr>`).join('')}<tr><td><b>Totaal</b></td><td class="r">${aiE(lijst.reduce((a,x)=>a+x.advies,0))}</td><td class="r">${aiE(lijst.reduce((a,x)=>a+x.factuur,0))}</td><td class="r">${aiE(lijst.reduce((a,x)=>a+x.assistent,0))}</td><td class="r"><b>${aiE(tot_)}</b></td><td class="r"><b>${aiE(tot_*f)}</b></td></tr></tbody></table>`:'<p class="empty">Nog geen AI-gebruik in deze maand.</p>';
+  const dtab=dl.length?`<table><thead><tr><th>Dag</th><th>Verloop</th><th class="r">Adviezen</th><th class="r">Facturen</th><th class="r">Assistent</th><th class="r">Totaal</th></tr></thead><tbody>${dl.map(x=>`<tr><td>${new Date(x.d+'T12:00:00').toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'short'})}</td><td style="width:34%"><div style="height:8px;border-radius:99px;background:rgba(255,255,255,.08)"><div style="height:100%;width:${Math.max(2,x.t/dmax*100)}%;background:linear-gradient(90deg,#3A4FB8,#E0568B);border-radius:99px"></div></div></td><td class="r">${aiE(x.advies)}</td><td class="r">${aiE(x.factuur)}</td><td class="r">${aiE(x.assistent)}</td><td class="r"><b>${aiE(x.t)}</b></td></tr>`).join('')}</tbody></table>`:'<p class="empty">Geen gebruik op de gekozen dagen.</p>';
+  const zn=AIS.z==='alle'?'alle zaken':(zaken.get(AIS.z)||{}).naam||'gekozen zaak';
+  return head('AI-kosten',`Wat SERVAI per zaak aan Anthropic betaalt, schatting op basis van tokengebruik. Klik op een zaak voor het dagoverzicht.`,`<select id="aim">${mnd.join('')}</select><button class="btn ghost sm" id="aicsv">Download CSV</button>`)+
+  `<div class="kpis"><div class="card kpi"><small>Onze kosten deze maand</small><b>${aiE(tot_)}</b><span class="c">${lijst.length} zaken met gebruik</span></div>
+   <div class="card kpi"><small>Gemiddeld per zaak</small><b>${aiE(lijst.length?tot_/lijst.length:0)}</b><span class="c">per maand</span></div>
+   <div class="card kpi"><small>Te factureren (incl. opslag)</small><b>${aiE(tot_*f)}</b><span class="c">met ${AIS.op}% opslag</span></div>
+   <div class="card kpi"><small>Opslag voor doorberekenen</small><b><input id="aiop" type="number" min="0" max="500" step="5" value="${AIS.op}" style="width:90px"> %</b><span class="c">wordt onthouden</span></div></div>
+  <div class="card" style="margin-top:14px"><h2>Per zaak</h2>${tab}</div>
+  <div class="card" style="margin-top:14px"><h2>Per dag · ${esc(zn)} ${AIS.z!=='alle'?'<button class="btn ghost sm" id="aiall">Alle zaken</button>':''}</h2>${dtab}</div>`}
+document.addEventListener('change',e=>{if(e.target.id==='aim'){AIS.m=e.target.value;AIS.z='alle';route()}if(e.target.id==='aiop'){AIS.op=Math.max(0,Math.min(500,+e.target.value||0));try{localStorage.setItem('servai-ai-opslag',AIS.op)}catch(x){}route()}});
+document.addEventListener('click',e=>{const r=e.target.closest('tr[data-aiz]');if(r){AIS.z=AIS.z===r.dataset.aiz?'alle':r.dataset.aiz;route();return}
+  if(e.target.id==='aiall'){AIS.z='alle';route();return}
+  if(e.target.id==='aicsv'){const zk=x=>x.klant_id+'|'+(x.locatie_id||''),m=new Map();AIS.rows.forEach(x=>{const k=zk(x),d=new Date(x.gemaakt).toLocaleDateString('sv-SE',{timeZone:'Europe/Amsterdam'}),id=k+'|'+d;if(!m.has(id))m.set(id,{d,n:aiNaam(x.klant_id,x.locatie_id),advies:0,factuur:0,assistent:0});const o=m.get(id);o[x.soort==='advies'?'advies':x.soort==='factuur'?'factuur':'assistent']+=+x.kosten_eur||0});
+    const csv='Datum;Zaak;Adviezen;Facturen;Assistent;Totaal\n'+[...m.values()].sort((a,b)=>a.d.localeCompare(b.d)||a.n.localeCompare(b.n)).map(o=>[o.d,'"'+o.n.replace(/"/g,'""')+'"',o.advies,o.factuur,o.assistent,o.advies+o.factuur+o.assistent].map(v=>typeof v==='number'?v.toFixed(4).replace('.',','):v).join(';')).join('\n');
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv'}));a.download='ai-kosten-'+AIS.m+'.csv';a.click()}});
 /* ===== router ===== */
 function route(){
   const [pg,id]=(location.hash.slice(1)||'overzicht').split('/');
   document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.p===(pg==='klant'?'klanten':pg==='ticket'?'tickets':pg)));
-  const V={overzicht:vOverzicht,klanten:vKlanten,gebruikers:vGebruikers,klant:()=>vKlant(id),abonnementen:vAbo,agenda:vAgenda,aanvragen:vAanvragen,verkoop:vVerkoop,tickets:vTickets,ticket:()=>vTicket(id)}[pg]||vOverzicht;
+  const V={overzicht:vOverzicht,klanten:vKlanten,gebruikers:vGebruikers,klant:()=>vKlant(id),abonnementen:vAbo,agenda:vAgenda,aanvragen:vAanvragen,verkoop:vVerkoop,aikosten:vAiKosten,tickets:vTickets,ticket:()=>vTicket(id)}[pg]||vOverzicht;
   Promise.resolve(V()).then(h=>{if(h!=null)$('#view').innerHTML=h;window.scrollTo(0,0);bindView()}).catch(e=>{$('#view').innerHTML=`<div class="card"><h2>Er ging iets mis</h2><p class="mute">${esc(e.message||e)}</p></div>`});
 }
 const head=(t,s,r='')=>`<div class="top"><div><h1>${esc(t)}</h1>${s?`<p class="sub">${s}</p>`:''}</div><div class="bar" style="margin:0">${r}</div></div>`;
