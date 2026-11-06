@@ -1190,7 +1190,8 @@ async function coords(L){
 async function weer(L){
   const c=await coords(L);if(!c)return null;const k=c.lat.toFixed(2)+','+c.lon.toFixed(2);
   if(WCACHE[k]&&Date.now()-WCACHE[k].t<18e5)return WCACHE[k].v;
-  const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lon}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max&timezone=Europe%2FAmsterdam&forecast_days=7`);
+  let r=await fetch(`/.netlify/functions/weer?lat=${c.lat}&lon=${c.lon}`).catch(()=>null);
+  if(!r||!r.ok)r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lon}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max&timezone=Europe%2FAmsterdam&forecast_days=7`);
   if(!r.ok)throw new Error('weer');const j=await r.json(),D=j.daily;
   const v={plaats:c.naam,dagen:D.time.map((t,i)=>({iso:t,code:D.weather_code[i],max:D.temperature_2m_max[i],min:D.temperature_2m_min[i],regen:D.precipitation_probability_max[i]||0,wind:D.wind_speed_10m_max[i]||0}))};
   WCACHE[k]={t:Date.now(),v};return v}
