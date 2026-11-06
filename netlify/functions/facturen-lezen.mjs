@@ -5,16 +5,24 @@ const URL_ = process.env.SUPABASE_URL, SVC = process.env.SUPABASE_SERVICE_KEY, K
 const H = { apikey: SVC, authorization: `Bearer ${SVC}`, "content-type": "application/json" };
 const rest = (p, o = {}) => fetch(`${URL_}/rest/v1/${p}`, { ...o, headers: { ...H, prefer: "return=minimal", ...(o.headers || {}) } });
 const get = async (p) => { const r = await rest(p, { headers: { prefer: "return=representation" } }); return r.ok ? r.json() : []; };
+const BATCH = Number(process.env.FACTUUR_BATCH) || 12, PARALLEL = Number(process.env.FACTUUR_PARALLEL) || 4;
 const MIME = (n) => (/\.pdf$/i.test(n) ? "application/pdf" : /\.png$/i.test(n) ? "image/png" : /\.jpe?g$/i.test(n) ? "image/jpeg" : null);
 
 export default async () => {
   if (!URL_ || !SVC || !KEY) return new Response("niet actief");
-  const wacht = await get("facturen?status=eq.ontvangen&bijlage_pad=not.is.null&klant_id=not.is.null&order=ontvangen.asc&limit=2&select=id,klant_id,bijlage_pad,bestandsnaam,ontvangen");
+  // Vastgelopen 'bezig' (functie afgebroken) na 10 minuten terug in de wachtrij, maximaal 3 pogingen.
+  await rest(`facturen?status=eq.bezig&bezig_sinds=lt.${new Date(Date.now() - 600000).toISOString()}`, { method: "PATCH", body: JSON.stringify({ status: "ontvangen" }) });
+  await rest("facturen?status=eq.ontvangen&pogingen=gte.3", { method: "PATCH", body: JSON.stringify({ status: "fout", fout: "Uitlezen mislukt na 3 pogingen" }) });
+  const wacht = await get(`facturen?status=eq.ontvangen&bijlage_pad=not.is.null&klant_id=not.is.null&pogingen=lt.3&order=ontvangen.asc&limit=${BATCH}&select=id,klant_id,bijlage_pad,bestandsnaam,ontvangen,pogingen`);
   let klaar = 0;
-  for (const f of wacht) {
+  const verwerk = async (f0) => {
+    // Claim: alleen wie de rij van 'ontvangen' naar 'bezig' zet mag hem verwerken (voorkomt dubbel werk bij overlappende runs).
+    const c = await rest(`facturen?id=eq.${f0.id}&status=eq.ontvangen`, { method: "PATCH", headers: { prefer: "return=representation" }, body: JSON.stringify({ status: "bezig", bezig_sinds: new Date().toISOString(), pogingen: (f0.pogingen || 0) + 1 }) });
+    if (!c.ok || !(await c.json()).length) return;
+    const f = f0;
     try {
       const mime = MIME(f.bestandsnaam || f.bijlage_pad);
-      if (!mime) { await rest(`facturen?id=eq.${f.id}`, { method: "PATCH", body: JSON.stringify({ status: "fout", fout: "Bestandstype niet ondersteund (PDF of afbeelding)" }) }); continue; }
+      if (!mime) { await rest(`facturen?id=eq.${f.id}`, { method: "PATCH", body: JSON.stringify({ status: "fout", fout: "Bestandstype niet ondersteund (PDF of afbeelding)" }) }); return; }
       const dl = await fetch(`${URL_}/storage/v1/object/facturen/${f.bijlage_pad}`, { headers: H });
       if (!dl.ok) throw new Error("bestand niet gevonden");
       const nf = normaliseerFactuur(await leesFactuur(await dl.arrayBuffer(), mime, { apiKey: KEY, model: process.env.FACTUUR_MODEL }), String(f.ontvangen).slice(0, 10));
@@ -27,9 +35,13 @@ export default async () => {
       await rest(`facturen?id=eq.${f.id}`, { method: "PATCH", body: JSON.stringify({ status: "verwerkt", verwerkt_op: new Date().toISOString(), fout: null, leverancier: nf.leverancier, factuurnummer: nf.factuurnummer, factuurdatum: nf.datum, bedrag: nf.totaal }) });
       klaar++;
     } catch (e) {
-      await rest(`facturen?id=eq.${f.id}`, { method: "PATCH", body: JSON.stringify({ status: "fout", fout: String(e.message || e).slice(0, 200) }) });
+      // Tijdelijke fout (bijv. API-limiet): terug in de wachtrij; na 3 pogingen pas 'fout'.
+      await rest(`facturen?id=eq.${f.id}`, { method: "PATCH", body: JSON.stringify({ status: "ontvangen", fout: String(e.message || e).slice(0, 200) }) });
     }
-  }
+  };
+  // PARALLEL facturen tegelijk, binnen de tijdslimiet van een geplande functie.
+  const start = Date.now(); let i = 0;
+  await Promise.all(Array.from({ length: PARALLEL }, async () => { while (i < wacht.length && Date.now() - start < 15000) await verwerk(wacht[i++]); }));
   return new Response(JSON.stringify({ klaar }));
 };
 export const config = { schedule: "*/5 * * * *" };

@@ -2153,7 +2153,7 @@ async function persLoad(wrap){
 
 const rpNog=(t,wat)=>({html:`<div class="grid"><div class="c span-12"><h2 style="margin-bottom:8px">${t}: nog geen data</h2><p style="color:var(--fg-2);max-width:620px">${wat} Zodra er meer koppelingen actief zijn, vult deze pagina zich vanzelf.</p></div></div>`});
 /* ---------------- Facturen: wat de finance-afdeling naar de SERVAI-factuurmailbox stuurt ---------------- */
-const FACST={ontvangen:['Wordt uitgelezen','flat'],verwerkt:['Verwerkt','up'],fout:['Fout','down'],niet_gekoppeld:['Niet gekoppeld','down']};
+const FACST={ontvangen:['Wordt uitgelezen','flat'],bezig:['Wordt uitgelezen','flat'],verwerkt:['Verwerkt','up'],fout:['Fout','down'],niet_gekoppeld:['Niet gekoppeld','down']};
 const FACC={food:['Food','#FB923C'],drank:['Drank','#60A5FA'],overig:['Overig','#9AA3C7']};
 const fcChip=c=>{const k=FACC[c]||FACC.overig;return `<span class="chip"><i style="background:${k[1]}"></i>${k[0]}</span>`};
 function facRender(wrap,rows,regels,wijz,adres){

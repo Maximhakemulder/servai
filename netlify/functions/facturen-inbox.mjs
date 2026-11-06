@@ -1,4 +1,4 @@
-// SERVAI · leest elke 15 minuten de factuurmailbox (IMAP) en bewaart bijlagen per klant. Leest alleen, verwijdert niets uit de mailbox.
+// SERVAI · leest elke 5 minuten de factuurmailbox (IMAP) en bewaart bijlagen per klant. Leest alleen, verwijdert niets uit de mailbox.
 // Koppelen aan klant: eerst via het adres facturen+<code>@… (klanten.factuur_code), anders via een bekende afzender (factuur_afzenders).
 // Mailbox: FACTUUR_MAIL_USER / FACTUUR_MAIL_PASSWORD (anders MAIL_USER / MAIL_PASSWORD). PDF's ouder dan 12 maanden worden gewist; gegevens blijven.
 import { imapConf } from "../lib/transport.mjs";
@@ -6,7 +6,7 @@ const URL_ = process.env.SUPABASE_URL, SVC = process.env.SUPABASE_SERVICE_KEY;
 const H = { apikey: SVC, authorization: `Bearer ${SVC}`, "content-type": "application/json" };
 const rest = (p, o = {}) => fetch(`${URL_}/rest/v1/${p}`, { ...o, headers: { ...H, prefer: "return=minimal", ...(o.headers || {}) } });
 const get = async (p) => { const r = await rest(p, { headers: { prefer: "return=representation" } }); return r.ok ? r.json() : []; };
-const BEWAAR_DAGEN = 365;
+const BEWAAR_DAGEN = 365, MAX = Number(process.env.FACTUUR_MAX_PER_RUN) || 150;
 
 /** Bepaalt bij welke klant een mail hoort. Puur, zodat het te testen is. */
 export function kiesKlant({ aan, van }, klanten, afzenders) {
@@ -37,8 +37,16 @@ export default async () => {
     await client.connect();
     const lock = await client.getMailboxLock("INBOX");
     try {
-      const uids = (await client.search({ since: new Date(Date.now() - 7 * 864e5) }, { uid: true })) || [];
-      for await (const m of client.fetch(uids.slice(-100), { source: { maxLength: 15e6 } }, { uid: true })) {
+      // Alleen nieuwe mails sinds de vorige keer (UID-bladwijzer), maximaal MAX per run; de rest volgt de volgende run.
+      const st = (await get("factuur_mailstatus?id=eq.1&select=uidvalidity,laatste_uid"))[0] || { uidvalidity: null, laatste_uid: 0 };
+      const uv = Number(client.mailbox.uidValidity);
+      let vanaf = st.uidvalidity && Number(st.uidvalidity) === uv ? Number(st.laatste_uid) : 0;
+      let uids = (await client.search(vanaf ? { uid: `${vanaf + 1}:*` } : { since: new Date(Date.now() - 14 * 864e5) }, { uid: true })) || [];
+      uids = uids.filter((u) => u > vanaf).sort((a, b) => a - b).slice(0, MAX);
+      let hoogste = vanaf; const start = Date.now();
+      for await (const m of client.fetch(uids, { source: { maxLength: 15e6 } }, { uid: true })) {
+        if (Date.now() - start > 22000) break;   // blijf onder de tijdslimiet; de rest volgt
+        hoogste = Math.max(hoogste, m.uid);
         const p = await simpleParser(m.source);
         const mid = String(p.messageId || "").slice(0, 200) || `uid-${m.uid}`;
         if ((await get(`facturen?message_id=eq.${encodeURIComponent(mid)}&select=id&limit=1`)).length) continue;
@@ -57,9 +65,10 @@ export default async () => {
           nieuw++;
         }
       }
+      await rest("factuur_mailstatus?id=eq.1", { method: "PATCH", body: JSON.stringify({ uidvalidity: uv, laatste_uid: hoogste, bijgewerkt: new Date().toISOString() }) });
     } finally { lock.release(); }
     await client.logout();
   } catch (e) { try { await client.logout(); } catch {} return new Response("fout: " + (e.code || e.message || "verbinding"), { status: 500 }); }
   return new Response(JSON.stringify({ nieuw }));
 };
-export const config = { schedule: "*/15 * * * *" };
+export const config = { schedule: "*/5 * * * *" };
