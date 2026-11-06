@@ -1,7 +1,7 @@
 // SERVAI · maakt 's nachts per klant AI-adviezen (tabel ai_adviezen). Elke run doet een paar klanten die vandaag nog niet aan de beurt waren.
-// Alleen actief met ANTHROPIC_API_KEY. Model: ADVIES_MODEL (standaard claude-haiku-5-5).
+// Alleen actief met ANTHROPIC_API_KEY. Model: ADVIES_MODEL (standaard claude-sonnet-5-5: beter in overdenken; haiku is goedkoper).
 import { samenvatFeiten, vraagAdvies } from "../lib/advies-ai.mjs";
-import { registreer, maandKosten, MAAND_BUDGET } from "../lib/ai-kosten.mjs";
+import { registreer, ruimte } from "../lib/ai-kosten.mjs";
 const URL_ = process.env.SUPABASE_URL, SVC = process.env.SUPABASE_SERVICE_KEY, KEY = process.env.ANTHROPIC_API_KEY;
 const H = { apikey: SVC, authorization: `Bearer ${SVC}`, "content-type": "application/json" };
 const rest = (p, o = {}) => fetch(`${URL_}/rest/v1/${p}`, { ...o, headers: { ...H, prefer: "return=minimal", ...(o.headers || {}) } });
@@ -25,8 +25,8 @@ async function maakVoor(k) {
   ]);
   const feiten = samenvatFeiten({ klant: k, omzet, loon, reserv, rooster, weer, evenementen, prijzen, gerechten, uren, groepen, artikelen });
   if (!feiten.heeft_data) return 0;                                   // te weinig kassadata voor zinnige adviezen
-  const model = process.env.ADVIES_MODEL || "claude-haiku-5-5";
-  if ((await maandKosten(get, k.id)) >= MAAND_BUDGET()) return -1;      // maandbudget op: geen nieuwe adviezen tot de volgende maand
+  const model = process.env.ADVIES_MODEL || "claude-sonnet-5-5";
+  if (!(await ruimte(get, k.id))) return -1;      // cap van de klant (of standaardcap) bereikt: geen nieuwe adviezen tot de volgende maand
   const items = await vraagAdvies(feiten, { apiKey: KEY, model, onUsage: (u) => registreer(rest, { klant_id: k.id, soort: "advies", model }, u) });
   await rest("ai_adviezen?on_conflict=klant_id,datum", { method: "POST", headers: { prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify({ klant_id: k.id, datum: dag(0), items, model, gemaakt: new Date().toISOString() }) });
   return items.length;

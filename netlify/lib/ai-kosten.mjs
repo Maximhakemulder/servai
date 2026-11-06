@@ -16,4 +16,13 @@ export const maandKosten = async (get, klant_id) => {
   const rijen = await get(`ai_gebruik?klant_id=eq.${klant_id}&gemaakt=gte.${van.toISOString()}&select=kosten_eur&limit=5000`);
   return rijen.reduce((s, r) => s + Number(r.kosten_eur || 0), 0);
 };
-export const MAAND_BUDGET = () => Number(process.env.AI_MAANDBUDGET_EUR) || 5;   // per klant per maand; daarboven pauzeert AI tot de volgende maand
+export const MAAND_BUDGET = () => Number(process.env.AI_MAANDBUDGET_EUR) || 5;   // standaardcap per klant per maand
+export const MAAND_MAX = () => Number(process.env.AI_MAANDMAX_EUR) || 50;        // harde bovengrens, ook als de klant een hogere cap invult
+/** De cap die nu geldt: de eigen cap van de klant (0 = AI uit), anders de standaard; nooit boven de harde bovengrens. */
+export const effectieveCap = async (get, klant_id) => {
+  const r = await get(`ai_instellingen?klant_id=eq.${klant_id}&select=maand_cap_eur`);
+  const c = r[0] && r[0].maand_cap_eur !== null && r[0].maand_cap_eur !== undefined ? Number(r[0].maand_cap_eur) : MAAND_BUDGET();
+  return Math.min(c, MAAND_MAX());
+};
+/** True als er deze maand nog ruimte is. */
+export const ruimte = async (get, klant_id) => (await maandKosten(get, klant_id)) < (await effectieveCap(get, klant_id));

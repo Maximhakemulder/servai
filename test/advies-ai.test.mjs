@@ -6,7 +6,7 @@ test("samenvatFeiten: te weinig data en kostprijs%", () => {
   assert.equal(f.heeft_data, false); assert.equal(f.loonnorm_pct, 28); assert.equal(f.hoogste_kostprijs_gerechten[0].kostprijs_pct, 43.3);
 });
 test("normaliseerAdvies: schoont op, weigert zonder cijfers", () => {
-  const r = normaliseerAdvies([{ t: "warn", c: "Inkoop", h: "Bier +8%", x: "Van 1,20 naar 1,30", v: "inkoop" }, { t: "warn", c: "Omzet", h: "Vaag", x: "zonder getallen", v: "financien" }, { t: "x", h: "a", x: "1" }, { t: "info", c: "Onbekend", h: "Kans", x: "3 dagen", v: "nep" }]);
+  const r = normaliseerAdvies([{ t: "warn", c: "Inkoop", h: "Bier +8%", x: "Van 1,20 naar 1,30", v: "inkoop", impact_eur_maand: 120 }, { t: "warn", c: "Omzet", h: "Vaag", x: "zonder getallen", v: "financien" }, { t: "x", h: "a", x: "1" }, { t: "info", c: "Onbekend", h: "Kans", x: "3 dagen", v: "nep" }]);
   assert.equal(r.length, 2); assert.equal(r[0].ai, true); assert.equal(r[1].c, "Omzet"); assert.equal(r[1].v, "overzicht");
 });
 import { uurProfiel, trendPer } from "../netlify/lib/advies-ai.mjs";
@@ -21,3 +21,7 @@ test("trendPer: laatste 28 dagen tegenover de 28 ervoor", () => {
 import { kostenEur } from "../netlify/lib/ai-kosten.mjs";
 test("kostenEur: Haiku 10k in + 1k uit", () => { const k = kostenEur("claude-haiku-5-5", 10000, 1000); assert.ok(k > 0.013 && k < 0.015); });
 test("kostenEur: onbekend model rekent met Sonnet-prijs", () => assert.ok(kostenEur("x", 1e6, 0) > 2.5));
+test("normaliseerAdvies: bagatelgrens, sortering op impact", () => {
+  const r = normaliseerAdvies([{ t: "warn", c: "Inkoop", h: "Klein", x: "0,3 cent", v: "inkoop", impact_eur_maand: 5 }, { t: "info", c: "Omzet", h: "Middel", x: "30 euro", v: "financien", impact_eur_maand: 200 }, { t: "warn", c: "Personeel", h: "Groot", x: "5 uur", v: "rooster", impact_eur_maand: 900 }, { t: "goed", c: "Omzet", h: "Goed", x: "+4%", v: "financien" }], { bagatel: 75 });
+  assert.deepEqual(r.map((i) => i.h), ["Groot", "Middel", "Goed"]);
+});

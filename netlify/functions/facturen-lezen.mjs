@@ -1,6 +1,6 @@
 // SERVAI · leest elke 5 minuten nieuwe facturen uit (regels, categorie, prijzen) en werkt ingrediëntprijzen bij (bron 'factuur').
 // Alleen actief met ANTHROPIC_API_KEY. SERVAI past nooit prijzen in de kassa aan; dit vult alleen de inkoopprijzen.
-import { registreer } from "../lib/ai-kosten.mjs";
+import { registreer, ruimte } from "../lib/ai-kosten.mjs";
 import { leesFactuur, normaliseerFactuur, koppelIngredient } from "../lib/factuur-lezen.mjs";
 const URL_ = process.env.SUPABASE_URL, SVC = process.env.SUPABASE_SERVICE_KEY, KEY = process.env.ANTHROPIC_API_KEY;
 const H = { apikey: SVC, authorization: `Bearer ${SVC}`, "content-type": "application/json" };
@@ -14,6 +14,9 @@ export default async () => {
   // Vastgelopen 'bezig' (functie afgebroken) na 10 minuten terug in de wachtrij, maximaal 3 pogingen.
   await rest(`facturen?status=eq.bezig&bezig_sinds=lt.${new Date(Date.now() - 600000).toISOString()}`, { method: "PATCH", body: JSON.stringify({ status: "ontvangen" }) });
   await rest("facturen?status=eq.ontvangen&pogingen=gte.3", { method: "PATCH", body: JSON.stringify({ status: "fout", fout: "Uitlezen mislukt na 3 pogingen" }) });
+  // Gepauzeerde facturen (cap bereikt) terug in de wachtrij zodra er weer ruimte is, bijvoorbeeld na een nieuwe maand of een hogere cap.
+  const gep = await get("facturen?status=eq.gepauzeerd&select=id,klant_id&order=ontvangen.asc&limit=60"), ruimteVan = new Map();
+  for (const g of gep) { if (!ruimteVan.has(g.klant_id)) ruimteVan.set(g.klant_id, await ruimte(get, g.klant_id)); if (ruimteVan.get(g.klant_id)) await rest(`facturen?id=eq.${g.id}`, { method: "PATCH", body: JSON.stringify({ status: "ontvangen", fout: null }) }); }
   const wacht = await get(`facturen?status=eq.ontvangen&bijlage_pad=not.is.null&klant_id=not.is.null&pogingen=lt.3&order=ontvangen.asc&limit=${BATCH}&select=id,klant_id,bijlage_pad,bestandsnaam,ontvangen,pogingen`);
   let klaar = 0;
   const verwerk = async (f0) => {
@@ -21,6 +24,7 @@ export default async () => {
     const c = await rest(`facturen?id=eq.${f0.id}&status=eq.ontvangen`, { method: "PATCH", headers: { prefer: "return=representation" }, body: JSON.stringify({ status: "bezig", bezig_sinds: new Date().toISOString(), pogingen: (f0.pogingen || 0) + 1 }) });
     if (!c.ok || !(await c.json()).length) return;
     const f = f0;
+    if (!(await ruimte(get, f.klant_id))) { await rest(`facturen?id=eq.${f.id}`, { method: "PATCH", body: JSON.stringify({ status: "gepauzeerd", pogingen: f0.pogingen || 0, fout: "AI-cap van deze maand bereikt" }) }); return; }
     try {
       const mime = MIME(f.bestandsnaam || f.bijlage_pad);
       if (!mime) { await rest(`facturen?id=eq.${f.id}`, { method: "PATCH", body: JSON.stringify({ status: "fout", fout: "Bestandstype niet ondersteund (PDF of afbeelding)" }) }); return; }

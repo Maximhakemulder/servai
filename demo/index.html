@@ -236,6 +236,7 @@ body.on-assist .fab{display:none}
 .nav .ng.open .nb{display:flex}
 .nav .ng[hidden]{display:none!important}
 .subbar{display:none}
+@media (max-width:760px){.aik-g{grid-template-columns:1fr!important}}
 @media (max-width:600px){.adr [data-adt]>span{display:none!important}.adr [data-adt]>b{white-space:normal!important}}
 .adv-strip{position:relative;overflow:hidden;border-radius:18px;padding:16px 18px 18px;border:1px solid rgba(124,147,255,.30)!important;border-left:1px solid rgba(124,147,255,.30)!important;background:radial-gradient(120% 160% at 0% 0%,rgba(124,147,255,.18),transparent 58%),radial-gradient(90% 140% at 100% 0%,rgba(224,86,139,.10),transparent 55%),var(--panel)!important;box-shadow:0 10px 30px -18px rgba(124,147,255,.55)}
 .adv-h{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
@@ -1675,7 +1676,7 @@ document.getElementById('view').addEventListener('click',e=>{
   if(a==='ing')(b.dataset.id?ikIngModal(b.dataset.id):ikIngNieuw());else if(a==='gerecht')ikGerechtModal();else if(a==='gerechten')ikIngGerechten(b.dataset.id);else if(a==='recept')ikRecept(b.dataset.id).catch(fail)});
 
 /* ---------------- Facturen: wat de finance-afdeling naar de SERVAI-factuurmailbox stuurt ---------------- */
-const FACST={ontvangen:['Wordt uitgelezen','flat'],bezig:['Wordt uitgelezen','flat'],verwerkt:['Verwerkt','up'],fout:['Fout','down'],niet_gekoppeld:['Niet gekoppeld','down']};
+const FACST={ontvangen:['Wordt uitgelezen','flat'],bezig:['Wordt uitgelezen','flat'],gepauzeerd:['Gepauzeerd (AI-cap)','down'],verwerkt:['Verwerkt','up'],fout:['Fout','down'],niet_gekoppeld:['Niet gekoppeld','down']};
 const FACC={food:['Food','#FB923C'],drank:['Drank','#60A5FA'],overig:['Overig','#9AA3C7']};
 const fcChip=c=>{const k=FACC[c]||FACC.overig;return `<span class="chip"><i style="background:${k[1]}"></i>${k[0]}</span>`};
 function facRender(wrap,rows,regels,wijz,adres){
@@ -1953,6 +1954,32 @@ function advHtml(items,wacht,sub){
    `<div class="c span-12"><p style="color:var(--mute);font-size:12.5px">SERVAI adviseert en signaleert. Prijzen, roosters en bestellingen pas je altijd zelf aan. Afvinken wordt in deze browser onthouden.</p></div></div>`;
 }
 
+/* ---------------- AI-kosten van deze maand + eigen maandcap (klant ziet live wat AI kost en kan een grens instellen) ---------------- */
+const AIK_STD=5;
+function aikHtml(d){
+  const f2=n=>'€ '+(+n||0).toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const tot=d.adv+d.fac+d.ass,cap=d.cap==null?AIK_STD:d.cap,pc=cap>0?Math.min(100,tot/cap*100):100,uit=cap===0,vol=cap>0&&tot>=cap;
+  const kl=pc>=100?'#FF8A8A':pc>=80?'#FFB86B':'#4ADE9A';
+  const rij=(t,v)=>`<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-top:1px solid var(--line);font-size:13.5px"><span style="color:var(--fg-2)">${t}</span><b>${f2(v)}</b></div>`;
+  return `<div class="c span-12" id="aik"><div class="ch"><div><h2>AI-kosten deze maand</h2><p>Live, een schatting. Stel een maximum in: SERVAI gaat daar nooit overheen.</p></div></div>
+   <div style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:22px" class="aik-g">
+    <div><div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><b style="font:700 30px var(--f-d)">${f2(tot)}</b><span style="color:var(--mute)">${uit?'AI staat uit':'van maximaal '+f2(cap)}</span></div>
+     <div style="height:8px;border-radius:99px;background:rgba(255,255,255,.08);margin:10px 0 12px;overflow:hidden"><div style="height:100%;width:${pc}%;background:${kl};border-radius:99px"></div></div>
+     ${rij('AI-adviezen (elke nacht)',d.adv)}${rij('Facturen uitlezen',d.fac)}${rij('Assistent',d.ass)}
+     ${vol||uit?`<p style="margin-top:10px;color:#FFB86B;font-size:13px">${uit?'AI staat uit voor je zaak.':'Maximum bereikt.'} Nieuwe adviezen en het uitlezen van facturen wachten tot de volgende maand of tot je het maximum verhoogt.</p>`:''}</div>
+    <div><label style="font-size:13px;color:var(--fg-2)">Maximum per maand (€)</label>
+     <div style="display:flex;gap:8px;margin:6px 0 8px;flex-wrap:wrap"><input class="fld" id="aik-cap" type="number" min="0" max="50" step="1" value="${d.cap==null?'':d.cap}" placeholder="${AIK_STD} (standaard)" style="max-width:170px"${d.kan?'':' disabled'}><button type="button" class="act" id="aik-save"${d.kan?'':' disabled'}>Opslaan</button></div>
+     <p style="color:var(--mute);font-size:12.5px;line-height:1.5">Leeg laten = standaard van € ${AIK_STD}. Vul 0 in om AI uit te zetten.${d.kan?'':' Alleen de eigenaar of bedrijfsleider kan dit wijzigen.'} Kosten van facturen en adviezen tellen mee; je betaalt hier niets extra, dit is inzicht in het gebruik.</p></div></div></div>`}
+function aikWire(save){
+  const b=document.getElementById('aik-save');if(!b)return;
+  b.onclick=async()=>{const i=document.getElementById('aik-cap'),raw=i.value.trim(),v=raw===''?null:Math.max(0,Math.min(50,+raw));if(raw!==''&&!isFinite(+raw)){flash('Vul een bedrag in');return}
+    b.disabled=true;try{await save(v);flash(v===null?'Standaard maximum ingesteld':v===0?'AI staat uit':'Maximum ingesteld op € '+v);if(typeof aikLaad==='function')aikLaad()}catch(e){flash('Opslaan is niet gelukt')}b.disabled=false}}
+async function aikLaad(){
+  const root=document.getElementById('adv-root');if(!root)return;
+  let cap=null;try{const x=localStorage.getItem('servai-demo-aicap');cap=x===null||x===''?null:+x}catch(e){}
+  const old=document.getElementById('aik');const t=document.createElement('div');t.innerHTML=aikHtml({adv:1.12,fac:0.58,ass:0.37,cap,kan:true});
+  if(old)old.replaceWith(t.firstElementChild);else root.appendChild(t.firstElementChild);
+  aikWire(async v=>{try{localStorage.setItem('servai-demo-aicap',v===null?'':String(v))}catch(e){}})}
 /* ---------------- AI-blokken (Coaching, Afwijkingen, Wat te doen, ...): één herkenbare AI-stijl op jouw data ---------------- */
 function aiEnhance(){
   const v=document.getElementById('view');if(!v)return;
@@ -2104,7 +2131,7 @@ const ADEMO=[
  {t:'goed',c:'Gasten',h:'Gemiddelde review 4,6',x:'12 nieuwe reviews deze periode, 3 noemen de snelle bediening.',v:'gasten'},
  {t:'warn',c:'Gasten',h:'2 reviews noemen wachttijd',x:'Beide op zaterdagavond tussen 19:00 en 20:30.',a:'Kijk naar de bezetting in de bediening op dat moment.',v:'gasten'}
 ];
-V.advies=()=>({html:advHtml(ADEMO,[],'voorbeelddata')});
+V.advies=()=>({html:advHtml(ADEMO,[],'voorbeelddata'),after(){aikLaad()}});
 /* ---------------- Rooster: weekoverzicht (ma t/m zo) en maandoverzicht ---------------- */
 const ROO={v:'week',d:new Date()};
 const MND=['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];

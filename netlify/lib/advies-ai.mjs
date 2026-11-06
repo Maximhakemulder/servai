@@ -37,7 +37,12 @@ export function samenvatFeiten({ klant, omzet, loon, reserv, rooster, weer, even
   const roo = perDag(rooster, "datum", ["uren"]).map((o) => ({ ...o, uren: r1(o.uren) }));
   const prijs = (prijzen || []).filter((p) => p.pct >= 3).sort((a, b) => b.pct - a.pct).slice(0, 12).map((p) => ({ product: p.omschrijving, leverancier: p.leverancier, van: p.vorige_prijs, naar: p.prijs, pct: p.pct, eenheid: p.eenheid }));
   const gr = (gerechten || []).filter((g) => g.kostprijs > 0 && g.verkoopprijs > 0).map((g) => ({ naam: g.naam, groep: g.groep, verkoopprijs: g.verkoopprijs, kostprijs: r1(g.kostprijs), kostprijs_pct: r1((g.kostprijs / (g.verkoopprijs / 1.09)) * 100) })).sort((a, b) => b.kostprijs_pct - a.kostprijs_pct).slice(0, 10);
+  const wk = {}; for (const o of omz) { (wk[o.wd] ||= []).push(o.omzet); }
+  const gemWd = Object.entries(wk).map(([w, a]) => ({ wd: w, dagen: a.length, gem_omzet: Math.round(som(a.map((x) => ({ x })), "x") / a.length), laagste: Math.min(...a), hoogste: Math.max(...a) }));
+  const maandOmzet = Math.round(som(omz.slice(-28), "omzet"));
   return {
+    omzet_laatste_28_dagen: maandOmzet, bagatelgrens_eur_per_maand: Math.max(75, Math.round(maandOmzet * 0.005)),
+    gemiddelde_per_weekdag: gemWd,
     vandaag: new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Amsterdam" }),
     loonnorm_pct: Number(klant && klant.loonnorm_pct) || 30,
     omzet_laatste_dagen: omz, loonkosten_laatste_dagen: lk,
@@ -51,39 +56,52 @@ export function samenvatFeiten({ klant, omzet, loon, reserv, rooster, weer, even
 }
 
 /** Controleert en schoont wat de AI teruggeeft. Alles wat niet klopt wordt weggegooid. */
-export function normaliseerAdvies(items) {
+export function normaliseerAdvies(items, { bagatel = 0 } = {}) {
   const uit = [];
   for (const i of Array.isArray(items) ? items : []) {
     const t = ["warn", "info", "goed"].includes(i && i.t) ? i.t : null;
     const h = String((i && i.h) || "").trim().slice(0, 110), x = String((i && i.x) || "").trim().slice(0, 300);
     if (!t || !h || !x || !/\d/.test(x)) continue;                       // een advies zonder cijfers wordt niet getoond
     const c = THEMA_C.includes(i.c) ? i.c : "Omzet", v = THEMA_V.includes(i.v) ? i.v : "overzicht";
-    const a = String(i.a || "").trim().slice(0, 240);
-    uit.push({ t, c, h, x, ...(a ? { a } : {}), v, ai: true });
-    if (uit.length >= 12) break;
+    const a = String(i.a || "").trim().slice(0, 240), m = Math.round(Math.abs(Number(i.impact_eur_maand)) || 0);
+    if (t !== "goed" && m < bagatel) continue;                           // te klein om de ondernemer mee lastig te vallen
+    uit.push({ t, c, h, x, ...(a ? { a } : {}), v, ...(m ? { m } : {}), ai: true });
   }
-  return uit;
+  // belangrijkste eerst: aandacht en kansen op geschatte euro's per maand
+  uit.sort((p, q) => (q.m || 0) - (p.m || 0));
+  return uit.slice(0, 8);
 }
 
-const SCHEMA = { type: "object", properties: { adviezen: { type: "array", maxItems: 12, items: { type: "object", required: ["t", "c", "h", "x", "v"], properties: {
+const SCHEMA = { type: "object", properties: { adviezen: { type: "array", maxItems: 8, items: { type: "object", required: ["t", "c", "h", "x", "a", "v", "impact_eur_maand"], properties: {
   t: { type: "string", enum: ["warn", "info", "goed"], description: "warn = aandacht, info = kans, goed = goed nieuws" },
   c: { type: "string", enum: THEMA_C }, h: { type: "string", description: "Kop, max 90 tekens" },
   x: { type: "string", description: "Onderbouwing met de concrete cijfers uit de data" },
-  a: { type: "string", description: "Concrete actie voor de ondernemer (SERVAI past zelf nooit iets aan)" },
+  a: { type: "string", description: "Concrete, uitvoerbare aanbeveling met cijfers (SERVAI past zelf nooit iets aan)" },
+  impact_eur_maand: { type: "number", description: "Geschatte waarde in euro per maand van dit advies (besparing, extra omzet of risico). Zet de berekening kort in x." },
   v: { type: "string", enum: THEMA_V } } } } }, required: ["adviezen"] };
 
-const SYSTEEM = `Je bent SERVAI, de AI-adviseur van een horecaondernemer. Schrijf in kort, zakelijk Nederlands, zonder uitroeptekens.
-Regels:
-- Gebruik uitsluitend de aangeleverde cijfers. Verzin niets. Noem altijd concrete cijfers in 'x'.
-- SERVAI adviseert en signaleert alleen. Zeg nooit dat SERVAI prijzen, roosters of bestellingen aanpast; de ondernemer beslist.
-- Zoek vooral verbanden tussen bronnen (omzet, loonkosten, rooster, reserveringen, weer, evenementen, inkoopprijzen, kostprijzen).
-- Maximaal 12 adviezen, belangrijkste eerst. Geen dubbele onderwerpen. Alleen wat echt nuttig is; liever 4 sterke dan 12 zwakke.
-- Kleine dataset of weinig dagen: wees voorzichtig en zeg dat in 'x'. Geen gastgegevens noemen.`;
+const SYSTEEM = `Je bent SERVAI, de AI-adviseur van een horecaondernemer: een scherpe bedrijfsadviseur die meedenkt, geen alarmbel.
+Schrijf kort, zakelijk Nederlands, zonder uitroeptekens.
+
+Wat een goed advies is:
+- Het is feitelijk, onderbouwd met concrete cijfers uit de data, en overdacht: je legt uit WAAROM het gebeurt en wat de ondernemer er concreet aan kan doen.
+- Het is materieel: reken uit wat het per maand in euro's waard is en zet die berekening kort in 'x' (bijvoorbeeld "6 gerechten per dag x € 0,40 x 26 dagen = € 62 per maand"). Vul 'impact_eur_maand' in. Alles onder de bagatelgrens (bagatelgrens_eur_per_maand) laat je weg.
+- Zoek verbanden tussen bronnen en combineer oorzaken: een prijsstijging telt pas mee in combinatie met hoeveel er van het product wordt verkocht; een rustige dag telt pas als rooster en reserveringen er niet bij passen; weer en evenementen verklaren soms een afwijking.
+- Vergelijk dagen met dezelfde weekdag (gemiddelde_per_weekdag), nooit met gisteren. Normale schommelingen zijn geen nieuws: een dag die € 40 onder het weekdaggemiddelde ligt is ruis. Alleen een patroon over meerdere weken of een duidelijke afwijking is een advies.
+- Voorwaarts kijken is waardevoller dan terugkijken: wat komt er de komende 14 dagen aan (reserveringen, weer, evenementen) en wat betekent dat voor rooster en inkoop.
+
+Wat je niet doet:
+- Geen triviale of kleine signalen (een prijsverandering van een paar cent, een kleine dagschommeling), geen algemene horecatips, geen herhaling van wat de ondernemer al ziet.
+- Niets verzinnen. Gebruik uitsluitend de aangeleverde cijfers. Weinig data betekent: zeg dat in 'x' of laat het advies weg.
+- SERVAI adviseert alleen. Zeg nooit dat SERVAI prijzen, roosters of bestellingen aanpast; de ondernemer beslist.
+- Geen gastgegevens noemen.
+
+Kwaliteit boven kwantiteit: 3 sterke adviezen zijn beter dan 8 matige. Zijn er geen echt waardevolle adviezen, geef er dan weinig of geen. Belangrijkste eerst.`;
 
 export async function vraagAdvies(feiten, { apiKey, model, onUsage } = {}) {
   const r = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST", headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-    body: JSON.stringify({ model: model || "claude-haiku-5-5", max_tokens: 3000, system: SYSTEEM,
+    body: JSON.stringify({ model: model || "claude-haiku-5-5", max_tokens: 3500, system: SYSTEEM,
       tools: [{ name: "adviezen", description: "De adviezen voor deze ondernemer", input_schema: SCHEMA }], tool_choice: { type: "tool", name: "adviezen" },
       messages: [{ role: "user", content: "Cijfers van deze zaak (JSON):\n" + JSON.stringify(feiten) }] }),
   });
@@ -92,5 +110,5 @@ export async function vraagAdvies(feiten, { apiKey, model, onUsage } = {}) {
   if (onUsage) await onUsage(out.usage);
   const t = (out.content || []).find((c) => c.type === "tool_use");
   if (!t) throw new Error("geen advies ontvangen");
-  return normaliseerAdvies(t.input && t.input.adviezen);
+  return normaliseerAdvies(t.input && t.input.adviezen, { bagatel: feiten.bagatelgrens_eur_per_maand });
 }
