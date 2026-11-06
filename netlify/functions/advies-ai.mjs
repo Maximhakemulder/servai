@@ -46,5 +46,5 @@ export default async () => {
   }));
   return new Response(JSON.stringify({ zaken: n }));
 };
-// Tussen 03:00 en 07:00 (Nederlandse tijd ruwweg) elke 10 minuten een paar klanten.
-export const config = { schedule: "*/10 2-6 * * *" };
+// Elke 10 minuten een paar zaken die vandaag nog geen advies hebben (per zaak één keer per dag; dus ook een herkansing bij een fout).
+export const config = { schedule: "*/10 * * * *" };
