@@ -482,7 +482,6 @@ td .co-s{padding:4px 10px;min-width:300px}td .co-s small{display:none}
   <form id="pwform" hidden><h2 style="font-size:18px;margin-bottom:6px">Kies een wachtwoord</h2><p class="lp" style="margin-bottom:10px">Minstens 8 tekens. Hiermee log je voortaan in.</p><label for="pw1">Nieuw wachtwoord</label><input id="pw1" type="password" autocomplete="new-password" minlength="8" required><label for="pw2">Herhaal wachtwoord</label><input id="pw2" type="password" autocomplete="new-password" minlength="8" required><button class="lgo" type="submit">Wachtwoord opslaan</button><p class="note" id="pw-err" role="alert" hidden style="color:#FF8A8A;font-size:13px;margin-top:10px"></p></form>
   <div id="demoWrap"><form id="lform"><label for="l-e">E-mailadres</label><input id="l-e" type="email" value="eva@restaurant-demo.nl" autocomplete="username"><label for="l-p">Wachtwoord</label><input id="l-p" type="password" value="demo-demo-demo" autocomplete="current-password"><button class="lgo" type="submit">Inloggen</button></form>
   <div class="ldemo"><p>Demo · log in als</p><div id="ldemo"></div></div><p class="lnote">Dit is een demo-omgeving met fictieve accounts en voorbeelddata. Echte inlog met beveiliging volgt zodra de koppelingen live staan.</p></div></div></div>
-<div class="cpop" id="cpop" hidden role="dialog" aria-label="Contact"><button class="x" type="button" aria-label="Sluiten">×</button><div class="hd"><img src="/assets/maxim.webp" alt="" width="48" height="48" loading="lazy"><div><b>Zo ziet het eruit voor jouw zaak</b><span>Maxim · 06 19 92 12 22</span></div></div><div class="cbtns"><a class="cb" href="tel:+31619921222" data-ct="bel"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>Bel me</a><a class="cb wa" href="https://wa.me/31619921222?text=Hoi%20Maxim%2C%20ik%20heb%20de%20SERVAI-demo%20bekeken%20en%20wil%20graag%20een%20demo%20voor%20mijn%20zaak." target="_blank" rel="noopener" data-ct="whatsapp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21l1.6-4.7A8.5 8.5 0 1 1 8 19.6z"/><path d="M9 9.5c.3 2 2.5 4.3 4.6 4.6l1.2-1.2 1.7.8c-.2 1-1 1.8-2 1.8-3.5 0-6.6-3.1-6.6-6.6 0-1 .8-1.8 1.8-2l.8 1.7z"/></svg>WhatsApp</a><a class="cb main" href="/#demo" data-ct="plan">Plan een demo</a></div></div>
 <a class="fab" href="#assistent"><svg><use href="#i-chat"/></svg>Vraag SERVAI</a>
 
 <script>
@@ -2563,11 +2562,7 @@ document.getElementById('pwform').addEventListener('submit',async e=>{
   if(!(cur()&&cur().st==='Actief'))state.uid='u1';doLogin(state.uid)
 })();
 /* contact: popup na 40 s (1x per sessie) */
-(()=>{const c=document.getElementById('cpop');if(!c)return;let seen=false;try{seen=sessionStorage.getItem('servai-demo-cpop')==='1'}catch(e){}
-  if(!seen)setTimeout(()=>{if(!document.body.classList.contains('locked'))c.hidden=false;try{sessionStorage.setItem('servai-demo-cpop','1')}catch(e){}},40000);
-  c.querySelector('.x').addEventListener('click',()=>c.hidden=true);
-  document.addEventListener('click',e=>{const a=e.target.closest('[data-ct]');if(a)c.hidden=true});
-})();
+
 </script>
 </body>
 </html>
