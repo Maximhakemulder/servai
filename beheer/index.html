@@ -136,7 +136,7 @@ const TSTAT={open:['wait','Open'],bezig:['blue','Bezig'],wacht_op_klant:['off','
 const URG=['Laag','Normaal','Hoog','Spoed'];
 const pill=(m,k)=>{const [c,t]=m[k]||['off',k];return `<span class="pill ${c}"><i></i>${esc(t)}</span>`};
 
-let SB=null,ME=null;const D={klanten:[],plannen:[],aanvragen:[],afspraken:[],tickets:[]};const S={cal:(()=>{const n=new Date();return{y:n.getFullYear(),m:n.getMonth()}})(),day:dkey(new Date()),kf:'',ks:'',ts:'',as:'',uf:'',uk:'',ur:''};
+let SB=null,ME=null;const D={aik:[],klanten:[],plannen:[],aanvragen:[],afspraken:[],tickets:[]};const S={cal:(()=>{const n=new Date();return{y:n.getFullYear(),m:n.getMonth()}})(),day:dkey(new Date()),kf:'',ks:'',ts:'',as:'',uf:'',uk:'',ur:''};
 
 /* ===== modal ===== */
 function modal(title,html,{wide}={}){
@@ -164,6 +164,7 @@ async function load(){
     q(SB.from('aanvragen').select('*').order('aangemaakt',{ascending:false})),
     q(SB.from('afspraken').select('*,klanten(naam)').order('start_tijd')),
     q(SB.from('tickets').select('*,klanten(naam)').order('aangemaakt',{ascending:false}))]);
+  try{const m=new Date();const r=await SB.from('ai_kosten_maand').select('klant_id,soort,aanroepen,kosten_eur').eq('maand',m.getFullYear()+'-'+String(m.getMonth()+1).padStart(2,'0')+'-01');D.aik=r.data||[]}catch(e){D.aik=[]}
   k.forEach(x=>{x.ab=one(x.abonnementen);x.locaties=(x.locaties||[]).sort((a,b)=>a.naam.localeCompare(b.naam))});
   D.klanten=k;D.plannen=p;D.aanvragen=a;D.afspraken=f;D.tickets=t;badges()}
 function badges(){
@@ -203,8 +204,14 @@ function vOverzicht(){
   <div class="g2">
     <div class="card"><h2>Aandacht nodig</h2><div class="list">${aandacht.length?aandacht.map(([c,t,h])=>`<div class="li"><a href="${h}">${esc(t)}</a><span class="pill ${c}"><i></i></span></div>`).join(''):'<p class="empty">Niets dat aandacht nodig heeft. 🎉</p>'}</div></div>
     <div class="card"><h2>Komende afspraken <a class="btn ghost sm" href="#agenda">Agenda</a></h2><div class="list">${kom.length?kom.map(a=>`<div class="li"><div><b>${esc(a.titel)}</b><div class="mute sm">${fdt(a.start_tijd)}${a.klanten?' · '+esc(a.klanten.naam):''}</div></div><span class="pill" style="color:${SOORT[a.soort][1]}"><i></i>${SOORT[a.soort][0]}</span></div>`).join(''):'<p class="empty">Geen afspraken gepland.</p>'}</div></div>
-  </div>`}
+  </div>${aiKostenCard()}`}
 
+function aiKostenCard(){
+  const f2=n=>'€ '+n.toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const rows=D.klanten.map(k=>{const r=D.aik.filter(x=>x.klant_id===k.id),s=t=>r.filter(x=>x.soort===t).reduce((a,x)=>a+ +x.kosten_eur,0),t=r.reduce((a,x)=>a+ +x.kosten_eur,0);return{k,adv:s('advies'),fac:s('factuur'),ass:s('assistent'),t,p:k.ab&&+k.ab.prijs_maand||0}}).filter(x=>x.t>0||(x.k.ab&&x.k.ab.status==='actief')).sort((a,b)=>b.t-a.t);
+  const tot=rows.reduce((a,x)=>a+x.t,0);
+  const tab=rows.length?'<table><thead><tr><th>Klant</th><th class="r">Adviezen</th><th class="r">Facturen</th><th class="r">Assistent</th><th class="r">Totaal</th><th class="r">% van abonnement</th></tr></thead><tbody>'+rows.map(x=>'<tr><td>'+esc(x.k.naam)+'</td><td class="r">'+f2(x.adv)+'</td><td class="r">'+f2(x.fac)+'</td><td class="r">'+f2(x.ass)+'</td><td class="r"><b>'+f2(x.t)+'</b></td><td class="r">'+(x.p?(Math.round(x.t/x.p*1000)/10)+'%':'–')+'</td></tr>').join('')+'</tbody></table>':'<p class="empty">Nog geen AI-gebruik deze maand.</p>';
+  return '<div class="card" style="margin-top:14px"><h2>AI-kosten deze maand <span class="mute sm" style="font-weight:400">schatting per klant</span></h2><p class="mute sm" style="margin-bottom:8px">Totaal '+f2(tot)+(rows.length?' · gemiddeld '+f2(tot/rows.length)+' per klant':'')+'</p>'+tab+'</div>'}
 /* ===== klanten ===== */
 function kRows(){
   const f=S.kf.toLowerCase(),st=S.ks;

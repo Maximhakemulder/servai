@@ -1956,6 +1956,11 @@ async function advBouw(){
     const zk=menu.filter(m=>!(kost[m.id]&&kost[m.id].kostprijs>0)).length;
     if(menu.length&&zk)it.push({t:'info',c:'Menu',h:zk+' gerechten zonder kostprijs',x:'Zonder kostprijs kan SERVAI geen food cost en geen prijsstijgingen voor die gerechten laten zien.',a:'Vul de kostprijs in bij Menu & kostprijs.',v:'inkoop'});
   }catch(e){}
+  try{ // AI-adviezen (nachtelijk gemaakt uit alle koppelingen); regelgebaseerde adviezen hierboven blijven staan
+    let q=SB.from('ai_adviezen').select('items,datum').gte('datum',new Date(Date.now()-3*864e5).toISOString().slice(0,10)).order('datum',{ascending:false}).limit(1);
+    if(KLANTID)q=q.eq('klant_id',KLANTID);const {data}=await q;
+    const ids=new Set(it.map(advId));((data&&data[0]&&data[0].items)||[]).forEach(i=>{if(i&&i.h&&!ids.has(advId(i)))it.push(i)});
+  }catch(e){}
   return {it,wacht:[['Gasten & reviews','Koppel Google Business Profile voor review-inzichten.'],['Reserveringen','Koppel Zenchef voor no-shows en bezetting.'],['Weer & omgeving','Weer- en evenementadvies volgt zodra de locatie is ingesteld.']],sub:perName()};
 }
 async function advLoad(wrap){

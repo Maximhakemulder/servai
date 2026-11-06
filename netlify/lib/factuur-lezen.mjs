@@ -48,7 +48,7 @@ const PROMPT = "Lees deze inkoopfactuur van een horecabedrijf. Geef leverancier,
 const SCHEMA = { type: "object", properties: { leverancier: { type: "string" }, factuurnummer: { type: "string" }, factuurdatum: { type: "string" }, totaal_excl_btw: { type: "number" }, regels: { type: "array", items: { type: "object", properties: { omschrijving: { type: "string" }, categorie: { type: "string", enum: ["food", "drank", "overig"] }, aantal: { type: "number" }, eenheid: { type: "string" }, prijs_per_eenheid: { type: "number" }, bedrag: { type: "number" } }, required: ["omschrijving", "categorie"] } } }, required: ["regels"] };
 
 /** Stuurt de factuur naar Claude en geeft het ruwe resultaat terug. */
-export async function leesFactuur(buffer, mime, { apiKey, model } = {}) {
+export async function leesFactuur(buffer, mime, { apiKey, model, onUsage } = {}) {
   const bron = { type: "base64", media_type: mime, data: Buffer.from(buffer).toString("base64") };
   const blok = mime === "application/pdf" ? { type: "document", source: bron } : { type: "image", source: bron };
   const r = await fetch("https://api.anthropic.com/v1/messages", {
@@ -57,6 +57,7 @@ export async function leesFactuur(buffer, mime, { apiKey, model } = {}) {
   });
   if (!r.ok) throw new Error(`uitlezen mislukt (${r.status})`);
   const out = await r.json();
+  if (onUsage) await onUsage(out.usage);
   const t = (out.content || []).find((c) => c.type === "tool_use");
   if (!t) throw new Error("geen resultaat bij uitlezen");
   return t.input;

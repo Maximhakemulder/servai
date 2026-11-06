@@ -1,5 +1,6 @@
 // SERVAI · leest elke 5 minuten nieuwe facturen uit (regels, categorie, prijzen) en werkt ingrediëntprijzen bij (bron 'factuur').
 // Alleen actief met ANTHROPIC_API_KEY. SERVAI past nooit prijzen in de kassa aan; dit vult alleen de inkoopprijzen.
+import { registreer } from "../lib/ai-kosten.mjs";
 import { leesFactuur, normaliseerFactuur, koppelIngredient } from "../lib/factuur-lezen.mjs";
 const URL_ = process.env.SUPABASE_URL, SVC = process.env.SUPABASE_SERVICE_KEY, KEY = process.env.ANTHROPIC_API_KEY;
 const H = { apikey: SVC, authorization: `Bearer ${SVC}`, "content-type": "application/json" };
@@ -25,7 +26,7 @@ export default async () => {
       if (!mime) { await rest(`facturen?id=eq.${f.id}`, { method: "PATCH", body: JSON.stringify({ status: "fout", fout: "Bestandstype niet ondersteund (PDF of afbeelding)" }) }); return; }
       const dl = await fetch(`${URL_}/storage/v1/object/facturen/${f.bijlage_pad}`, { headers: H });
       if (!dl.ok) throw new Error("bestand niet gevonden");
-      const nf = normaliseerFactuur(await leesFactuur(await dl.arrayBuffer(), mime, { apiKey: KEY, model: process.env.FACTUUR_MODEL }), String(f.ontvangen).slice(0, 10));
+      const nf = normaliseerFactuur(await leesFactuur(await dl.arrayBuffer(), mime, { apiKey: KEY, model: process.env.FACTUUR_MODEL, onUsage: (u) => registreer(rest, { klant_id: f.klant_id, soort: "factuur", model: process.env.FACTUUR_MODEL || "claude-haiku-5-5" }, u) }), String(f.ontvangen).slice(0, 10));
       await rest(`factuur_regels?factuur_id=eq.${f.id}`, { method: "DELETE" });
       if (nf.regels.length) await rest("factuur_regels", { method: "POST", body: JSON.stringify(nf.regels.map((r) => ({ ...r, factuur_id: f.id, klant_id: f.klant_id, datum: nf.datum, leverancier: nf.leverancier }))) });
       const ing = await get(`ingredienten?klant_id=eq.${f.klant_id}&select=id,naam,eenheid&limit=2000`);
