@@ -46,6 +46,13 @@ button{font:inherit;color:inherit}
 .nav a:hover{background:rgba(255,255,255,.04);color:var(--fg)}
 .nav a.on{background:var(--panel-2);color:#fff;box-shadow:inset 0 0 0 1px var(--line)}
 .nav a.on svg{stroke:url(#g)}
+.nav a.nav-ai{position:relative;gap:11px;padding:8px 12px 8px 8px;color:#fff;font-weight:600;background:linear-gradient(135deg,rgba(124,147,255,.16),rgba(224,86,139,.10));box-shadow:inset 0 0 0 1px rgba(124,147,255,.32);margin:4px 0}
+.nav a.nav-ai:hover{background:linear-gradient(135deg,rgba(124,147,255,.26),rgba(224,86,139,.16))}
+.nav a.nav-ai.on{background:linear-gradient(135deg,rgba(124,147,255,.30),rgba(224,86,139,.20));box-shadow:inset 0 0 0 1px rgba(160,175,255,.6),0 8px 22px -12px rgba(224,86,139,.8)}
+.nav a.nav-ai .ni{width:28px;height:28px;flex:none;border-radius:9px;display:grid;place-items:center;background:linear-gradient(135deg,#3A4FB8,#E0568B);box-shadow:0 4px 12px -4px rgba(224,86,139,.7)}
+.nav a.nav-ai .ni svg,.nav a.nav-ai.on .ni svg{width:16px;height:16px;stroke:#fff}
+.nav a.nav-ai em{margin-left:auto;font-style:normal;font-size:11.5px;font-weight:700;min-width:20px;text-align:center;padding:2px 7px;border-radius:99px;background:linear-gradient(135deg,#3A4FB8,#E0568B);color:#fff}
+.nav a.nav-ai em:empty{display:none}
 .nav a.sub{padding-left:40px;font-size:14px;margin-top:-2px}
 .nav .sep{height:1px;background:var(--line);margin:10px 8px}
 .nav .ai{background:linear-gradient(var(--panel),var(--panel)) padding-box,var(--grad) border-box;border:1px solid transparent;color:#fff}
@@ -433,7 +440,7 @@ td .co-s{padding:4px 10px;min-width:300px}td .co-s small{display:none}
       <a href="#rooster" data-v="rooster" class="sub"><svg><use href="#i-cal"/></svg><span>Rooster</span></a><a href="#reserveringen" data-v="reserveringen" class="sub"><svg><use href="#i-cal"/></svg><span>Reserveringen</span></a><a href="#gasten" data-v="gasten" class="sub"><svg><use href="#i-star"/></svg><span>Gasten &amp; reviews</span></a><a href="#menu" data-v="menu" class="sub"><svg><use href="#i-chef"/></svg><span>Verkoop gerechten</span></a><a href="#dranken" data-v="dranken" class="sub"><svg><use href="#i-drink"/></svg><span>Verkoop dranken</span></a></div></div>
       <div class="ng" data-g="kaart"><button type="button" class="nh"><svg><use href="#i-box"/></svg><span>Menukaart</span><svg class="chv" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button><div class="nb"><a href="#inkoop" data-v="inkoop" class="sub"><svg><use href="#i-box"/></svg><span>Menu &amp; kostprijs</span></a></div></div>
       <div class="ng" data-g="inz"><button type="button" class="nh"><svg><use href="#i-up"/></svg><span>Inzichten</span><svg class="chv" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button><div class="nb"><a href="#upselling" data-v="upselling" class="sub"><svg><use href="#i-up"/></svg><span>Upselling</span></a><a href="#kansen" data-v="kansen" class="sub"><svg><use href="#i-spark"/></svg><span>Markt &amp; kansen</span></a><a href="#facturen" data-v="facturen" class="sub"><svg><use href="#i-mail"/></svg><span>Facturen</span></a><a href="#meldingen" data-v="meldingen" class="sub"><svg><use href="#i-bell"/></svg><span>Meldingen</span></a></div></div>
-      <a href="#advies" data-v="advies"><svg><use href="#i-spark"/></svg><span>AI-advies</span></a>
+      <a href="#advies" data-v="advies" class="nav-ai"><span class="ni"><svg><use href="#i-spark"/></svg></span><span>AI-advies</span><em id="navai-n"></em></a>
       <div class="sep"></div>
       <div class="ng" data-g="rec"><button type="button" class="nh"><svg><use href="#i-mail"/></svg><span>Receptie</span><svg class="chv" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button><div class="nb"><a href="#receptie" data-v="receptie" class="sub"><svg><use href="#i-mail"/></svg><span>AI-receptie</span></a></div></div>
       <div class="ng" data-g="mkt"><button type="button" class="nh"><svg><use href="#i-mega"/></svg><span>Marketing</span><svg class="chv" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button><div class="nb"><a href="#social" data-v="social" class="sub"><svg><use href="#i-mega"/></svg><span>Social media</span></a></div></div>
