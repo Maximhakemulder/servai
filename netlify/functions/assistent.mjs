@@ -16,6 +16,7 @@ Regels:
 - Vergelijk dagen met dezelfde weekdag, niet met gisteren. Reken zelf na wat in euro's per maand relevant is.
 - SERVAI adviseert alleen: je past nooit prijzen, roosters of bestellingen aan en zegt ook nooit dat je dat doet. De ondernemer beslist.
 - Geen gastgegevens noemen. Alleen vragen over deze zaak(en), omzet, personeel, gasten, reserveringen, inkoop en menu. Andere vragen beleefd afwijzen in een zin.
+- Facturen (facturen_hele_organisatie) zijn per organisatie, niet per zaak. Status: ontvangen = binnen, bezig = wordt nu uitgelezen, verwerkt = uitgelezen, gepauzeerd = AI-maximum bereikt, fout = uitlezen mislukt.
 - Bij meerdere zaken: noem de zaaknaam bij elk cijfer.`;
 
 export async function beantwoord({ vraag, historie, feiten, model, apiKey, onUsage }) {
@@ -72,8 +73,13 @@ async function verwerk(req) {
   locs = locs.slice(0, MAX_ZAKEN);
   if (!locs.length) return json({ error: "Geen zaak gevonden" }, 404);
   const feiten = await Promise.all(locs.map((l) => haalFeiten(get, k, l)));
+  // Facturen gelden voor de hele organisatie: laatste 40 (status, bedrag, leverancier) + de regels van de recentste, zodat de assistent ze kan noemen.
+  const fac = await get(`facturen?klant_id=eq.${klant_id}&select=id,ontvangen,leverancier,van,onderwerp,bedrag,status,fout&order=ontvangen.desc&limit=40`);
+  const fr = fac.length ? await get(`factuur_regels?klant_id=eq.${klant_id}&factuur_id=in.(${fac.slice(0, 10).map((f) => f.id).join(",")})&select=factuur_id,omschrijving,categorie,aantal,eenheid,prijs_per_eenheid,bedrag&limit=300`) : [];
+  const inkoop = { facturen_hele_organisatie: fac.map((f) => ({ ontvangen: String(f.ontvangen).slice(0, 10), leverancier: f.leverancier || f.van, onderwerp: f.onderwerp, bedrag_excl_btw: f.bedrag, status: f.status, ...(f.fout ? { fout: f.fout } : {}), regels: fr.filter((r) => r.factuur_id === f.id).map((r) => ({ artikel: r.omschrijving, categorie: r.categorie, aantal: r.aantal, eenheid: r.eenheid, prijs: r.prijs_per_eenheid, bedrag: r.bedrag })) })) };
+  const alle = feiten.length === 1 ? { ...feiten[0], ...inkoop } : { zaken: feiten, ...inkoop };
   const model = process.env.ASSISTENT_MODEL || "claude-haiku-5-5";
-  const antwoord = await beantwoord({ vraag, historie: b.historie, feiten: feiten.length === 1 ? feiten[0] : feiten, model, apiKey: KEY,
+  const antwoord = await beantwoord({ vraag, historie: b.historie, feiten: alle, model, apiKey: KEY,
     onUsage: (us) => registreer(rest, { klant_id, locatie_id: locs.length === 1 ? locs[0].id : null, soort: "assistent", model }, us) });
   return json({ antwoord: antwoord || "Daar kan ik nu geen antwoord op geven." });
 }
