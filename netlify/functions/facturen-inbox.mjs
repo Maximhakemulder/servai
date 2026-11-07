@@ -54,8 +54,8 @@ export default async () => {
         const van = (p.from && p.from.value[0] && p.from.value[0].address || "").toLowerCase();
         const aan = [].concat(p.to || [], p.cc || []).flatMap((x) => x.value.map((v) => v.address));
         const klant = kiesKlant({ aan, van }, klanten, afzenders);
-        // Handtekeningplaatjes (logo, Facebook, Twitter) zijn geen facturen: inline/ingesloten of kleine afbeeldingen slaan we over. PDF en XML blijven altijd.
-        const isFactuur = (a) => a.size < 10e6 && (/pdf|xml/i.test(a.contentType) || (/image/i.test(a.contentType) && !a.related && a.contentDisposition !== "inline" && !a.cid && a.size >= 40e3));
+        // Alleen PDF-bijlagen zijn facturen; afbeeldingen (handtekeningen, logo's) en overige bijlagen slaan we over.
+        const isFactuur = (a) => a.size < 10e6 && (/pdf/i.test(a.contentType) || /\.pdf$/i.test(a.filename || ""));
         const bijl = (p.attachments || []).filter(isFactuur);
         for (const [i, a] of (bijl.length ? bijl : [null]).entries()) {
           let pad = null;
