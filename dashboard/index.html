@@ -416,6 +416,24 @@ td .co-s{padding:4px 10px;min-width:300px}td .co-s small{display:none}
 .gk{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:12px;margin-bottom:12px}.gk small{display:block;color:var(--mute);font-size:12px}.gk b{display:block;font:600 20px var(--f-d);margin:2px 0}
 @media (max-width:560px){.tr{grid-template-columns:minmax(0,1fr) 56px auto}.tr .spk{display:none}}
 </style>
+<style>
+.inf{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;margin-left:6px;padding:0;border-radius:50%;border:1px solid rgba(154,163,199,.55);background:transparent;color:#9AA3C7;font:600 10px/1 Georgia,serif;font-style:italic;cursor:pointer;vertical-align:middle;text-transform:none;letter-spacing:0}
+.inf:hover,.inf:focus-visible{color:#fff;border-color:#7C93FF;background:rgba(124,147,255,.25);outline:none}
+#infpop{position:fixed;z-index:9999;max-width:260px;padding:10px 12px;border-radius:10px;background:#1B2040;border:1px solid rgba(124,147,255,.45);color:#E8ECFF;font-size:13px;line-height:1.45;font-family:inherit;box-shadow:0 8px 30px rgba(0,0,0,.45);text-transform:none;letter-spacing:0;font-style:normal}
+</style>
+<script>
+/* Klein i-icoon met uitleg in een mini-popup: inf('tekst') geeft de knop terug. */
+const inf=t=>'<button type="button" class="inf" data-i="'+String(t).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')+'" aria-label="Uitleg">i</button>';
+(()=>{let pop=null;const dicht=()=>{if(pop){pop.remove();pop=null}};
+  document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.inf');
+    if(!b){if(!(e.target.closest&&e.target.closest('#infpop')))dicht();return}
+    e.preventDefault();e.stopPropagation();const open=pop&&pop._b===b;dicht();if(open)return;
+    pop=document.createElement('div');pop.id='infpop';pop.setAttribute('role','tooltip');pop.textContent=b.dataset.i;pop._b=b;document.body.appendChild(pop);
+    const r=b.getBoundingClientRect(),w=pop.offsetWidth,h=pop.offsetHeight;
+    let x=Math.min(Math.max(8,r.left+r.width/2-w/2),innerWidth-w-8),y=r.bottom+8;if(y+h>innerHeight-8)y=Math.max(8,r.top-h-8);
+    pop.style.left=x+'px';pop.style.top=y+'px'},true);
+  addEventListener('keydown',e=>{if(e.key==='Escape')dicht()});addEventListener('scroll',dicht,true);addEventListener('hashchange',dicht)})();
+</script>
 </head>
 <body>
 
@@ -1125,7 +1143,7 @@ function lkSpec(rows,MW,pcol){
   if(!MW||!MW.length)return dagTab;
   const mw={};MW.forEach(r=>{const k=String(r.medewerker).trim(),d=mw[k]||(mw[k]={g:0,w:0,k:0});d.g+=+r.gepland_uren||0;d.w+=+r.gewerkt_uren||0;d.k+=+r.kosten||0});
   const nm=Object.keys(mw).sort((a,b)=>mw[b].k-mw[a].k),T=nm.reduce((t,n)=>({g:t.g+mw[n].g,w:t.w+mw[n].w,k:t.k+mw[n].k}),{g:0,w:0,k:0});
-  return dagTab+`<div class="sec"><h2>Per medewerker</h2><small>${perName()} · alleen zichtbaar voor de eigenaar</small></div><div class="c span-12"><div class="tw"><table class="mx"><thead><tr><th>Medewerker</th><th>Uren gepland</th><th>Uren gewerkt</th><th>Verschil</th><th>Loonkosten</th></tr></thead><tbody>${nm.map(n=>{const r=mw[n],v=r.w-r.g;return `<tr><td style="text-align:left"><b>${esc(n)}</b></td><td>${nl(r.g)}</td><td>${nl(r.w)}</td><td>${v>0?'+':''}${nl(v)} u</td><td>${r.k?eur(r.k):'–'}</td></tr>`}).join('')}<tr><td style="text-align:left"><b>Totaal</b></td><td><b>${nl(T.g)}</b></td><td><b>${nl(T.w)}</b></td><td></td><td><b>${eur(T.k)}</b></td></tr></tbody></table></div></div>`;
+  return dagTab+`<div class="sec"><h2>Per medewerker</h2><small>${perName()} · alleen zichtbaar voor de eigenaar</small></div><div class="c span-12"><div class="tw"><table class="mx"><thead><tr><th>Medewerker</th><th>Uren gepland${inf('Uren die in het rooster stonden voor deze medewerker.')}</th><th>Uren gewerkt${inf('Uren die echt zijn geklokt of geregistreerd.')}</th><th>Verschil${inf('Uren gewerkt min uren gepland. +2 u betekent 2 uur meer gewerkt dan gepland; dat kost extra loon.')}</th><th>Loonkosten${inf('Kosten per dienst zoals je roostersysteem die berekent. Alleen zichtbaar voor de eigenaar.')}</th></tr></thead><tbody>${nm.map(n=>{const r=mw[n],v=r.w-r.g;return `<tr><td style="text-align:left"><b>${esc(n)}</b></td><td>${nl(r.g)}</td><td>${nl(r.w)}</td><td>${v>0?'+':''}${nl(v)} u</td><td>${r.k?eur(r.k):'–'}</td></tr>`}).join('')}<tr><td style="text-align:left"><b>Totaal</b></td><td><b>${nl(T.g)}</b></td><td><b>${nl(T.w)}</b></td><td></td><td><b>${eur(T.k)}</b></td></tr></tbody></table></div></div>`;
 }
 async function lkMw(from,to){
   try{const u=cur();if(!u||u.r!=='Eigenaar')return [];
@@ -1160,10 +1178,10 @@ async function lkLoad(){
   wrap.outerHTML=[
    kpi('Omzet',eur(tot.o),'<span class="delta flat">'+perName()+'</span>','netto uit de kassa'),
    kpi('Loonkosten',eur(tot.l),'<span class="delta flat">incl. werkgeverslasten</span>','uit het rooster'),
-   kpi('Loonkosten in % van omzet',pct==null?'–':pct.toFixed(1).replace('.',',')+'%',pct==null?'':`<span class="delta ${pcol(pct)}">${Math.abs(diff).toFixed(1).replace('.',',')} punt ${diff>0?'boven':'onder'} norm</span>`,'norm: '+String(KLANTNORM).replace('.',',')+'%'),
+   kpi('Loonkosten in % van omzet'+inf('Loonkosten gedeeld door omzet. De norm is het percentage dat jij als doel hebt gesteld.'),pct==null?'–':pct.toFixed(1).replace('.',',')+'%',pct==null?'':`<span class="delta ${pcol(pct)}">${Math.abs(diff).toFixed(1).replace('.',',')} punt ${diff>0?'boven':'onder'} norm</span>`,'norm: '+String(KLANTNORM).replace('.',',')+'%'),
    kpi('Uren gewerkt',nf(tot.w),`<span class="delta ${dh>0?'down':'up'}">${dh>0?'+':''}${nf(dh)} uur t.o.v. plan</span>`,'gepland: '+nf(tot.g)+' uur')
   ].join('')+(days.length>1?`<div class="c span-12"><div class="ch"><div><h2>Loonkosten in % van omzet per dag</h2><p>${locName()} · stippellijn is je norm van ${String(KLANTNORM).replace('.',',')}%</p></div></div><div class="cv short"><canvas id="c-lk" role="img" aria-label="Loonkosten in procent van omzet per dag"></canvas></div></div>`:'')+
-  `<div class="sec"><h2>Per locatie</h2><small>${perName()}</small></div><div class="c span-12"><div class="tw"><table class="mx"><thead><tr><th>Locatie</th><th>Omzet</th><th>Loonkosten</th><th>% van omzet</th><th>Uren gewerkt</th><th>Verschil met plan</th></tr></thead><tbody>${Object.keys(byLoc).map(id=>{const r=byLoc[id],pc=r.o>0?r.l/r.o*100:null;return `<tr><td style="text-align:left"><b>${lname(id)}</b></td><td>${eur(r.o)}</td><td>${eur(r.l)}</td><td><span class="delta ${pcol(pc)}">${pc==null?'–':pc.toFixed(1).replace('.',',')+'%'}</span></td><td>${nf(r.w)}</td><td>${r.w-r.g>0?'+':''}${nf(r.w-r.g)} u</td></tr>`}).join('')}</tbody></table></div></div>`+lkSpec(rows,MW,pcol);
+  `<div class="sec"><h2>Per locatie</h2><small>${perName()}</small></div><div class="c span-12"><div class="tw"><table class="mx"><thead><tr><th>Locatie</th><th>Omzet</th><th>Loonkosten</th><th>% van omzet</th><th>Uren gewerkt</th><th>Verschil met plan${inf('Gewerkte uren min geplande uren. Een plus betekent meer uren dan gepland.')}</th></tr></thead><tbody>${Object.keys(byLoc).map(id=>{const r=byLoc[id],pc=r.o>0?r.l/r.o*100:null;return `<tr><td style="text-align:left"><b>${lname(id)}</b></td><td>${eur(r.o)}</td><td>${eur(r.l)}</td><td><span class="delta ${pcol(pc)}">${pc==null?'–':pc.toFixed(1).replace('.',',')+'%'}</span></td><td>${nf(r.w)}</td><td>${r.w-r.g>0?'+':''}${nf(r.w-r.g)} u</td></tr>`}).join('')}</tbody></table></div></div>`+lkSpec(rows,MW,pcol);
   if(days.length>1){
     mk('c-lk',{type:'line',data:{labels:days.map(dshort),datasets:[
       {label:'Loonkosten %',data:days.map(d=>byDay[d].o>0?+(byDay[d].l/byDay[d].o*100).toFixed(1):null),borderColor:'#5E7BFF',backgroundColor:'rgba(94,123,255,.12)',fill:true,tension:.3,pointRadius:2,spanGaps:true},
@@ -1880,7 +1898,7 @@ function aikHtml(d){
   const tot=d.adv+d.fac+d.ass,cap=d.cap==null?AIK_STD:d.cap,pc=cap>0?Math.min(100,tot/cap*100):100,uit=cap===0,vol=cap>0&&tot>=cap;
   const kl=pc>=100?'#FF8A8A':pc>=80?'#FFB86B':'#4ADE9A';
   const rij=(t,v)=>`<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-top:1px solid var(--line);font-size:13.5px"><span style="color:var(--fg-2)">${t}</span><b>${f2(v)}</b></div>`;
-  return `<div class="c span-12" id="aik"><div class="ch"><div><h2>AI-gebruik deze maand</h2><p>Live bijgewerkt. Stel een maximum in: SERVAI gaat daar nooit overheen.</p></div></div>
+  return `<div class="c span-12" id="aik"><div class="ch"><div><h2>AI-gebruik deze maand${inf('Wat AI deze maand kost voor adviezen, het uitlezen van facturen en de assistent. Je kunt een maximum instellen; SERVAI gaat daar nooit overheen.')}</h2><p>Live bijgewerkt. Stel een maximum in: SERVAI gaat daar nooit overheen.</p></div></div>
    <div style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:22px" class="aik-g">
     <div><div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><b style="font:700 30px var(--f-d)">${f2(tot)}</b><span style="color:var(--mute)">${uit?'AI staat uit':'van maximaal '+f2(cap)}</span></div>
      <div style="height:8px;border-radius:99px;background:rgba(255,255,255,.08);margin:10px 0 12px;overflow:hidden"><div style="height:100%;width:${pc}%;background:${kl};border-radius:99px"></div></div>
@@ -2061,7 +2079,7 @@ async function rooLoad(wrap){
     const tr=namen.map(n=>`<tr><td><b>${esc(n)}</b></td>${dagen.map(d=>`<td class="r"${ymd(d)===vandaagS?' style="background:rgba(124,147,255,.07)"':''}>${cel(n,d)}</td>`).join('')}<td class="r"><b>${rU(rpSum(sel.filter(r=>r.medewerker.toLowerCase()===n.toLowerCase()),'uren'))}</b></td>${LOON.size?(()=>{const w=LOON.get(n.toLowerCase()),u=rpSum(sel.filter(r=>r.medewerker.toLowerCase()===n.toLowerCase()),'uren');return w!=null?`<td class="r">${eur(w,2)}</td><td class="r">${eur(w*u,0)}</td>`:'<td class="r" style="color:var(--mute)">–</td><td class="r" style="color:var(--mute)">–</td>'})():''}</tr>`).join('');
     const tot=`<tr><td><b>Totaal</b></td>${dagen.map(d=>{const l=perDag[ymd(d)]||[];return `<td class="r"><b>${l.length?rU(rpSum(l,'uren')):'–'}</b><br><span style="color:var(--mute);font-size:11.5px">${new Set(l.map(r=>r.medewerker.toLowerCase())).size} pers.</span></td>`}).join('')}<td class="r"><b>${rU(tu)}</b></td>${LOON.size?`<td></td><td class="r"><b>${eur(sel.reduce((t,r)=>t+(LOON.get(r.medewerker.toLowerCase())||0)*(+r.uren||0),0),0)}</b></td>`:''}</tr>`;
     const lijst=dagen.map((d,i)=>{const l=(perDag[ymd(d)]||[]).slice().sort((x,y)=>(x.begin_tijd||'99').localeCompare(y.begin_tijd||'99'));return `<div style="padding:10px 0;border-bottom:1px solid var(--line)"><div style="display:flex;justify-content:space-between;gap:8px;${ymd(d)===vandaagS?'color:#7C93FF;':''}"><b>${RDGL[i]} ${rKort(d)}</b><span style="color:var(--mute);font-size:13px">${l.length?new Set(l.map(r=>r.medewerker.toLowerCase())).size+' pers. · '+rU(rpSum(l,'uren')):'geen diensten'}</span></div>${l.map(x=>`<div style="display:flex;justify-content:space-between;gap:8px;font-size:14px;padding:3px 0"><span>${esc(x.medewerker)}${x.functie?` <span style="color:var(--mute);font-size:12px">${esc(x.functie)}</span>`:''}</span><b style="font-weight:600;white-space:nowrap">${esc(rTijd(x))}</b></div>`).join('')}</div>`}).join('');
-    body=`<div class="c span-12"><div class="roo-t"><div class="tw"><table><thead><tr><th>Medewerker</th>${th}<th class="r">Totaal</th>${LOON.size?'<th class="r">Uurloon</th><th class="r">Loon (bruto)</th>':''}</tr></thead><tbody>${tr}${tot}</tbody></table></div></div><div class="roo-l">${lijst}</div></div>`;
+    body=`<div class="c span-12"><div class="roo-t"><div class="tw"><table><thead><tr><th>Medewerker</th>${th}<th class="r">Totaal</th>${LOON.size?'<th class="r">Uurloon'+inf('Bruto uurloon per medewerker. Alleen zichtbaar voor de eigenaar.')+'</th><th class="r">Loon (bruto)'+inf('Uren in deze week maal uurloon, zonder werkgeverslasten.')+'</th>':''}</tr></thead><tbody>${tr}${tot}</tbody></table></div></div><div class="roo-l">${lijst}</div></div>`;
   }else{
     const n=Math.round((tot-van)/864e5)+1,dm=[...Array(n)].map((_,i)=>rD(van,i));
     body=`<div class="c span-12"><div class="roo-m">${RDG.map(x=>`<div style="text-align:center;color:var(--mute);font-size:12px">${x}</div>`).join('')}${dm.map(d=>{const l=perDag[ymd(d)]||[],buiten=d.getMonth()!==a.getMonth();return `<button type="button" class="roo-d${buiten?' x':''}${ymd(d)===vandaagS?' t':''}" data-roo-dag="${ymd(d)}"><b>${d.getDate()}</b>${l.length?`<span>${new Set(l.map(r=>r.medewerker.toLowerCase())).size} pers.</span><span>${rU(rpSum(l,'uren'))}</span>`:'<span style="opacity:.4">–</span>'}</button>`}).join('')}</div><p style="color:var(--mute);font-size:12.5px;margin-top:10px">Tik op een dag voor de diensten van die week.</p></div>`;
@@ -2226,7 +2244,7 @@ function facRender(wrap,rows,regels,wijz,adres){
   const tot=per.food+per.drank+per.overig;
   const kp=c=>rpKpi(FACC[c][0]+' inkoop',eur(per[c],0),`<span class="delta flat">${tot?Math.round(per[c]/tot*100):0}% van inkoop</span>`,'deze maand, excl. btw');
   const w=wijz.filter(x=>Math.abs(+x.pct)>=2).sort((a,b)=>Math.abs(b.pct)-Math.abs(a.pct)),op=w.filter(x=>x.pct>0);
-  const kpis=kp('food')+kp('drank')+kp('overig')+rpKpi('Prijsstijgingen',nf(op.length),`<span class="delta ${op.length?'down':'flat'}">${op.length?'▲ '+op.filter(x=>x.pct>=5).length+' boven 5%':'–'}</span>`,'t.o.v. vorige factuur');
+  const kpis=kp('food')+kp('drank')+kp('overig')+rpKpi('Prijsstijgingen'+inf('Producten die op de nieuwste factuur duurder zijn dan op de vorige van dezelfde leverancier.'),nf(op.length),`<span class="delta ${op.length?'down':'flat'}">${op.length?'▲ '+op.filter(x=>x.pct>=5).length+' boven 5%':'–'}</span>`,'t.o.v. vorige factuur');
   const e2=n=>eur(n,2),pc=p=>(p>0?'+':'−')+nl1(Math.abs(p))+'%';
   const kaarten=[];
   op.filter(x=>x.pct>=5).slice(0,3).forEach(x=>kaarten.push({t:'warn',c:FACC[x.categorie]?FACC[x.categorie][0]:'Inkoop',h:`${x.omschrijving} ${pc(x.pct)}${x.leverancier?' bij '+x.leverancier:''}`,a:`Van ${e2(x.vorige_prijs)} naar ${e2(x.prijs)} per ${x.eenheid||'eenheid'}. Vraag een offerte bij een andere leverancier of check of je verkoopprijs nog klopt.`}));
