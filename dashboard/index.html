@@ -2251,7 +2251,7 @@ function facMarkt(regels){
   const duur=rij.filter(x=>x.v>5),mnd=Math.round(duur.reduce((t,x)=>t+x.extra,0));
   const kop=duur.length?`Bij <b>${duur.length}</b> van ${rij.length} producten betaal je meer dan de markt${mnd>=25?` (ongeveer <b>${eur(mnd,0)}</b> per maand)`:''}.`:`Je prijzen liggen in lijn met de markt (${rij.length} producten vergeleken).`;
   const cls=v=>v>5?'down':v<-5?'up':'flat';
-  const tab=rij.map(x=>`<tr><td style="white-space:normal">${esc(x.r.omschrijving)}<br><span style="color:var(--mute);font-size:12px">${esc(x.r.leverancier||'')}</span></td><td class="r">${e2(x.j)}<span style="color:var(--mute);font-size:12px"> / ${esc(x.r.eenheid)}</span></td><td class="r">${e2(+x.m.prijs)}${x.m.bron_url?`<br><a href="${esc(x.m.bron_url)}" target="_blank" rel="noopener" style="font-size:12px">${esc(x.m.bron_naam||'bron')}</a>`:`<br><span style="color:var(--mute);font-size:12px">${esc(x.m.bron_naam||'')}</span>`}</td><td class="r"><span class="delta ${cls(x.v)}">${x.v>0?'+':''}${nl1(x.v)}%</span></td><td>${esc(x.m.zekerheid||'')}</td></tr>`).join('');
+  const tab=rij.map(x=>`<tr><td style="white-space:normal">${esc(x.r.omschrijving)}<br><span style="color:var(--mute);font-size:12px">${esc(x.r.leverancier||'')}</span></td><td class="r">${e2(x.j)}<span style="color:var(--mute);font-size:12px"> / ${esc(x.r.eenheid)}</span></td><td class="r">${e2(+x.m.prijs)}${x.m.bron_url?`<br><a href="${esc(x.m.bron_url)}" target="_blank" rel="noopener" style="font-size:12px">${esc(x.m.bron_naam||'bron')}</a>`:`<br><span style="color:var(--mute);font-size:12px">${esc(x.m.bron_naam||'')}</span>`}${x.m.toelichting?`<br><span style="color:var(--mute);font-size:11.5px;white-space:normal">${esc(x.m.toelichting)}</span>`:''}</td><td class="r"><span class="delta ${cls(x.v)}">${x.v>0?'+':''}${nl1(x.v)}%</span></td><td>${esc(x.m.zekerheid||'')}</td></tr>`).join('');
   return `<div class="c span-12"><div class="ch"><div><h2>Marktvergelijking${inf('SERVAI zoekt wekelijks de actuele prijs van je producten bij groothandels als Sligro, Hanos en Makro (excl. btw). Dit is een AI-schatting met bron; controleer bij twijfel de verpakking. Zekerheid: hoog = zelfde product en verpakking.')}</h2><p>${kop}</p></div></div><div class="tw"><table><thead><tr><th>Product</th><th class="r">Jouw prijs</th><th class="r">Markt</th><th class="r">Verschil</th><th>Zekerheid</th></tr></thead><tbody>${tab}</tbody></table></div></div>`;
 }
 function facRender(wrap,rows,regels,wijz,adres){
@@ -2296,7 +2296,7 @@ async function facLoad(wrap){
   const [r,rg,wz,k]=await Promise.all([q,qr,qw,SB.from('klanten').select('factuur_code').eq('id',KLANTID).maybeSingle()]);
   if(document.getElementById('rp-wrap')!==wrap)return;
   if(r.error)throw r.error;
-  try{const mp=await SB.from('markt_prijzen').select('sleutel,eenheid,prijs,bron_naam,bron_url,zekerheid');FACMARKT=new Map((mp.data||[]).map(m=>[m.sleutel+'|'+m.eenheid,m]))}catch(e){FACMARKT=new Map()}
+  try{const mp=await SB.from('markt_prijzen').select('sleutel,eenheid,prijs,bron_naam,bron_url,zekerheid,toelichting');FACMARKT=new Map((mp.data||[]).map(m=>[m.sleutel+'|'+m.eenheid,m]))}catch(e){FACMARKT=new Map()}
   facRender(wrap,r.data||[],rg.data||[],wz.data||[],'facturen'+(k.data&&k.data.factuur_code?'+'+k.data.factuur_code:'')+'@servai.nl');
 }
 async function kopLoad(wrap){
