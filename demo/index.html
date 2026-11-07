@@ -2145,12 +2145,17 @@ const rWk=d=>{const t=rD(d,3-((rD(d).getDay()+6)%7)),j=new Date(t.getFullYear(),
 const rKort=d=>d.getDate()+' '+MND[d.getMonth()].slice(0,3);
 const rTijd=x=>x.begin_tijd&&x.eind_tijd?x.begin_tijd+'–'+x.eind_tijd:nl1(+x.uren).replace(',0','')+' u';
 const rU=n=>nl1(n).replace(',0','')+' u';
+function rooLoon(rows){const m=new Map(),u=cur();
+  if(!u||u.r!=='Eigenaar')return m;
+  rows.forEach(r=>{const k=String(r.medewerker).toLowerCase();if(m.has(k))return;let h=0;for(const c of k)h=(h*31+c.charCodeAt(0))%97;m.set(k,Math.round((13+h/97*6)*4)/4)});   // demo: verzonnen uurlonen
+  return m}
 async function rooLoad(wrap){
   const a=ROO.d,maand=ROO.v==='maand';
   let van,tot;
   if(maand){const e=new Date(a.getFullYear(),a.getMonth()+1,0);e.setHours(12);van=rMa(new Date(a.getFullYear(),a.getMonth(),1));tot=rD(rMa(e),6)}
   else{van=rMa(a);tot=rD(van,6)}
   const rows=await dFetch('rooster','locatie_id,datum,medewerker,begin_tijd,eind_tijd,uren,functie',ymd(van),ymd(tot),['datum','begin_tijd']);
+  const LOON=rooLoon(rows);
   if(document.getElementById('rp-wrap')!==wrap)return;
   const perDag={};rows.forEach(r=>{(perDag[r.datum]||(perDag[r.datum]=[])).push(r)});
   const vandaagS=ymd(new Date()),k=kanUpload();
@@ -2167,10 +2172,10 @@ async function rooLoad(wrap){
     const namen=[...new Map(sel.map(r=>[r.medewerker.toLowerCase(),r.medewerker])).values()].sort((x,y)=>(x==='Open diensten')-(y==='Open diensten')||x.localeCompare(y,'nl'));
     const cel=(n,d)=>{const l=(perDag[ymd(d)]||[]).filter(r=>r.medewerker.toLowerCase()===n.toLowerCase());return l.length>2?`<div style="white-space:nowrap"><b style="font-weight:600">${l.length} diensten</b><br><span style="color:var(--mute);font-size:11.5px">${rU(rpSum(l,'uren'))}</span></div>`:l.length?l.map(x=>`<div style="white-space:nowrap"><b style="font-weight:600">${esc(rTijd(x))}</b>${x.functie?`<br><span style="color:var(--mute);font-size:11.5px">${esc(x.functie)}</span>`:''}</div>`).join(''):'<span style="color:var(--mute)">–</span>'};
     const th=dagen.map((d,i)=>`<th class="r" style="${ymd(d)===vandaagS?'color:#7C93FF':''}">${RDG[i]} ${d.getDate()}</th>`).join('');
-    const tr=namen.map(n=>`<tr><td><b>${esc(n)}</b></td>${dagen.map(d=>`<td class="r"${ymd(d)===vandaagS?' style="background:rgba(124,147,255,.07)"':''}>${cel(n,d)}</td>`).join('')}<td class="r"><b>${rU(rpSum(sel.filter(r=>r.medewerker.toLowerCase()===n.toLowerCase()),'uren'))}</b></td></tr>`).join('');
-    const tot=`<tr><td><b>Totaal</b></td>${dagen.map(d=>{const l=perDag[ymd(d)]||[];return `<td class="r"><b>${l.length?rU(rpSum(l,'uren')):'–'}</b><br><span style="color:var(--mute);font-size:11.5px">${new Set(l.map(r=>r.medewerker.toLowerCase())).size} pers.</span></td>`}).join('')}<td class="r"><b>${rU(tu)}</b></td></tr>`;
+    const tr=namen.map(n=>`<tr><td><b>${esc(n)}</b></td>${dagen.map(d=>`<td class="r"${ymd(d)===vandaagS?' style="background:rgba(124,147,255,.07)"':''}>${cel(n,d)}</td>`).join('')}<td class="r"><b>${rU(rpSum(sel.filter(r=>r.medewerker.toLowerCase()===n.toLowerCase()),'uren'))}</b></td>${LOON.size?(()=>{const w=LOON.get(n.toLowerCase()),u=rpSum(sel.filter(r=>r.medewerker.toLowerCase()===n.toLowerCase()),'uren');return w!=null?`<td class="r">${eur(w,2)}</td><td class="r">${eur(w*u,0)}</td>`:'<td class="r" style="color:var(--mute)">–</td><td class="r" style="color:var(--mute)">–</td>'})():''}</tr>`).join('');
+    const tot=`<tr><td><b>Totaal</b></td>${dagen.map(d=>{const l=perDag[ymd(d)]||[];return `<td class="r"><b>${l.length?rU(rpSum(l,'uren')):'–'}</b><br><span style="color:var(--mute);font-size:11.5px">${new Set(l.map(r=>r.medewerker.toLowerCase())).size} pers.</span></td>`}).join('')}<td class="r"><b>${rU(tu)}</b></td>${LOON.size?`<td></td><td class="r"><b>${eur(sel.reduce((t,r)=>t+(LOON.get(r.medewerker.toLowerCase())||0)*(+r.uren||0),0),0)}</b></td>`:''}</tr>`;
     const lijst=dagen.map((d,i)=>{const l=(perDag[ymd(d)]||[]).slice().sort((x,y)=>(x.begin_tijd||'99').localeCompare(y.begin_tijd||'99'));return `<div style="padding:10px 0;border-bottom:1px solid var(--line)"><div style="display:flex;justify-content:space-between;gap:8px;${ymd(d)===vandaagS?'color:#7C93FF;':''}"><b>${RDGL[i]} ${rKort(d)}</b><span style="color:var(--mute);font-size:13px">${l.length?new Set(l.map(r=>r.medewerker.toLowerCase())).size+' pers. · '+rU(rpSum(l,'uren')):'geen diensten'}</span></div>${l.map(x=>`<div style="display:flex;justify-content:space-between;gap:8px;font-size:14px;padding:3px 0"><span>${esc(x.medewerker)}${x.functie?` <span style="color:var(--mute);font-size:12px">${esc(x.functie)}</span>`:''}</span><b style="font-weight:600;white-space:nowrap">${esc(rTijd(x))}</b></div>`).join('')}</div>`}).join('');
-    body=`<div class="c span-12"><div class="roo-t"><div class="tw"><table><thead><tr><th>Medewerker</th>${th}<th class="r">Totaal</th></tr></thead><tbody>${tr}${tot}</tbody></table></div></div><div class="roo-l">${lijst}</div></div>`;
+    body=`<div class="c span-12"><div class="roo-t"><div class="tw"><table><thead><tr><th>Medewerker</th>${th}<th class="r">Totaal</th>${LOON.size?'<th class="r">Uurloon</th><th class="r">Loon (bruto)</th>':''}</tr></thead><tbody>${tr}${tot}</tbody></table></div></div><div class="roo-l">${lijst}</div></div>`;
   }else{
     const n=Math.round((tot-van)/864e5)+1,dm=[...Array(n)].map((_,i)=>rD(van,i));
     body=`<div class="c span-12"><div class="roo-m">${RDG.map(x=>`<div style="text-align:center;color:var(--mute);font-size:12px">${x}</div>`).join('')}${dm.map(d=>{const l=perDag[ymd(d)]||[],buiten=d.getMonth()!==a.getMonth();return `<button type="button" class="roo-d${buiten?' x':''}${ymd(d)===vandaagS?' t':''}" data-roo-dag="${ymd(d)}"><b>${d.getDate()}</b>${l.length?`<span>${new Set(l.map(r=>r.medewerker.toLowerCase())).size} pers.</span><span>${rU(rpSum(l,'uren'))}</span>`:'<span style="opacity:.4">–</span>'}</button>`}).join('')}</div><p style="color:var(--mute);font-size:12.5px;margin-top:10px">Tik op een dag voor de diensten van die week.</p></div>`;

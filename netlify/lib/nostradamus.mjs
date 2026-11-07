@@ -45,7 +45,14 @@ export function vertaal({ planning = [], uren = [], staff = [], office_id }, ctx
     const v = gew.get(k) || { ...ctx, datum, medewerker: med, gewerkt_uren: 0 };
     v.gewerkt_uren = r2(v.gewerkt_uren + num(u.hour_hours)); gew.set(k, v);
   }
-  return { rooster, gepland: [...gepl.values()], gewerkt: [...gew.values()] };
+  const lonen = [];
+  for (const m of staff) {
+    if (office_id != null && m.office_id != null && String(m.office_id) !== String(office_id)) continue;
+    const med = String(m.staff_name || m.card_name || "").trim(), w = num(m.card_hourly_salary), sc = num(m.card_salary_rate);
+    if (!med || !(w > 0)) continue;
+    lonen.push({ ...ctx, medewerker: med, uurloon: r2(w), schaal: sc > 0 ? r2(sc) : null, bijgewerkt: new Date().toISOString() });
+  }
+  return { rooster, gepland: [...gepl.values()], gewerkt: [...gew.values()], lonen };
 }
 
 const chunks = (a, n) => { const o = []; for (let i = 0; i < a.length; i += n) o.push(a.slice(i, i + n)); return o; };
@@ -80,8 +87,10 @@ export async function syncNostradamus(rest, kop, geheim, { nu = new Date(), fetc
     await rest(`uren?locatie_id=eq.${kop.locatie_id}&medewerker=in.("Medewerker null","Medewerker undefined","Medewerker 0","Open diensten")`, { method: "DELETE", headers: { prefer: "return=minimal" } });   // oude naam van open diensten uit een eerdere versie
     await up("uren", d.gepland, "locatie_id,datum,medewerker");        // alleen gepland_uren + kosten
     await up("uren", d.gewerkt, "locatie_id,datum,medewerker");        // alleen gewerkt_uren
+    try { await up("medewerker_loon", d.lonen, "locatie_id,medewerker"); }   // uurlonen: alleen voor de eigenaar zichtbaar; sync gaat door als migratie 0024 nog ontbreekt
+    catch (e) { console.warn("nostradamus: lonen niet opgeslagen:", String(e.message || e).slice(0, 120)); }
     await status({ status: "ok", laatste_succes: nu.toISOString(), laatste_fout: null, sync_tot: nu.toISOString() });
-    return { ok: true, diensten: toekomst.length, gepland: d.gepland.length, gewerkt: d.gewerkt.length };
+    return { ok: true, lonen: d.lonen.length, diensten: toekomst.length, gepland: d.gepland.length, gewerkt: d.gewerkt.length };
   } catch (e) {
     const m = String(e.message || e).slice(0, 300);
     await status({ status: "fout", laatste_fout: m });
