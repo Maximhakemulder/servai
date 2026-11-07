@@ -55,5 +55,6 @@ export default async () => {
     await Promise.all(Array.from({ length: PARALLEL }, async () => { while (i < wacht.length) await verwerk(wacht[i++]); }));
     if (!klaar && wacht.every((w) => (w.pogingen || 0) >= 2)) break;          // niets gelukt in deze ronde en bijna alles op: stop, de volgende run probeert opnieuw
   }
+  if (klaar) { try { await fetch(`${process.env.URL || "https://servai.nl"}/.netlify/functions/markt-benchmark-background`, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }); } catch (e) { console.error("markt starten mislukt", String(e.message || e)); } }   // marktindicatie voor de zojuist gelezen facturen
   return new Response(JSON.stringify({ klaar }));
 };

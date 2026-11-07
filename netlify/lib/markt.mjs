@@ -35,12 +35,12 @@ Regels:
 Antwoord uitsluitend met JSON, zonder uitleg eromheen:
 {"gevonden":true|false,"product_op_site":"naam zoals op de pagina","pakprijs":number,"pak_hoeveelheid":number,"pak_eenheid":"kg|g|l|ml|cl|stuk","btw_inbegrepen":true|false,"btw_pct":9,"bron_naam":"Sligro","bron_url":"https://...","zekerheid":"hoog|middel|laag"}`;
 
-export async function vraagMarkt({ omschrijving, eenheid, prijs, leverancier }, { apiKey, model, onUsage } = {}) {
+export async function vraagMarkt({ omschrijving, eenheid, prijs, leverancier, verpakking }, { apiKey, model, onUsage } = {}) {
   const r = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST", headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01", "content-type": "application/json" },
     body: JSON.stringify({ model: model || "claude-haiku-5-5", max_tokens: 1200, system: SYSTEEM,
-      tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 3 }],
-      messages: [{ role: "user", content: `Product op de factuur: ${omschrijving}\nEenheid: ${eenheid}\nPrijs op de factuur per ${eenheid}: € ${prijs}${leverancier ? `\nLeverancier: ${leverancier}` : ""}` }] }),
+      tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 1 }],
+      messages: [{ role: "user", content: `Product op de factuur: ${omschrijving}\n${verpakking ? `Verpakking op de factuur: ${verpakking} (de prijs op de factuur per verpakking is hierop gebaseerd; zoek een pak van dezelfde grootte)\n` : ""}Eenheid: ${eenheid}\nPrijs op de factuur per ${eenheid}: € ${prijs}${leverancier ? `\nLeverancier: ${leverancier}` : ""}` }] }),
   });
   if (!r.ok) throw new Error(`marktprijs mislukt (${r.status})`);
   const out = await r.json();
