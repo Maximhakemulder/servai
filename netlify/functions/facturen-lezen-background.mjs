@@ -39,7 +39,7 @@ export default async () => {
       const prijzen = new Map();
       for (const r of nf.regels) { const i = koppelIngredient(r, ing); if (i) prijzen.set(i.id, { klant_id: f.klant_id, ingredient_id: i.id, datum: nf.datum, prijs_per_eenheid: r.prijs_per_eenheid, leverancier: nf.leverancier, bron: "factuur" }); }
       if (prijzen.size) await rest("ingredient_prijzen?on_conflict=ingredient_id,datum", { method: "POST", headers: { prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify([...prijzen.values()]) });
-      await rest(`facturen?id=eq.${f.id}`, { method: "PATCH", body: JSON.stringify({ status: "verwerkt", verwerkt_op: new Date().toISOString(), fout: null, leverancier: nf.leverancier, factuurnummer: nf.factuurnummer, factuurdatum: nf.datum, bedrag: nf.totaal }) });
+      await rest(`facturen?id=eq.${f.id}`, { method: "PATCH", body: JSON.stringify({ status: "verwerkt", verwerkt_op: new Date().toISOString(), fout: null, leverancier: nf.leverancier, factuurnummer: nf.factuurnummer, factuurdatum: nf.datum, bedrag: nf.totaal, vervaldatum: nf.vervaldatum, totaal_incl_btw: nf.totaal_incl_btw, btw_totaal: nf.btw_totaal, extra: nf.extra }) });
       klaar++;
     } catch (e) {
       // Tijdelijke fout (bijv. API-limiet): terug in de wachtrij; na 3 pogingen pas 'fout'.
