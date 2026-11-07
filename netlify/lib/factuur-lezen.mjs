@@ -53,12 +53,13 @@ export async function leesFactuur(buffer, mime, { apiKey, model, onUsage } = {})
   const blok = mime === "application/pdf" ? { type: "document", source: bron } : { type: "image", source: bron };
   const r = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST", headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-    body: JSON.stringify({ model: model || "claude-haiku-5-5", max_tokens: 4000, tools: [{ name: "factuur", description: "De gegevens van de factuur", input_schema: SCHEMA }], tool_choice: { type: "tool", name: "factuur" }, messages: [{ role: "user", content: [blok, { type: "text", text: PROMPT }] }] }),
+    body: JSON.stringify({ model: model || "claude-haiku-5-5", max_tokens: 16000, tools: [{ name: "factuur", description: "De gegevens van de factuur", input_schema: SCHEMA }], tool_choice: { type: "tool", name: "factuur" }, messages: [{ role: "user", content: [blok, { type: "text", text: PROMPT }] }] }),
   });
   if (!r.ok) throw new Error(`uitlezen mislukt (${r.status})`);
   const out = await r.json();
   if (onUsage) await onUsage(out.usage);
   const t = (out.content || []).find((c) => c.type === "tool_use");
   if (!t) throw new Error("geen resultaat bij uitlezen");
+  if (out.stop_reason === "max_tokens") throw new Error("factuur te groot om in één keer uit te lezen");
   return t.input;
 }

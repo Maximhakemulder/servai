@@ -31,8 +31,10 @@ export default async () => {
       const dl = await fetch(`${URL_}/storage/v1/object/facturen/${f.bijlage_pad}`, { headers: H });
       if (!dl.ok) throw new Error("bestand niet gevonden");
       const nf = normaliseerFactuur(await leesFactuur(await dl.arrayBuffer(), mime, { apiKey: KEY, model: process.env.FACTUUR_MODEL, onUsage: (u) => registreer(rest, { klant_id: f.klant_id, soort: "factuur", model: process.env.FACTUUR_MODEL || "claude-haiku-5-5" }, u) }), String(f.ontvangen).slice(0, 10));
+      if (!nf.regels.length) throw new Error("geen factuurregels gevonden in dit bestand");
       await rest(`factuur_regels?factuur_id=eq.${f.id}`, { method: "DELETE" });
-      if (nf.regels.length) await rest("factuur_regels", { method: "POST", body: JSON.stringify(nf.regels.map((r) => ({ ...r, factuur_id: f.id, klant_id: f.klant_id, datum: nf.datum, leverancier: nf.leverancier }))) });
+      const ins = await rest("factuur_regels", { method: "POST", body: JSON.stringify(nf.regels.map((r) => ({ ...r, factuur_id: f.id, klant_id: f.klant_id, datum: nf.datum, leverancier: nf.leverancier }))) });
+      if (!ins.ok) throw new Error("regels opslaan mislukt: " + (await ins.text()).slice(0, 160));
       const ing = await get(`ingredienten?klant_id=eq.${f.klant_id}&select=id,naam,eenheid&limit=2000`);
       const prijzen = new Map();
       for (const r of nf.regels) { const i = koppelIngredient(r, ing); if (i) prijzen.set(i.id, { klant_id: f.klant_id, ingredient_id: i.id, datum: nf.datum, prijs_per_eenheid: r.prijs_per_eenheid, leverancier: nf.leverancier, bron: "factuur" }); }
