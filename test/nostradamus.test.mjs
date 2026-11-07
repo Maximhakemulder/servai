@@ -14,6 +14,6 @@ test("vertaal: rooster, gepland en gewerkt per medewerker, gefilterd op kantoor"
   assert.equal(d.gewerkt[0].gewerkt_uren, 6.25);
 });
 test("hhmm en klantnaam-controle", () => {
-  assert.equal(hhmm("2026-11-10 07:05:00"), "07:05");
+  assert.equal(hhmm("2026-11-10 07:05:00"), "07:05"); assert.equal(hhmm("2026-11-10T07:05:00"), "07:05"); assert.equal(hhmm("7:05"), "07:05"); assert.equal(hhmm("2026-11-10"), null);
   assert.throws(() => maakClient({ klant: "evil.com/x", api_key: "k" }));
 });

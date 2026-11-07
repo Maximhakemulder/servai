@@ -23,13 +23,14 @@ export function maakClient({ klant, api_key }, fetchImpl = fetch) {
   } };
 }
 
-export const hhmm = (t) => { const m = /(\d{2}):(\d{2})/.exec(String(t || "").slice(10)); return m ? `${m[1]}:${m[2]}` : null; };
+export const hhmm = (t) => { const m = /(?:^|[T\s])(\d{1,2}):(\d{2})/.exec(String(t || "")); return m ? `${m[1].padStart(2, "0")}:${m[2]}` : null; };
 
 /** Vertaalt planning-, uren- en personeelsrijen naar de rijen van SERVAI. Pure functie (getest). */
 export function vertaal({ planning = [], uren = [], staff = [], office_id }, ctx) {
   const mine = (r) => office_id == null || String(r.office_id ?? r.hour_office_id) === String(office_id);
   const naam = new Map(staff.map((s) => [String(s.card_id), String(s.staff_name || s.card_name || "").trim()]));
-  const wie = (r) => naam.get(String(r.card_id)) || String(r.card_name || "").trim() || `Medewerker ${r.card_id}`;
+  const open = (r) => r.card_id == null || r.card_id === "" || Number(r.card_id) === 0;
+  const wie = (r) => open(r) ? "Open diensten" : naam.get(String(r.card_id)) || String(r.card_name || "").trim() || `Medewerker ${r.card_id}`;
   const rooster = [], gepl = new Map(), gew = new Map();
   for (const p of planning.filter(mine)) {
     if (!p.planning_date || !/^\d{4}-\d{2}-\d{2}/.test(p.planning_date)) continue;
@@ -75,6 +76,7 @@ export async function syncNostradamus(rest, kop, geheim, { nu = new Date(), fetc
     if (!del.ok) throw new Error("Oud rooster vervangen mislukt: " + (await del.text()).slice(0, 200));
     const toekomst = d.rooster.filter((r) => r.datum >= dagStr(t)).map((r) => { if (!metBron) delete r.bron; return r; });
     for (const ch of chunks(toekomst, 500)) { const r = await rest("rooster", { method: "POST", headers: { prefer: "return=minimal" }, body: JSON.stringify(ch) }); if (!r.ok) throw new Error("Rooster wegschrijven mislukt: " + (await r.text()).slice(0, 200)); }
+    await rest(`uren?locatie_id=eq.${kop.locatie_id}&medewerker=in.("Medewerker null","Medewerker undefined")`, { method: "DELETE", headers: { prefer: "return=minimal" } });   // oude naam van open diensten uit een eerdere versie
     await up("uren", d.gepland, "locatie_id,datum,medewerker");        // alleen gepland_uren + kosten
     await up("uren", d.gewerkt, "locatie_id,datum,medewerker");        // alleen gewerkt_uren
     await status({ status: "ok", laatste_succes: nu.toISOString(), laatste_fout: null, sync_tot: nu.toISOString() });
