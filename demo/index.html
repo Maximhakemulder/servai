@@ -1124,6 +1124,22 @@ const ymd=d=>d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
 const dayAgo=n=>{const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()-n);return d};
 const dshort=iso=>{const[y,m,d]=iso.split('-');return +d+'-'+ +m};
 V.loonkosten=()=>({html:`<div class="grid"><div class="c span-12" id="lk-wrap"><p style="color:var(--mute)">Gegevens laden…</p></div></div>`,after:lkLoad});
+
+function lkSpec(rows,MW,pcol){
+  const dg={};rows.forEach(r=>{const d=dg[r.datum]||(dg[r.datum]={o:0,l:0,w:0});d.o+=+r.omzet||0;d.l+=+r.loonkosten||0;d.w+=+r.gewerkt_uren||0});
+  const dagen=Object.keys(dg).sort().reverse();
+  const nl=n=>(+n).toLocaleString('nl-NL',{maximumFractionDigits:1});
+  const dagTab=`<div class="sec"><h2>Per dag</h2><small>${perName()}</small></div><div class="c span-12"><div class="tw"><table class="mx"><thead><tr><th>Dag</th><th>Omzet</th><th>Loonkosten</th><th>% van omzet</th><th>Uren gewerkt</th></tr></thead><tbody>${dagen.map(d=>{const r=dg[d],pc=r.o>0?r.l/r.o*100:null;return `<tr><td style="text-align:left"><b>${new Date(d+'T12:00:00').toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'short'})}</b></td><td>${r.o?eur(r.o):'–'}</td><td>${eur(r.l)}</td><td><span class="delta ${pcol(pc)}">${pc==null?'–':pc.toFixed(1).replace('.',',')+'%'}</span></td><td>${nl(r.w)}</td></tr>`}).join('')}</tbody></table></div></div>`;
+  if(!MW||!MW.length)return dagTab;
+  const mw={};MW.forEach(r=>{const k=String(r.medewerker).trim(),d=mw[k]||(mw[k]={g:0,w:0,k:0});d.g+=+r.gepland_uren||0;d.w+=+r.gewerkt_uren||0;d.k+=+r.kosten||0});
+  const nm=Object.keys(mw).sort((a,b)=>mw[b].k-mw[a].k),T=nm.reduce((t,n)=>({g:t.g+mw[n].g,w:t.w+mw[n].w,k:t.k+mw[n].k}),{g:0,w:0,k:0});
+  return dagTab+`<div class="sec"><h2>Per medewerker</h2><small>${perName()} · alleen zichtbaar voor de eigenaar</small></div><div class="c span-12"><div class="tw"><table class="mx"><thead><tr><th>Medewerker</th><th>Uren gepland</th><th>Uren gewerkt</th><th>Verschil</th><th>Loonkosten</th></tr></thead><tbody>${nm.map(n=>{const r=mw[n],v=r.w-r.g;return `<tr><td style="text-align:left"><b>${esc(n)}</b></td><td>${nl(r.g)}</td><td>${nl(r.w)}</td><td>${v>0?'+':''}${nl(v)} u</td><td>${r.k?eur(r.k):'–'}</td></tr>`}).join('')}<tr><td style="text-align:left"><b>Totaal</b></td><td><b>${nl(T.g)}</b></td><td><b>${nl(T.w)}</b></td><td></td><td><b>${eur(T.k)}</b></td></tr></tbody></table></div></div>`;
+}
+async function lkMw(from,to){
+  const u=cur();if(!u||u.r!=='Eigenaar')return [];
+  const rows=await dFetch('rooster','locatie_id,datum,medewerker,uren',from,to),W=rooLoon(rows);
+  return rows.map(r=>({medewerker:r.medewerker,gepland_uren:r.uren,gewerkt_uren:Math.round((+r.uren+((r.datum.charCodeAt(9)+r.medewerker.length)%3-1)*0.25)*4)/4,kosten:Math.round(r.uren*(W.get(String(r.medewerker).toLowerCase())||15)*1.3*100)/100}))
+}
 async function lkLoad(){
   const wrap=document.getElementById('lk-wrap');if(!wrap||!SB)return;
   const p=state.period;let from,to;
@@ -1146,13 +1162,15 @@ async function lkLoad(){
   const dh=tot.w-tot.g;
   const kpi=(t,v,d,c)=>`<div class="c kpi span-3"><small>${t}</small><b>${v}</b>${d}<span class="ctx">${c}</span></div>`;
   const pcol=x=>x==null?'':x>KLANTNORM+2?'down':x>KLANTNORM?'flat':'up';
+  const MW=await lkMw(from,to);
+  if(document.getElementById('lk-wrap')!==wrap)return;
   wrap.outerHTML=[
    kpi('Omzet',eur(tot.o),'<span class="delta flat">'+perName()+'</span>','netto uit de kassa'),
    kpi('Loonkosten',eur(tot.l),'<span class="delta flat">incl. werkgeverslasten</span>','uit het rooster'),
    kpi('Loonkosten in % van omzet',pct==null?'–':pct.toFixed(1).replace('.',',')+'%',pct==null?'':`<span class="delta ${pcol(pct)}">${Math.abs(diff).toFixed(1).replace('.',',')} punt ${diff>0?'boven':'onder'} norm</span>`,'norm: '+String(KLANTNORM).replace('.',',')+'%'),
    kpi('Uren gewerkt',nf(tot.w),`<span class="delta ${dh>0?'down':'up'}">${dh>0?'+':''}${nf(dh)} uur t.o.v. plan</span>`,'gepland: '+nf(tot.g)+' uur')
   ].join('')+(days.length>1?`<div class="c span-12"><div class="ch"><div><h2>Loonkosten in % van omzet per dag</h2><p>${locName()} · stippellijn is je norm van ${String(KLANTNORM).replace('.',',')}%</p></div></div><div class="cv short"><canvas id="c-lk" role="img" aria-label="Loonkosten in procent van omzet per dag"></canvas></div></div>`:'')+
-  `<div class="sec"><h2>Per locatie</h2><small>${perName()}</small></div><div class="c span-12"><div class="tw"><table class="mx"><thead><tr><th>Locatie</th><th>Omzet</th><th>Loonkosten</th><th>% van omzet</th><th>Uren gewerkt</th><th>Verschil met plan</th></tr></thead><tbody>${Object.keys(byLoc).map(id=>{const r=byLoc[id],pc=r.o>0?r.l/r.o*100:null;return `<tr><td style="text-align:left"><b>${lname(id)}</b></td><td>${eur(r.o)}</td><td>${eur(r.l)}</td><td><span class="delta ${pcol(pc)}">${pc==null?'–':pc.toFixed(1).replace('.',',')+'%'}</span></td><td>${nf(r.w)}</td><td>${r.w-r.g>0?'+':''}${nf(r.w-r.g)} u</td></tr>`}).join('')}</tbody></table></div></div>`;
+  `<div class="sec"><h2>Per locatie</h2><small>${perName()}</small></div><div class="c span-12"><div class="tw"><table class="mx"><thead><tr><th>Locatie</th><th>Omzet</th><th>Loonkosten</th><th>% van omzet</th><th>Uren gewerkt</th><th>Verschil met plan</th></tr></thead><tbody>${Object.keys(byLoc).map(id=>{const r=byLoc[id],pc=r.o>0?r.l/r.o*100:null;return `<tr><td style="text-align:left"><b>${lname(id)}</b></td><td>${eur(r.o)}</td><td>${eur(r.l)}</td><td><span class="delta ${pcol(pc)}">${pc==null?'–':pc.toFixed(1).replace('.',',')+'%'}</span></td><td>${nf(r.w)}</td><td>${r.w-r.g>0?'+':''}${nf(r.w-r.g)} u</td></tr>`}).join('')}</tbody></table></div></div>`+lkSpec(rows,MW,pcol);
   if(days.length>1){
     mk('c-lk',{type:'line',data:{labels:days.map(dshort),datasets:[
       {label:'Loonkosten %',data:days.map(d=>byDay[d].o>0?+(byDay[d].l/byDay[d].o*100).toFixed(1):null),borderColor:'#5E7BFF',backgroundColor:'rgba(94,123,255,.12)',fill:true,tension:.3,pointRadius:2,spanGaps:true},
