@@ -160,7 +160,7 @@ async function api(actie,data){
 /* ===== data ===== */
 async function load(){
   const [k,p,a,f,t]=await Promise.all([
-    (()=>{const K=l=>SB.from('klanten').select('*,locaties('+l+'),profielen(id,naam,email,rol,actief,laatst_gezien,locatie_id),abonnementen(*),koppelingen(id,soort,systeem,status,laatste_succes,laatste_fout)').order('naam');return q(K('id,naam,plaats,regio')).catch(()=>q(K('id,naam')))})(),
+    (()=>{const K=l=>SB.from('klanten').select('*,locaties!locaties_klant_id_fkey('+l+'),profielen(id,naam,email,rol,actief,laatst_gezien,locatie_id),abonnementen(*),koppelingen(id,soort,systeem,status,laatste_succes,laatste_fout)').order('naam');return q(K('id,naam,plaats,regio')).catch(()=>q(K('id,naam')))})(),
     q(SB.from('plannen').select('*').order('volgorde')),
     q(SB.from('aanvragen').select('*').order('aangemaakt',{ascending:false})),
     q(SB.from('afspraken').select('*,klanten(naam)').order('start_tijd')),
