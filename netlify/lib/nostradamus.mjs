@@ -65,9 +65,15 @@ export async function syncNostradamus(rest, kop, geheim, { nu = new Date(), fetc
       const r = await rest(`${tabel}?on_conflict=${conflict}`, { method: "POST", headers: { prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify(ch) });
       if (!r.ok) throw new Error(`Wegschrijven naar ${tabel} mislukt: ${(await r.text()).slice(0, 200)}`); } };
     // rooster: vervang onze eigen diensten in het venster (handmatig geüploade diensten blijven staan)
-    const del = await rest(`rooster?locatie_id=eq.${kop.locatie_id}&bron=eq.nostradamus&datum=gte.${dagStr(t)}&datum=lte.${tot}`, { method: "DELETE", headers: { prefer: "return=minimal" } });
-    if (!del.ok) throw new Error("Oud rooster vervangen mislukt");
-    const toekomst = d.rooster.filter((r) => r.datum >= dagStr(t));
+    const venster = `locatie_id=eq.${kop.locatie_id}&datum=gte.${dagStr(t)}&datum=lte.${tot}`;
+    let metBron = true;
+    let del = await rest(`rooster?${venster}&bron=eq.nostradamus`, { method: "DELETE", headers: { prefer: "return=minimal" } });
+    if (!del.ok) {                                                      // oudere database zonder kolom "bron": vervang dan alle diensten in het venster
+      metBron = false;
+      del = await rest(`rooster?${venster}`, { method: "DELETE", headers: { prefer: "return=minimal" } });
+    }
+    if (!del.ok) throw new Error("Oud rooster vervangen mislukt: " + (await del.text()).slice(0, 200));
+    const toekomst = d.rooster.filter((r) => r.datum >= dagStr(t)).map((r) => { if (!metBron) delete r.bron; return r; });
     for (const ch of chunks(toekomst, 500)) { const r = await rest("rooster", { method: "POST", headers: { prefer: "return=minimal" }, body: JSON.stringify(ch) }); if (!r.ok) throw new Error("Rooster wegschrijven mislukt: " + (await r.text()).slice(0, 200)); }
     await up("uren", d.gepland, "locatie_id,datum,medewerker");        // alleen gepland_uren + kosten
     await up("uren", d.gewerkt, "locatie_id,datum,medewerker");        // alleen gewerkt_uren
