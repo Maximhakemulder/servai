@@ -13,7 +13,7 @@ export default async () => {
   if (!URL_ || !SVC || !KEY) return new Response("niet actief");
   // Vastgelopen 'bezig' (functie afgebroken) na 5 minuten terug in de wachtrij, maximaal 3 pogingen.
   await rest(`facturen?status=eq.bezig&bezig_sinds=lt.${new Date(Date.now() - 300000).toISOString()}`, { method: "PATCH", body: JSON.stringify({ status: "ontvangen" }) });
-  await rest("facturen?status=eq.ontvangen&pogingen=gte.3", { method: "PATCH", body: JSON.stringify({ status: "fout", fout: "Uitlezen mislukt na 3 pogingen" }) });
+  for (const x of await get("facturen?status=eq.ontvangen&pogingen=gte.3&select=id,fout")) await rest(`facturen?id=eq.${x.id}`, { method: "PATCH", body: JSON.stringify({ status: "fout", fout: ("Mislukt na 3 pogingen: " + (x.fout || "onbekend")).slice(0, 300) }) });
   // Gepauzeerde facturen (cap bereikt) terug in de wachtrij zodra er weer ruimte is, bijvoorbeeld na een nieuwe maand of een hogere cap.
   const gep = await get("facturen?status=eq.gepauzeerd&select=id,klant_id&order=ontvangen.asc&limit=60"), ruimteVan = new Map();
   for (const g of gep) { if (!ruimteVan.has(g.klant_id)) ruimteVan.set(g.klant_id, await ruimte(get, g.klant_id)); if (ruimteVan.get(g.klant_id)) await rest(`facturen?id=eq.${g.id}`, { method: "PATCH", body: JSON.stringify({ status: "ontvangen", fout: null }) }); }
