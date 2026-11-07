@@ -2,13 +2,13 @@
 // en pas aan met AI_PRIJZEN_JSON, bijvoorbeeld {"claude-haiku-5-5":[1,5]}. Wisselkoers: AI_USD_EUR (standaard 0,92).
 const STANDAARD = { "claude-haiku-5-5": [1, 5], "claude-sonnet-5-5": [3, 15], "claude-opus-5-5": [5, 25] };
 const prijzen = () => { try { return { ...STANDAARD, ...JSON.parse(process.env.AI_PRIJZEN_JSON || "{}") }; } catch { return STANDAARD; } };
-export const kostenEur = (model, tin, tuit) => {
+export const kostenEur = (model, tin, tuit, zoek = 0) => {
   const [pi, po] = prijzen()[model] || prijzen()["claude-sonnet-5-5"];          // onbekend model: reken voorzichtig met Sonnet-prijs
-  return ((tin * pi + tuit * po) / 1e6) * (Number(process.env.AI_USD_EUR) || 0.92);
+  return ((tin * pi + tuit * po) / 1e6 + zoek * 0.01) * (Number(process.env.AI_USD_EUR) || 0.92);   // webzoeken: aangenomen $10 per 1000 zoekopdrachten
 };
 export const registreer = (rest, { klant_id, locatie_id = null, soort, model }, usage) => {
-  const tin = (usage && usage.input_tokens) || 0, tuit = (usage && usage.output_tokens) || 0;
-  return rest("ai_gebruik", { method: "POST", body: JSON.stringify({ klant_id, locatie_id, soort, model, tokens_in: tin, tokens_uit: tuit, kosten_eur: Math.round(kostenEur(model, tin, tuit) * 1e5) / 1e5 }) });
+  const tin = (usage && usage.input_tokens) || 0, tuit = (usage && usage.output_tokens) || 0, zoek = (usage && usage.server_tool_use && usage.server_tool_use.web_search_requests) || 0;
+  return rest("ai_gebruik", { method: "POST", body: JSON.stringify({ klant_id, locatie_id, soort, model, tokens_in: tin, tokens_uit: tuit, kosten_eur: Math.round(kostenEur(model, tin, tuit, zoek) * 1e5) / 1e5 }) });
 };
 /** Kosten van deze maand voor een klant, voor het maandbudget. */
 export const maandKosten = async (get, klant_id) => {
