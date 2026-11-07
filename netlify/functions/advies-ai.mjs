@@ -1,30 +1,16 @@
 // SERVAI · maakt 's nachts per klant AI-adviezen (tabel ai_adviezen). Elke run doet een paar klanten die vandaag nog niet aan de beurt waren.
 // Alleen actief met ANTHROPIC_API_KEY. Model: ADVIES_MODEL (standaard claude-sonnet-5-5: beter in overdenken; haiku is goedkoper).
-import { samenvatFeiten, vraagAdvies } from "../lib/advies-ai.mjs";
+import { vraagAdvies } from "../lib/advies-ai.mjs";
+import { haalFeiten, dag } from "../lib/feiten.mjs";
 import { registreer, ruimte } from "../lib/ai-kosten.mjs";
 const URL_ = process.env.SUPABASE_URL, SVC = process.env.SUPABASE_SERVICE_KEY, KEY = process.env.ANTHROPIC_API_KEY;
 const H = { apikey: SVC, authorization: `Bearer ${SVC}`, "content-type": "application/json" };
 const rest = (p, o = {}) => fetch(`${URL_}/rest/v1/${p}`, { ...o, headers: { ...H, prefer: "return=minimal", ...(o.headers || {}) } });
 const get = async (p) => { const r = await rest(p, { headers: { prefer: "return=representation" } }); return r.ok ? r.json() : []; };
-const dag = (n) => new Date(Date.now() + n * 864e5).toLocaleDateString("sv-SE", { timeZone: "Europe/Amsterdam" });
 const PER_RUN = Number(process.env.ADVIES_PER_RUN) || 6, PARALLEL = 3;
 
 async function maakVoor(k, l) {
-  const L = `&locatie_id=eq.${l.id}`;
-  const [omzet, loon, reserv, rooster, weer, evenementen, prijzen, gerechten, uren, groepen, artikelen] = await Promise.all([
-    get(`omzet_per_dag?klant_id=eq.${k.id}${L}&bedrijfsdag=gte.${dag(-35)}&select=bedrijfsdag,omzet,bonnen,couverts&limit=2000`),
-    get(`loonkosten_per_dag?klant_id=eq.${k.id}${L}&datum=gte.${dag(-35)}&select=datum,omzet,loonkosten,gewerkt_uren&limit=2000`),
-    get(`reserveringen?klant_id=eq.${k.id}${L}&tijdstip=gte.${dag(0)}&tijdstip=lt.${dag(15)}&status=neq.geannuleerd&select=tijdstip,personen&limit=5000`),
-    get(`rooster?klant_id=eq.${k.id}${L}&datum=gte.${dag(0)}&datum=lt.${dag(15)}&select=datum,uren&limit=5000`),
-    get(`weer_dagen?klant_id=eq.${k.id}${L}&datum=gte.${dag(0)}&datum=lt.${dag(8)}&select=datum,code,temp_max,temp_min,regenkans,wind_max&order=datum&limit=100`),
-    get(`evenementen?klant_id=eq.${k.id}&or=(locatie_id.eq.${l.id},locatie_id.is.null)&datum=gte.${dag(0)}&datum=lt.${dag(15)}&select=datum,tot,naam,drukte&limit=50`),
-    get(`factuur_prijswijzigingen?klant_id=eq.${k.id}&select=omschrijving,leverancier,vorige_prijs,prijs,pct,eenheid&limit=200`),
-    get(`gerecht_kostprijs?klant_id=eq.${k.id}&select=naam,groep,verkoopprijs,kostprijs&limit=500`),
-    get(`omzet_per_uur?klant_id=eq.${k.id}${L}&bedrijfsdag=gte.${dag(-28)}&select=bedrijfsdag,uur,omzet&limit=20000`),
-    get(`verkoop_per_groep_dag?klant_id=eq.${k.id}${L}&bedrijfsdag=gte.${dag(-56)}&select=bedrijfsdag,groep,aantal,omzet&limit=20000`),
-    get(`verkoop_per_artikel_dag?klant_id=eq.${k.id}${L}&bedrijfsdag=gte.${dag(-56)}&select=bedrijfsdag,artikel,aantal,omzet&limit=50000`),
-  ]);
-  const feiten = samenvatFeiten({ klant: k, zaak: l.naam, omzet, loon, reserv, rooster, weer, evenementen, prijzen, gerechten, uren, groepen, artikelen });
+  const feiten = await haalFeiten(get, k, l);
   if (!feiten.heeft_data) return 0;                                   // te weinig kassadata voor zinnige adviezen
   const model = process.env.ADVIES_MODEL || "claude-sonnet-5-5";
   if (!(await ruimte(get, k.id))) return -1;      // cap van de klant (of standaardcap) bereikt: geen nieuwe adviezen tot de volgende maand

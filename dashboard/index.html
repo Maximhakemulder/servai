@@ -2250,10 +2250,33 @@ async function kopLoad(wrap){
   const alle=[['unTill','Kassa'],['Nostradamus','Rooster & uren'],['Zenchef','Reserveringen'],['Google Business Profile','Reviews & zichtbaarheid']];
   wrap.outerHTML=`<div class="c span-12"><div class="ch"><div><h2>Verbonden systemen</h2><p>SERVAI regelt de koppelingen voor je</p></div></div>${rpTab(alle.map(([n,soort])=>{const k=act.find(x=>(x.systeem||'').toLowerCase().replace(/\s/g,'')===n.toLowerCase().replace(/\s/g,''));return `<tr><td>${plogo(n)} <b>${n}</b><br><span style="color:var(--mute);font-size:12px">${soort}</span></td><td>${k?(st[k.status]||k.status):'Niet verbonden'}</td><td>${k?f(k.laatste_succes):'–'}</td><td>${k&&k.laatste_fout?esc(k.laatste_fout):''}</td></tr>`}),'<th>Systeem</th><th>Status</th><th>Laatst gelukt</th><th>Melding</th>')}</div>`;
 }
+let ASSH=[];
+const assHtml=t=>esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>');
+function assReal(){
+  const sug=['Hoe was mijn omzet de afgelopen weken?','Wat moet ik deze week in de gaten houden?','Welke inkoopprijzen zijn gestegen?','Hoe druk wordt het komend weekend?'];
+  return {html:`<div class="c"><div class="chat">
+  <div class="msgs" id="msgs"><div class="m a">Hoi! Ik ben je SERVAI-assistent voor <b>${esc(locName())}</b>. Stel een vraag over je omzet, personeel, reserveringen of inkoop. Ik antwoord op basis van je eigen cijfers en pas zelf nooit iets aan.</div></div>
+  <div class="sugs" id="sugs">${sug.map(q=>`<button class="sug">${esc(q)}</button>`).join('')}</div>
+  <form class="ask" id="ask"><input id="q" placeholder="Stel een vraag over je zaak..." autocomplete="off" maxlength="500"><button type="submit">Vraag</button></form>
+</div></div>`,after(){
+    const msgs=document.getElementById('msgs');let bezig=false;
+    const add=(c,h)=>{const d=document.createElement('div');d.className='m '+c;d.innerHTML=h;msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;return d};
+    const send=async q=>{q=q.trim();if(!q||bezig)return;bezig=true;add('u',esc(q));const t=add('a typing','<i></i><i></i><i></i>');
+      try{const {data:{session}}=await SB.auth.getSession();
+        const r=await fetch('/.netlify/functions/assistent',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+(session&&session.access_token)},body:JSON.stringify({vraag:q,locatie_id:state.loc,historie:ASSH,klant_id:VIEWAS||undefined})});
+        const j=await r.json().catch(()=>({}));t.remove();
+        if(!r.ok)add('a',esc(j.error||'Er ging iets mis. Probeer het zo opnieuw.'));
+        else{add('a',assHtml(j.antwoord));ASSH.push({r:'u',t:q},{r:'a',t:j.antwoord});ASSH=ASSH.slice(-8)}
+      }catch(e){t.remove();add('a','Geen verbinding. Probeer het zo opnieuw.')}
+      bezig=false};
+    document.getElementById('sugs').addEventListener('click',e=>{if(e.target.matches('.sug'))send(e.target.textContent)});
+    document.getElementById('ask').addEventListener('submit',e=>{e.preventDefault();const i=document.getElementById('q');const v=i.value;i.value='';send(v)});
+  }};
+}
 (()=>{const d={kansen:V.kansen,upselling:V.upselling,assistent:V.assistent,meldingen:V.meldingen,advies:V.advies,koppelingen:V.koppelingen,gebruikers:V.gebruikers,support:V.support};
   V.kansen=()=>REAL?rpNog('Markt & kansen','Kansen worden berekend uit je kassadata in combinatie met weer, evenementen en reserveringen.'):d.kansen();
   V.upselling=()=>REAL?{html:`<div class="grid"><div class="c span-12" id="up-setup"><p style="color:var(--mute)">Laden…</p></div>`+rpNog('Upselling','Upselling-inzichten komen uit bonregels per medewerker, zodra de kassa-koppeling actief is.').html.replace('<div class="grid">',''),after(){upSetup()}}:d.upselling();
-  V.assistent=()=>REAL?rpNog('Assistent','De assistent beantwoordt vragen over je cijfers zodra er genoeg data is.'):d.assistent();
+  V.assistent=()=>REAL?assReal():d.assistent();
   V.meldingen=()=>REAL?rpNog('Meldingen','Hier stel je straks per persoon WhatsApp- en mailmeldingen in.'):d.meldingen();
   V.advies=()=>REAL?rpPage(advLoad):d.advies();
   V.gebruikers=()=>REAL?rpNog('Gebruikers','Gebruikers en rollen beheert SERVAI voor je. Wil je iemand toevoegen? Mail naar hallo@servai.nl.'):d.gebruikers();
