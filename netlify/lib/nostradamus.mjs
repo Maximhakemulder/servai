@@ -76,7 +76,7 @@ export async function syncNostradamus(rest, kop, geheim, { nu = new Date(), fetc
     if (!del.ok) throw new Error("Oud rooster vervangen mislukt: " + (await del.text()).slice(0, 200));
     const toekomst = d.rooster.filter((r) => r.datum >= dagStr(t)).map((r) => { if (!metBron) delete r.bron; return r; });
     for (const ch of chunks(toekomst, 500)) { const r = await rest("rooster", { method: "POST", headers: { prefer: "return=minimal" }, body: JSON.stringify(ch) }); if (!r.ok) throw new Error("Rooster wegschrijven mislukt: " + (await r.text()).slice(0, 200)); }
-    await rest(`uren?locatie_id=eq.${kop.locatie_id}&medewerker=in.("Medewerker null","Medewerker undefined")`, { method: "DELETE", headers: { prefer: "return=minimal" } });   // oude naam van open diensten uit een eerdere versie
+    await rest(`uren?locatie_id=eq.${kop.locatie_id}&medewerker=in.("Medewerker null","Medewerker undefined","Medewerker 0")`, { method: "DELETE", headers: { prefer: "return=minimal" } });   // oude naam van open diensten uit een eerdere versie
     await up("uren", d.gepland, "locatie_id,datum,medewerker");        // alleen gepland_uren + kosten
     await up("uren", d.gewerkt, "locatie_id,datum,medewerker");        // alleen gewerkt_uren
     await status({ status: "ok", laatste_succes: nu.toISOString(), laatste_fout: null, sync_tot: nu.toISOString() });
