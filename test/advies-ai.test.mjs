@@ -25,3 +25,15 @@ test("normaliseerAdvies: bagatelgrens, sortering op impact", () => {
   const r = normaliseerAdvies([{ t: "warn", c: "Inkoop", h: "Klein", x: "0,3 cent", v: "inkoop", impact_eur_maand: 5 }, { t: "info", c: "Omzet", h: "Middel", x: "30 euro", v: "financien", impact_eur_maand: 200 }, { t: "warn", c: "Personeel", h: "Groot", x: "5 uur", v: "rooster", impact_eur_maand: 900 }, { t: "goed", c: "Omzet", h: "Goed", x: "+4%", v: "financien" }], { bagatel: 75 });
   assert.deepEqual(r.map((i) => i.h), ["Groot", "Middel", "Goed"]);
 });
+import { ruimte, factorVoor } from "../netlify/lib/ai-kosten.mjs";
+const nepGet = (data) => async (p) => p.startsWith("ai_tarief") ? data.tarief : p.startsWith("ai_instellingen") ? data.inst : p.startsWith("ai_gebruik") ? data.gebruik : [];
+test("factorVoor: standaard 4, eigen factor wint", async () => {
+  assert.equal(await factorVoor(nepGet({ tarief: [{ sleutel: "standaard", factor: 4 }] }), "k1"), 4);
+  assert.equal(await factorVoor(nepGet({ tarief: [{ sleutel: "standaard", factor: 4 }, { sleutel: "k1", factor: 3 }] }), "k1"), 3);
+});
+test("ruimte: cap geldt voor doorberekende kosten (echt x factor)", async () => {
+  const g = (kosten, cap) => nepGet({ tarief: [{ sleutel: "standaard", factor: 4 }], inst: cap === undefined ? [] : [{ maand_cap_eur: cap }], gebruik: [{ kosten_eur: kosten }] });
+  assert.equal(await ruimte(g(5, 25), "k1"), true);     // 5 x 4 = 20 < 25
+  assert.equal(await ruimte(g(7, 25), "k1"), false);    // 28 >= 25
+  assert.equal(await ruimte(g(0, 0), "k1"), false);     // cap 0 = AI uit
+});

@@ -1955,29 +1955,29 @@ function advHtml(items,wacht,sub){
 }
 
 /* ---------------- AI-kosten van deze maand + eigen maandcap (klant ziet live wat AI kost en kan een grens instellen) ---------------- */
-const AIK_STD=5;
+const AIK_STD=25;
 function aikHtml(d){
   const f2=n=>'€ '+(+n||0).toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2});
   const tot=d.adv+d.fac+d.ass,cap=d.cap==null?AIK_STD:d.cap,pc=cap>0?Math.min(100,tot/cap*100):100,uit=cap===0,vol=cap>0&&tot>=cap;
   const kl=pc>=100?'#FF8A8A':pc>=80?'#FFB86B':'#4ADE9A';
   const rij=(t,v)=>`<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-top:1px solid var(--line);font-size:13.5px"><span style="color:var(--fg-2)">${t}</span><b>${f2(v)}</b></div>`;
-  return `<div class="c span-12" id="aik"><div class="ch"><div><h2>AI-kosten deze maand</h2><p>Live, een schatting. Stel een maximum in: SERVAI gaat daar nooit overheen.</p></div></div>
+  return `<div class="c span-12" id="aik"><div class="ch"><div><h2>AI-gebruik deze maand</h2><p>Live bijgewerkt. Stel een maximum in: SERVAI gaat daar nooit overheen.</p></div></div>
    <div style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:22px" class="aik-g">
     <div><div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><b style="font:700 30px var(--f-d)">${f2(tot)}</b><span style="color:var(--mute)">${uit?'AI staat uit':'van maximaal '+f2(cap)}</span></div>
      <div style="height:8px;border-radius:99px;background:rgba(255,255,255,.08);margin:10px 0 12px;overflow:hidden"><div style="height:100%;width:${pc}%;background:${kl};border-radius:99px"></div></div>
      ${rij('AI-adviezen (elke nacht)',d.adv)}${rij('Facturen uitlezen',d.fac)}${rij('Assistent',d.ass)}
      ${vol||uit?`<p style="margin-top:10px;color:#FFB86B;font-size:13px">${uit?'AI staat uit voor je zaak.':'Maximum bereikt.'} Nieuwe adviezen en het uitlezen van facturen wachten tot de volgende maand of tot je het maximum verhoogt.</p>`:''}</div>
     <div><label style="font-size:13px;color:var(--fg-2)">Maximum per maand (€)</label>
-     <div style="display:flex;gap:8px;margin:6px 0 8px;flex-wrap:wrap"><input class="fld" id="aik-cap" type="number" min="0" max="50" step="1" value="${d.cap==null?'':d.cap}" placeholder="${AIK_STD} (standaard)" style="max-width:170px"${d.kan?'':' disabled'}><button type="button" class="act" id="aik-save"${d.kan?'':' disabled'}>Opslaan</button></div>
-     <p style="color:var(--mute);font-size:12.5px;line-height:1.5">Leeg laten = standaard van € ${AIK_STD}. Vul 0 in om AI uit te zetten.${d.kan?'':' Alleen de eigenaar of bedrijfsleider kan dit wijzigen.'} Kosten van facturen en adviezen tellen mee; je betaalt hier niets extra, dit is inzicht in het gebruik.</p></div></div></div>`}
+     <div style="display:flex;gap:8px;margin:6px 0 8px;flex-wrap:wrap"><input class="fld" id="aik-cap" type="number" min="0" max="200" step="5" value="${d.cap==null?'':d.cap}" placeholder="${AIK_STD} (standaard)" style="max-width:170px"${d.kan?'':' disabled'}><button type="button" class="act" id="aik-save"${d.kan?'':' disabled'}>Opslaan</button></div>
+     <p style="color:var(--mute);font-size:12.5px;line-height:1.5">Leeg laten = standaard van € ${AIK_STD}. Vul 0 in om AI uit te zetten.${d.kan?'':' Alleen de eigenaar of bedrijfsleider kan dit wijzigen.'} Adviezen, het uitlezen van facturen en de assistent tellen mee.</p></div></div></div>`}
 function aikWire(save){
   const b=document.getElementById('aik-save');if(!b)return;
-  b.onclick=async()=>{const i=document.getElementById('aik-cap'),raw=i.value.trim(),v=raw===''?null:Math.max(0,Math.min(50,+raw));if(raw!==''&&!isFinite(+raw)){flash('Vul een bedrag in');return}
+  b.onclick=async()=>{const i=document.getElementById('aik-cap'),raw=i.value.trim(),v=raw===''?null:Math.max(0,Math.min(200,+raw));if(raw!==''&&!isFinite(+raw)){flash('Vul een bedrag in');return}
     b.disabled=true;try{await save(v);flash(v===null?'Standaard maximum ingesteld':v===0?'AI staat uit':'Maximum ingesteld op € '+v);if(typeof aikLaad==='function')aikLaad()}catch(e){flash('Opslaan is niet gelukt')}b.disabled=false}}
 async function aikLaad(){
   const root=document.getElementById('adv-root');if(!root)return;
   let cap=null;try{const x=localStorage.getItem('servai-demo-aicap');cap=x===null||x===''?null:+x}catch(e){}
-  const old=document.getElementById('aik');const t=document.createElement('div');t.innerHTML=aikHtml({adv:1.12,fac:0.58,ass:0.37,cap,kan:true});
+  const old=document.getElementById('aik');const t=document.createElement('div');t.innerHTML=aikHtml({adv:4.48,fac:2.32,ass:1.48,cap,kan:true});
   if(old)old.replaceWith(t.firstElementChild);else root.appendChild(t.firstElementChild);
   aikWire(async v=>{try{localStorage.setItem('servai-demo-aicap',v===null?'':String(v))}catch(e){}})}
 /* ---------------- AI-blokken (Coaching, Afwijkingen, Wat te doen, ...): één herkenbare AI-stijl op jouw data ---------------- */

@@ -16,13 +16,19 @@ export const maandKosten = async (get, klant_id) => {
   const rijen = await get(`ai_gebruik?klant_id=eq.${klant_id}&gemaakt=gte.${van.toISOString()}&select=kosten_eur&limit=5000`);
   return rijen.reduce((s, r) => s + Number(r.kosten_eur || 0), 0);
 };
-export const MAAND_BUDGET = () => Number(process.env.AI_MAANDBUDGET_EUR) || 5;   // standaardcap per klant per maand
-export const MAAND_MAX = () => Number(process.env.AI_MAANDMAX_EUR) || 50;        // harde bovengrens, ook als de klant een hogere cap invult
-/** De cap die nu geldt: de eigen cap van de klant (0 = AI uit), anders de standaard; nooit boven de harde bovengrens. */
+export const MAAND_BUDGET = () => Number(process.env.AI_MAANDBUDGET_EUR) || 25;   // standaardcap per klant per maand, in doorberekende euro's (wat de klant ziet)
+export const MAAND_MAX = () => Number(process.env.AI_MAANDMAX_EUR) || 200;        // harde bovengrens in doorberekende euro's
+/** Doorbereken-factor voor een klant: eigen factor, anders de standaard (4), uit tabel ai_tarief. */
+export const factorVoor = async (get, klant_id) => {
+  const r = await get(`ai_tarief?sleutel=in.(standaard,${klant_id})&select=sleutel,factor`);
+  const eigen = r.find((x) => x.sleutel === klant_id), std = r.find((x) => x.sleutel === "standaard");
+  return Number((eigen || std || {}).factor) || 4;
+};
+/** De cap die nu geldt, in doorberekende euro's: de eigen cap van de klant (0 = AI uit), anders de standaard; nooit boven de harde bovengrens. */
 export const effectieveCap = async (get, klant_id) => {
   const r = await get(`ai_instellingen?klant_id=eq.${klant_id}&select=maand_cap_eur`);
   const c = r[0] && r[0].maand_cap_eur !== null && r[0].maand_cap_eur !== undefined ? Number(r[0].maand_cap_eur) : MAAND_BUDGET();
   return Math.min(c, MAAND_MAX());
 };
-/** True als er deze maand nog ruimte is. */
-export const ruimte = async (get, klant_id) => (await maandKosten(get, klant_id)) < (await effectieveCap(get, klant_id));
+/** True als er deze maand nog ruimte is. De klant stelt zijn cap in op wat hij ziet (echte kosten x factor), dus vergelijk met de doorberekende kosten. */
+export const ruimte = async (get, klant_id) => (await maandKosten(get, klant_id)) * (await factorVoor(get, klant_id)) < (await effectieveCap(get, klant_id));
