@@ -431,7 +431,7 @@ const ACT={
   nosKoppel(d){const k=klant(d.id);if(!k.locaties.length){toast('Maak eerst een locatie aan');return}
     formModal('Nostradamus koppelen',`<p class="mute sm">Alleen lezen: rooster en gewerkte uren. De api-key (van een gebruiker met de rol Board) wordt versleuteld opgeslagen en de verbinding wordt eerst getest. Heeft de klant meerdere kantoren, vul dan het kantoor-nummer in; laat leeg om te kiezen.</p>
     <label>Locatie<select name="locatie_id">${k.locaties.map(l=>`<option value="${l.id}">${esc(l.naam)}</option>`).join('')}</select></label>
-    <label>Klantnaam in het adres (<i>klant</i>.nostradamus.nu)<input name="klant" required autocomplete="off" placeholder="diggels"></label>
+    <label>Klantnaam (het stuk voor .nostradamus.nu)<input name="klant" required autocomplete="off" placeholder="diggels"></label>
     <label>API-key<input name="api_key" type="password" required autocomplete="off"></label>
     <label>Kantoor-nummer (optioneel)<input name="office_id" autocomplete="off"></label>`,
     async(v,f,m)=>{const {data:{session}}=await SB.auth.getSession();
