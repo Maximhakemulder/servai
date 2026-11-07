@@ -32,14 +32,14 @@ export function vertaal({ planning = [], uren = [], staff = [], office_id }, ctx
   const open = (r) => r.card_id == null || r.card_id === "" || Number(r.card_id) === 0;
   const wie = (r) => open(r) ? "Open diensten" : naam.get(String(r.card_id)) || String(r.card_name || "").trim() || `Medewerker ${r.card_id}`;
   const rooster = [], gepl = new Map(), gew = new Map();
-  for (const p of planning.filter(mine)) {
+  for (const p of planning.filter(mine).filter((r) => !open(r))) {   // open diensten (nog niemand ingeroosterd) tellen niet mee
     if (!p.planning_date || !/^\d{4}-\d{2}-\d{2}/.test(p.planning_date)) continue;
     const datum = p.planning_date.slice(0, 10), med = wie(p), h = num(p.planning_hours);
     rooster.push({ ...ctx, datum, medewerker: med, begin_tijd: hhmm(p.planning_start), eind_tijd: hhmm(p.planning_end), uren: r2(h), functie: String(p.planning_workspace_name || "").trim().slice(0, 80) || null, bron: "nostradamus" });
     const k = datum + "|" + med, v = gepl.get(k) || { ...ctx, datum, medewerker: med, gepland_uren: 0, kosten: 0 };
     v.gepland_uren = r2(v.gepland_uren + h); v.kosten = r2(v.kosten + num(p.planning_costs)); gepl.set(k, v);
   }
-  for (const u of uren.filter(mine)) {
+  for (const u of uren.filter(mine).filter((r) => !open(r))) {
     if (!u.hour_date || !/^\d{4}-\d{2}-\d{2}/.test(u.hour_date)) continue;
     const datum = u.hour_date.slice(0, 10), med = wie(u), k = datum + "|" + med;
     const v = gew.get(k) || { ...ctx, datum, medewerker: med, gewerkt_uren: 0 };
@@ -67,6 +67,7 @@ export async function syncNostradamus(rest, kop, geheim, { nu = new Date(), fetc
       if (!r.ok) throw new Error(`Wegschrijven naar ${tabel} mislukt: ${(await r.text()).slice(0, 200)}`); } };
     // rooster: vervang onze eigen diensten in het venster (handmatig geüploade diensten blijven staan)
     const venster = `locatie_id=eq.${kop.locatie_id}&datum=gte.${dagStr(t)}&datum=lte.${tot}`;
+    await rest(`rooster?${venster}&medewerker=eq.Open%20diensten`, { method: "DELETE", headers: { prefer: "return=minimal" } });   // eerdere versie nam open diensten mee
     let metBron = true;
     let del = await rest(`rooster?${venster}&bron=eq.nostradamus`, { method: "DELETE", headers: { prefer: "return=minimal" } });
     if (!del.ok) {                                                      // oudere database zonder kolom "bron": vervang dan alle diensten in het venster
@@ -76,7 +77,7 @@ export async function syncNostradamus(rest, kop, geheim, { nu = new Date(), fetc
     if (!del.ok) throw new Error("Oud rooster vervangen mislukt: " + (await del.text()).slice(0, 200));
     const toekomst = d.rooster.filter((r) => r.datum >= dagStr(t)).map((r) => { if (!metBron) delete r.bron; return r; });
     for (const ch of chunks(toekomst, 500)) { const r = await rest("rooster", { method: "POST", headers: { prefer: "return=minimal" }, body: JSON.stringify(ch) }); if (!r.ok) throw new Error("Rooster wegschrijven mislukt: " + (await r.text()).slice(0, 200)); }
-    await rest(`uren?locatie_id=eq.${kop.locatie_id}&medewerker=in.("Medewerker null","Medewerker undefined","Medewerker 0")`, { method: "DELETE", headers: { prefer: "return=minimal" } });   // oude naam van open diensten uit een eerdere versie
+    await rest(`uren?locatie_id=eq.${kop.locatie_id}&medewerker=in.("Medewerker null","Medewerker undefined","Medewerker 0","Open diensten")`, { method: "DELETE", headers: { prefer: "return=minimal" } });   // oude naam van open diensten uit een eerdere versie
     await up("uren", d.gepland, "locatie_id,datum,medewerker");        // alleen gepland_uren + kosten
     await up("uren", d.gewerkt, "locatie_id,datum,medewerker");        // alleen gewerkt_uren
     await status({ status: "ok", laatste_succes: nu.toISOString(), laatste_fout: null, sync_tot: nu.toISOString() });
